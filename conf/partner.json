@@ -1,0 +1,7 @@
+{
+  "lang1": {
+    "private_key": "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "public_key":"bbbbbbbbbbbbbbbbbbbbb",
+    "secret_key": "cccccccccccccccc"
+  }
+}
