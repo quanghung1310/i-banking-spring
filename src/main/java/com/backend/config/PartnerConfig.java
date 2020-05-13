@@ -18,7 +18,7 @@ public class PartnerConfig {
         }
     }
 
-    private static JsonObject getMerchantConfig() {
+    public static JsonObject getMerchantConfig() {
         return partnerConfig.getJsonObject("lang1", new JsonObject());
     }
     public static String getPrivateKey() {

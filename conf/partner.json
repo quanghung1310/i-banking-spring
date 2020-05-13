@@ -1,7 +1,7 @@
 {
   "lang1": {
-    "private_key": "aaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "public_key":"bbbbbbbbbbbbbbbbbbbbb",
-    "secret_key": "cccccccccccccccc"
+    "private_key": "MIICXAIBAAKBgQDKjxdg6xDzqe7JxjP1Kv9XVr8S5dXhdECjrbatAvdxQRrnTnP/9weWskmmUt9H3s114witn2bgPYVHzcA5WgVFOvVfgXq+LfwKOVdEudmGmFBHXhWAwrB/hAVHCiIxuqtqsvLYOerPUCEYYrlQ3PRmzW+koxMN6FLYqfxE3wfwXQIDAQABAoGAWhFYTuMXLZGROS0lq01MLrTGz4tdGBvOJjm28aVRC43sfY+X6ugX+r0aHJfa6qU6bMHf+PvZDbqtSelGIPpTPtPBIBpcICZ6lYvG3MO0McBnrjkaw3ujDvqjm/Eg3t2wIyILGrVTKnxyN9DwEixxS31aMg2KxkOujXCwvr4l5I0CQQDrhFzD1uIZhtVFYeVSzUow6FfvN97dVtTZ3HzoHgOu0apeLfXC+m0F4gmiEjNvCtWGOsl5Zz7spJGWsyCSAJtbAkEA3CzwHxIztmaJMB0cVXX5uLKKKbYapjVn9HuktizEGsasEBY8F8hIXEjFef8+a7rHpF0xU75PqPJJ/6HfvqNIpwJAfst08c53TYzktwTcZHa3cZs09EodBwbfcyccbA70pqKkWS3fOQh/t4IY85Ne83JewHRX0a9/FgIHi52GdHQ1LwJAZToX8AEbW2oK+t73buc9t8gGM6Uw3WfCcqoCEWvFgZYD96VxXXHMqvkeKbfLSBZowU3DZwAhechjcy9GQkyqEwJBAI3feLYuPqfNitC+R4iEaAbGLfbbGqPbzypLOZLJv17zUpHQzxVEJOdhQ/J0/NLV3WK+9A/IsxgMXFtXg/b6m8g=",
+    "public_key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDKjxdg6xDzqe7JxjP1Kv9XVr8S5dXhdECjrbatAvdxQRrnTnP/9weWskmmUt9H3s114witn2bgPYVHzcA5WgVFOvVfgXq+LfwKOVdEudmGmFBHXhWAwrB/hAVHCiIxuqtqsvLYOerPUCEYYrlQ3PRmzW+koxMN6FLYqfxE3wfwXQIDAQAB",
+    "secret_key": "5561baf6ee334fa782ce5b764699a749"
   }
 }

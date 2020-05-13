@@ -4,6 +4,7 @@ import com.backend.config.PartnerConfig;
 import com.backend.response.BaseResponse;
 import com.backend.util.DataUtil;
 import com.backend.util.LogUtil;
+import com.backend.util.Misc;
 import com.backend.util.ResponseUtil;
 import com.google.gson.Gson;
 import io.vertx.core.AbstractVerticle;
@@ -29,9 +30,11 @@ public class PaymentVerticle extends AbstractVerticle {
             final String logId = DataUtil.createRequestId();
             HttpServerResponse response = ctx.response();
             ctx.request().bodyHandler(buffer -> {
-                String priavteKey = PartnerConfig.getPrivateKey();
+                String privateKey = PartnerConfig.getPrivateKey();
+                String hash ="TiKycA6BOK7BywfbqAqMEHt+jBrKNyG3Ggy0E2ynRsmhwd5FIHWPL1yR3bBWMaStqCgli/nj7HFnyQMBM46/X2BBhRRWWVBXOg0uVmOr8XNY0PQb5w0OLo0MlN+v6enjEtvYwuEreLX7mJTNavgUt39yS/kPXXeHIsyBbQcIZT4=";
+                String parseHash = Misc.parseRSAData(logId, hash, privateKey);
                 ResponseUtil.responseToClient(logId, response,
-                        responseBody(new JsonObject(), logId, 0, priavteKey).toString(), ResponseUtil.HTTP_OK);
+                        responseBody(new JsonObject(), logId, 0, parseHash).toString(), ResponseUtil.HTTP_OK);
                 return;
             });
         });
@@ -45,5 +48,4 @@ public class PaymentVerticle extends AbstractVerticle {
                 .put("message", message)
                 .put("dataResponse", dataResponse);
     }
-
 }
