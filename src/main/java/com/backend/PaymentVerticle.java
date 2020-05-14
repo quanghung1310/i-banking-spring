@@ -1,7 +1,6 @@
 package com.backend;
 
 import com.backend.config.PartnerConfig;
-import com.backend.response.BaseResponse;
 import com.backend.util.DataUtil;
 import com.backend.util.LogUtil;
 import com.backend.util.Misc;
@@ -31,16 +30,18 @@ public class PaymentVerticle extends AbstractVerticle {
             HttpServerResponse response = ctx.response();
             ctx.request().bodyHandler(buffer -> {
                 String privateKey = PartnerConfig.getPrivateKey();
-                String hash ="TiKycA6BOK7BywfbqAqMEHt+jBrKNyG3Ggy0E2ynRsmhwd5FIHWPL1yR3bBWMaStqCgli/nj7HFnyQMBM46/X2BBhRRWWVBXOg0uVmOr8XNY0PQb5w0OLo0MlN+v6enjEtvYwuEreLX7mJTNavgUt39yS/kPXXeHIsyBbQcIZT4=";
-                String parseHash = Misc.parseRSAData(logId, hash, privateKey);
+                String data = new JsonObject().put("value", "lang123").toString();
+                String hashRSA = Misc.encryptRSA("1", data, PartnerConfig.getPublicKey());
+//                String hash = "BphKmdC2XlkFt1XeyXoNr4l1pzrFgFIQtM60RhqtOAn9mG9tmNF4dgATy0fgQvvsqLr9UyXxAZtF61ZPE3Lij82CHXkCb8Z+n1DkZwnwQup3b8ivWXYoMzFLIxV4nAvfXAko1fMy1pICOfWFcEAKvjPqwBu6d+o9R9IAuJ6d2Qc=";
+//                String parseHash = Misc.parseRSAData(logId, hash, privateKey);
                 ResponseUtil.responseToClient(logId, response,
-                        responseBody(new JsonObject(), logId, 0, parseHash).toString(), ResponseUtil.HTTP_OK);
+                        responseBody(new JsonObject(), logId, 0, hashRSA).toString(), ResponseUtil.HTTP_OK);
                 return;
             });
         });
-
         httpServer.requestHandler(router).listen(1123);
     }
+
     private JsonObject responseBody(JsonObject dataResponse, String requestId, int resultCode, String message) {
         return new JsonObject()
                 .put("requestId", requestId)

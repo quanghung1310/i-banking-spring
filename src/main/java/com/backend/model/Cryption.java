@@ -1,5 +1,9 @@
 package com.backend.model;
 
+import com.backend.constant.StringConstant;
+import io.vertx.core.json.JsonObject;
+import org.apache.logging.log4j.Logger;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -13,6 +17,17 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class Cryption {
+
+    Logger logger;
+
+    public Cryption()
+    {
+
+    }
+    public Cryption(Logger logger)
+    {
+        this.logger = logger;
+    }
 
     public String decryptRSA(String enc, String prk) throws InvalidKeyException,
             IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
@@ -34,8 +49,20 @@ public class Cryption {
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         pubk = keyFactory.generatePublic(publicKeySpec);
         Cipher cipher = Cipher.getInstance("RSA");
-        System.out.println("\n" + cipher.getProvider().getInfo());
         cipher.init(Cipher.ENCRYPT_MODE, pubk);
         return Base64.getEncoder().encodeToString(cipher.doFinal(inpBytes)).replace("\r", "");
+    }
+
+    public JsonObject genPriPubKeyByRSA() throws NoSuchAlgorithmException {
+        Base64.Encoder encoder = Base64.getEncoder();
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(1024);
+        KeyPair kp = kpg.generateKeyPair();
+        Key pub = kp.getPublic();
+        Key pvt = kp.getPrivate();
+
+        return new JsonObject()
+                .put(StringConstant.PRIVATE_KEY, encoder.encodeToString(pvt.getEncoded()))
+                .put(StringConstant.PUBLIC_KEY, encoder.encodeToString(pub.getEncoded()));
     }
 }

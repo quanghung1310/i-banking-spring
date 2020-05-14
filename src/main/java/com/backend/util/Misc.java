@@ -1,11 +1,13 @@
 package com.backend.util;
 
 import com.backend.config.MainConfig;
-import com.backend.config.PartnerConfig;
+import com.backend.constant.StringConstant;
 import com.backend.model.Cryption;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.nio.charset.StandardCharsets;
 
 public class Misc {
     private static final Logger LOGGER = LogManager.getLogger(Misc.class);
@@ -45,18 +47,28 @@ public class Misc {
         return partnerRawData;
     }
 
-    public static String encryptRSA(String logId, JsonObject data, String pub_key) {
+    public static String encryptRSA(String logId, String data, String pub_key) {
         String hash = "";
         try {
-//            String pub_key = PartnerConfig.getPublicKey();
-//            JsonObject jsonDataClient = new JsonObject()
-//                    .put("partnerCode", "lang1");
-            byte[] testByte = data.toString().getBytes("UTF-8");
+            byte[] testByte = data.getBytes(StandardCharsets.UTF_8);
             hash = new Cryption().encryptRSA(testByte, pub_key).replaceAll("\n", "");
             LOGGER.info("{}| Create RSA data get result: {}", logId, hash);
         } catch (Exception e) {
             LOGGER.error("{}| Create RSA data get exception: {}", logId, e.getMessage());
         }
         return hash;
+    }
+
+    public static String genRSAKey(String logId) {
+        String result = "";
+        try {
+            JsonObject key = new Cryption().genPriPubKeyByRSA();
+            result = key.toString();
+            LOGGER.info("{}| Generate private key: {}", logId, key.getString(StringConstant.PRIVATE_KEY, ""));
+            LOGGER.info("{}| Generate public key: {}", logId, key.getString(StringConstant.PUBLIC_KEY, ""));
+        } catch (Exception e) {
+            LOGGER.error("{}| Generate RSA key get exception: {}", logId, e.getMessage());
+        }
+        return result;
     }
 }
