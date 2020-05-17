@@ -8,13 +8,7 @@ import javax.persistence.Id;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity(name = "PARTNER")
 public class PartnerDTO {
-    @Id
-    @GeneratedValue
     private long id;
 
     private String partnerCode;

@@ -1,9 +1,9 @@
 {
   "verticles": [
 		{
-		  "name": "PaymentVerticle",
+		  "name": "PartnerVerticle",
 		  "block": false,
-		  "address": "com.backend.PaymentVerticle",
+		  "address": "com.backend.PartnerVerticle",
 		  "instances": 1,
 		  "isDeployed": true
 		},
