@@ -1,4 +1,11 @@
 {
+  "mysql": {
+    "username": "root",
+    "password": "",
+    "jdbcUrl": "jdbc:mysql://localhost:3306/TEN_POOL?useUnicode=true&characterEncoding=UTF-8",
+    "max_pool_size": 9
+  },
+
   "list_phone_convert": {
     "070": "0120",
     "079": "0121",

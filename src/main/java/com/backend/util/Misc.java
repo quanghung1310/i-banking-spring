@@ -2,7 +2,7 @@ package com.backend.util;
 
 import com.backend.config.MainConfig;
 import com.backend.constant.StringConstant;
-import com.backend.model.Cryption;
+import com.backend.cryption.RSACryption;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +38,7 @@ public class Misc {
     public static String parseRSAData(String logId, String hash, String key) {
         String partnerRawData = "";
         try {
-            partnerRawData = new Cryption().decryptRSA(hash.trim(), key.trim());
+            partnerRawData = new RSACryption().decryptRSA(hash.trim(), key.trim());
             LOGGER.info("{}| Parse RSA data get result: {}", logId, partnerRawData.replaceAll("[\\s\n\t]", ""));
             return partnerRawData;
         } catch (Exception e) {
@@ -51,7 +51,7 @@ public class Misc {
         String hash = "";
         try {
             byte[] testByte = data.getBytes(StandardCharsets.UTF_8);
-            hash = new Cryption().encryptRSA(testByte, pub_key).replaceAll("\n", "");
+            hash = new RSACryption().encryptRSA(testByte, pub_key).replaceAll("\n", "");
             LOGGER.info("{}| Create RSA data get result: {}", logId, hash);
         } catch (Exception e) {
             LOGGER.error("{}| Create RSA data get exception: {}", logId, e.getMessage());
@@ -62,7 +62,7 @@ public class Misc {
     public static String genRSAKey(String logId) {
         String result = "";
         try {
-            JsonObject key = new Cryption().genPriPubKeyByRSA();
+            JsonObject key = new RSACryption().genPriPubKeyByRSA();
             result = key.toString();
             LOGGER.info("{}| Generate private key: {}", logId, key.getString(StringConstant.PRIVATE_KEY, ""));
             LOGGER.info("{}| Generate public key: {}", logId, key.getString(StringConstant.PUBLIC_KEY, ""));

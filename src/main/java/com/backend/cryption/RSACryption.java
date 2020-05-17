@@ -1,4 +1,4 @@
-package com.backend.model;
+package com.backend.cryption;
 
 import com.backend.constant.StringConstant;
 import io.vertx.core.json.JsonObject;
@@ -16,15 +16,15 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-public class Cryption {
+public class RSACryption {
 
     Logger logger;
 
-    public Cryption()
+    public RSACryption()
     {
 
     }
-    public Cryption(Logger logger)
+    public RSACryption(Logger logger)
     {
         this.logger = logger;
     }
@@ -65,4 +65,9 @@ public class Cryption {
                 .put(StringConstant.PRIVATE_KEY, encoder.encodeToString(pvt.getEncoded()))
                 .put(StringConstant.PUBLIC_KEY, encoder.encodeToString(pub.getEncoded()));
     }
+
+//    --------------------------------------------- PGP ---------------------------------------------
+//    public JsonObject PGPKeyRingGenerator (int id, String partnerCode, String email) {
+//
+//    }
 }

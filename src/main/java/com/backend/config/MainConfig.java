@@ -13,6 +13,9 @@ public class MainConfig {
         MainConfig.mainConfig = mainConfig;
     }
 
+    public static JsonObject getOracleDbConfig() {
+        return mainConfig.getJsonObject("mysql", new JsonObject());
+    }
     public static JsonObject listPhoneConvert() {
         return new JsonObject();
     }
