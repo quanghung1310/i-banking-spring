@@ -14,8 +14,10 @@ public class MySqlManager extends AbstractVerticle {
     private static final Logger LOGGER = LogManager.getLogger(MySqlManager.class.getName());
 
     public static void getPartnerByPartnerCode(String logId, String partnerCode, Handler<PartnerDTO> callback) {
-        //todo: connect database
-        DatabaseVerticle.jdbcClient.queryWithParams(SqlConstant.QUERY_GET_PARTNER_BY_PARTNER_CODE, new JsonArray().add(partnerCode), res -> {
+        DatabaseVerticle.jdbcClient.queryWithParams(
+                SqlConstant.QUERY_GET_PARTNER_BY_PARTNER_CODE,
+                new JsonArray().add(partnerCode),
+                res -> {
             if (res.succeeded()) {
                 JsonObject result = res.result().getRows().isEmpty()? new JsonObject() : res.result().getRows().get(0);
                 LOGGER.info("{}| Get Partner By PartnerCode result: {}", logId, result.copy().remove("PARTNER_SECRET_KEY"));
