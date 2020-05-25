@@ -21,6 +21,8 @@
 	<properties>
 		<vertx.version>3.8.3</vertx.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<bouncycastle.version>1.59</bouncycastle.version>
+		<bouncygpg.version>2.1.0</bouncygpg.version>
 	</properties>
 
 	<dependencies>
@@ -132,20 +134,30 @@
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-crypto</artifactId>
 			<version>2.3.3.Final</version>
-	</dependency>
-
+		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.6</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpg-jdk15on</artifactId>
-			<version>1.51</version>
+			<version>${bouncycastle.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>${bouncycastle.version}</version>
+		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>name.neuhalfen.projects.crypto.bouncycastle.openpgp</groupId>-->
+<!--			<artifactId>bouncy-gpg</artifactId>-->
+<!--			<version>${bouncygpg.version}</version>-->
+<!--		</dependency>-->
 
-	</dependencies>
+</dependencies>
 
 	<build>
 		<plugins>

@@ -2,6 +2,7 @@ package com.backend;
 
 import com.backend.config.PartnerConfig;
 import com.backend.constant.DatabaseConstants;
+import com.backend.cryption.pgp.PGPHelper;
 import com.backend.database.DatabaseVerticle;
 import com.backend.database.MySqlManager;
 import com.backend.util.DataUtil;
@@ -17,6 +18,13 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.openpgp.PGPException;
+
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 
 public class PaymentVerticle extends AbstractVerticle {
 
@@ -63,5 +71,9 @@ public class PaymentVerticle extends AbstractVerticle {
                 .put("resultCode", resultCode)
                 .put("message", message)
                 .put("dataResponse", dataResponse);
+    }
+
+    public static void main(String[] args) throws PGPException, NoSuchAlgorithmException, IOException, SignatureException, NoSuchProviderException, InvalidKeyException {
+        PGPHelper.genKeyPair();
     }
 }
