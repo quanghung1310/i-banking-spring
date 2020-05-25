@@ -4,18 +4,16 @@ import java.util.HashMap;
 
 public class ErrorConstants {
 
-    public static final String NOT_VALID	= "not valid";
-    public static final String IS_EMPTY		= "is empty";
-    public static final String NOT_JSON		= "not json";
-
     public static final int SUCCESS = 0;//	success
-    public static final int PARTNER_NOT_FOUND = 208;
-    public static final int SYSTEM_ERROR = 1006;
-    public static final int SDK_CHECK_SIGNATURE_FAIL = 2129;
-    public static final int SDK_BILL_NOT_EXIST_OR_EXPIRED = 2131;
-    public static final int SDK_BILL_PAID = 2132;
-    public static final int BAD_FORMAT_DATA = 2400;
-    public static final int REQUEST_ID_EXISTED = 2128;
+    public static final int PARTNER_NOT_FOUND = 1;
+    public static final int SYSTEM_ERROR = 2;
+    public static final int SDK_CHECK_SIGNATURE_FAIL = 3;
+    public static final int SDK_BILL_NOT_EXIST_OR_EXPIRED = 4;
+    public static final int SDK_BILL_PAID = 5;
+    public static final int BAD_FORMAT_DATA = 6;
+    public static final int REQUEST_ID_EXISTED = 7;
+    public static final int TIME_EXPIRED = 8;
+    public static final int HASH_NOT_VALID = 9;
 
     //ERROR ONLINE STORE
     public static final int BAD_REQUEST = -1;
@@ -30,11 +28,10 @@ public class ErrorConstants {
         errorMapEn.put(PARTNER_NOT_FOUND, "Partner is not active/create");
         errorMapEn.put(SYSTEM_ERROR, "System error");
         errorMapEn.put(SDK_CHECK_SIGNATURE_FAIL, "Signature not match");
-        errorMapEn.put(SDK_BILL_PAID, "Order has been processed");
         errorMapEn.put(BAD_FORMAT_DATA, "Bad format data");
         errorMapEn.put(BAD_REQUEST, "Request not existed");
-        errorMapEn.put(DATABASE_ERROR, "Database error");
         errorMapEn.put(REQUEST_ID_EXISTED, "RequestId already exists. Please create a new requestId");
+        errorMapVn.put(TIME_EXPIRED, "Request expired, please try again");
     }
 
     static {
@@ -45,8 +42,9 @@ public class ErrorConstants {
         errorMapVn.put(SDK_BILL_PAID, "Giao dịch đã được xử lý. Vui lòng kiểm tra lại");
         errorMapVn.put(BAD_FORMAT_DATA, "Dữ liệu sai định dạng");
         errorMapVn.put(BAD_REQUEST, "Yêu cầu không tồn tại");
-        errorMapVn.put(DATABASE_ERROR, "Lỗi hệ thống dữ liệu");
         errorMapVn.put(REQUEST_ID_EXISTED, "RequestId đã tồn tại. Vui lòng tạo requestId mới");
+        errorMapVn.put(TIME_EXPIRED, "Yêu cầu hết hạn, vui lòng thử lại!");
+        errorMapVn.put(TIME_EXPIRED, "Chữ ký không hợp lệ");
     }
 
     public static String getDescEn(int errorCode) {

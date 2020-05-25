@@ -17,7 +17,7 @@ public class DatabaseVerticle extends AbstractVerticle {
     @Override
     public void start() throws Exception {
         jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
-                .put("provider_class", "org.hibernate.connection.C3P0ConnectionProvider")
+                .put("provider_class", "io.vertx.ext.jdbc.spi.impl.HikariCPDataSourceProvider")
                 .put("jdbcUrl", MainConfig.getOracleDbConfig().getString("jdbcUrl"))
                 .put("driverClassName", "com.mysql.jdbc.Driver")
                 .put("username", MainConfig.getOracleDbConfig().getString("username"))

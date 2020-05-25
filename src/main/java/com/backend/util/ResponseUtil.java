@@ -19,12 +19,12 @@ public class ResponseUtil {
     public static final int HTTP_REQUEST_TIME_OUT = 408;
     public static final int HTTP_GATEWAY_TIME_OUT = 504;
 
-    public static String buildResponse(int status) {
-        return new BaseResponse(status).toString();
+    public static String buildResponse(String requestId, int resultCode) {
+        return new BaseResponse(requestId, resultCode).toString();
     }
 
-    public static void responseError(String logId, HttpServerResponse response, int httpCode, int status) {
-        responseToClient(logId, response, buildResponse(status), httpCode);
+    public static void responseError(String logId, String requestId, HttpServerResponse response, int httpCode, int resultCode) {
+        responseToClient(logId, response, buildResponse(requestId, resultCode), httpCode);
     }
 
     public static void responseToClient(String logId, HttpServerResponse response, String responseStr, int httpCode) {

@@ -149,10 +149,10 @@ public class DataUtil {
         }
     }
 
-    public static String createSignature(JsonObject json, String secretKey, String logId) {
+    public static String createHash(JsonObject json, String secretKey, String logId) {
         try {
             JsonObject jsonSimple = toSimpleJsonObject(new JsonObject(), json, true);
-            String dataCryption = buildRawDataSignature(jsonSimple);
+            String dataCryption = buildRawDataHash(jsonSimple);
             LOGGER.info("{}| MoMo data cryption: {}", logId, dataCryption);
             return signHmacSHA256(dataCryption, secretKey);
         } catch (Exception ex) {
@@ -173,7 +173,7 @@ public class DataUtil {
         return jsonSimple;
     }
 
-    public static String buildRawDataSignature(JsonObject rawData) {
+    public static String buildRawDataHash(JsonObject rawData) {
         StringBuilder result = new StringBuilder();
         if (rawData == null) {
             return result.toString();

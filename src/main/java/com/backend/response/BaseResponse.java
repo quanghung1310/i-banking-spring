@@ -9,26 +9,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BaseResponse {
-
-    private int status = -1;
+    private String requestId;
+    private int resultCode;
     private String message;
-    private long responseTime;
+    private JsonObject data;
 
-    public BaseResponse() {
-        this.message = "Lỗi";
-        this.responseTime = System.currentTimeMillis();
-    }
-
-    public BaseResponse(int status) {
-        this.status = status;
-        this.message = ErrorConstants.getDescVn(status);
-        this.responseTime = System.currentTimeMillis();
-    }
-
-    public BaseResponse(String message) {
-        this.status = ErrorConstants.BAD_FORMAT_DATA;
-        this.message = message;
-        this.responseTime = System.currentTimeMillis();
+    public BaseResponse(String requestId, int resultCode) {
+        this.requestId = requestId;
+        this.resultCode = resultCode;
+        this.message = ErrorConstants.getDescVn(resultCode);
     }
 
     public JsonObject toJson() {
@@ -42,5 +31,12 @@ public class BaseResponse {
         } catch (Exception e) {
             return "{}";
         }
+    }
+
+    public BaseResponse(String requestId, int resultCode, JsonObject data) {
+        this.requestId = requestId;
+        this.resultCode = resultCode;
+        this.message = ErrorConstants.getDescVn(resultCode);
+        this.data = data;
     }
 }
