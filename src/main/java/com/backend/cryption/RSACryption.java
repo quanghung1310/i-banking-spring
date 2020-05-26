@@ -65,9 +65,4 @@ public class RSACryption {
                 .put(StringConstant.PRIVATE_KEY, encoder.encodeToString(pvt.getEncoded()))
                 .put(StringConstant.PUBLIC_KEY, encoder.encodeToString(pub.getEncoded()));
     }
-
-//    --------------------------------------------- PGP ---------------------------------------------
-//    public JsonObject PGPKeyRingGenerator (int id, String partnerCode, String email) {
-//
-//    }
 }
