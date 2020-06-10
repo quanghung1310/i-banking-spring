@@ -10,7 +10,9 @@ public class SqlConstant {
 
 
     //---------------------------- INSERT ----------------------------//
-
+    public static final String QUERY_INSERT_PARTNER =
+            "INSERT INTO banking_service.partner(PARTNER_CODE, PRIVATE_KEY, PUBLIC_KEY, EMAIL, PHONE_NUMBER, PASSWORD)" +
+                    " VALUES(?, ?, ?, ?, ?, ?)";
 
 
     //---------------------------- DELETE ----------------------------//

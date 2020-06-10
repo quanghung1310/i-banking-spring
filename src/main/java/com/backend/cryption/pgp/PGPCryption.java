@@ -1,4 +1,4 @@
-//package com.backend.model;
+package com.backend.cryption.pgp;
 //import java.io.ByteArrayOutputStream;
 //import java.io.IOException;
 //import java.io.InputStream;
@@ -35,7 +35,8 @@
 //import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 //import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 //
-//public class PGPCryption {
+public class PGPCryption {
+
 //
 //    static final ClassLoader loader = PGPCryption.class.getClassLoader();
 //
@@ -327,4 +328,4 @@
 //        throw new IllegalArgumentException(
 //                "Can't find signing key in key ring.");
 //    }
-//}
+}

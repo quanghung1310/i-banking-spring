@@ -2,6 +2,7 @@ package com.backend.constant;
 
 public class StringConstant {
 
+    //------------------------------- field data -------------------------------
     public static final String REQUEST_ID       = "requestId";
     public static final String INITIATOR        = "initiator";
     public static final String REQUEST_TYPE     = "requestType";
@@ -14,5 +15,8 @@ public class StringConstant {
     public static final String PRIVATE_KEY     = "privateKey";
     public static final String PUBLIC_KEY      = "publicKey";
     public static final String PARTNER_CODE    = "partnerCode";
+    public static final String EMAIL           = "email";
+    public static final String PHONE_NUMBER    = "phoneNumber";
+    public static final String PASSWORD        = "password";
 
 }

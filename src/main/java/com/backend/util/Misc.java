@@ -4,6 +4,7 @@ import com.backend.config.MainConfig;
 import com.backend.constant.StringConstant;
 import com.backend.cryption.RSACryption;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +36,28 @@ public class Misc {
         return phoneNumber;
     }
 
+    /**
+     * Convert phone number from 11 to 10 number
+     * @param phoneNumber phone need convert
+     * @return phone converted to 10 number
+     */
+    public static String convertToNewPhone(String phoneNumber) {
+        JsonObject listPhone = MainConfig.listPhoneConvert();
+        if (listPhone == null || listPhone.isEmpty()) {
+            return phoneNumber;
+        }
+        // phoneNumber=01663198462
+        for (String key : listPhone.fieldNames()) {
+            // key=036; value=0166
+            String value = listPhone.getString(key);
+            if (StringUtils.isNotBlank(value) && phoneNumber.startsWith(value)) {
+                // return 0363198462
+                return key + phoneNumber.substring(value.length());
+            }
+        }
+        return phoneNumber;
+    }
+
     public static String parseRSAData(String logId, String hash, String key) {
         String partnerRawData = "";
         try {
@@ -59,13 +82,12 @@ public class Misc {
         return hash;
     }
 
-    public static String genRSAKey(String logId) {
-        String result = "";
+    public static JsonObject genRSAKey(String logId) {
+        JsonObject result = new JsonObject();
         try {
-            JsonObject key = new RSACryption().genPriPubKeyByRSA();
-            result = key.toString();
-            LOGGER.info("{}| Generate private key: {}", logId, key.getString(StringConstant.PRIVATE_KEY, ""));
-            LOGGER.info("{}| Generate public key: {}", logId, key.getString(StringConstant.PUBLIC_KEY, ""));
+            result = new RSACryption().genPriPubKeyByRSA();
+            LOGGER.info("{}| Generate private key: {}", logId, result.getString(StringConstant.PRIVATE_KEY, ""));
+            LOGGER.info("{}| Generate public key: {}", logId, result.getString(StringConstant.PUBLIC_KEY, ""));
         } catch (Exception e) {
             LOGGER.error("{}| Generate RSA key get exception: {}", logId, e.getMessage());
         }
