@@ -14,7 +14,9 @@ public class PartnerDTO {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
     private String partnerCode;
+    @Column(length = 2048)
     private String privateKey;
+    @Column(length = 2048)
     private String publicKey;
     private String email;
     private String phoneNumber;
