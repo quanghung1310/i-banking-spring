@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@Table(name="partner")
+@Table(name="partners")
 public class PartnerDTO {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
