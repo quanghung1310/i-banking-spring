@@ -32,7 +32,7 @@ public class EmployeeController {
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
-        BaseResponse response = new BaseResponse();
+        BaseResponse response;
         try {
             if (!request.isValidData()) {
                 logger.warn("{}| Validate request register data: Fail!", logId);
@@ -67,7 +67,7 @@ public class EmployeeController {
     public ResponseEntity<String> deposit(@RequestBody DepositRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
-        BaseResponse response = new BaseResponse();
+        BaseResponse response;
         try {
             if (!request.isValidData()) {
                 logger.warn("{}| Validate request deposit data: Fail!", logId);

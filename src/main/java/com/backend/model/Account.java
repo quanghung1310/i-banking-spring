@@ -1,5 +1,6 @@
 package com.backend.model;
 
+import io.vertx.core.json.jackson.DatabindCodec;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,5 +23,15 @@ public class Account {
     public String updatedAt;
     public String description;
     public Integer type;
+    public Long balance;
+    public Long userId;
 
+    @Override
+    public String toString() {
+        try {
+            return DatabindCodec.mapper().writeValueAsString(this);
+        } catch (Exception e) {
+            return "{}";
+        }
+    }
 }

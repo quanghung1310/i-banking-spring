@@ -8,6 +8,8 @@
 # Index
 1. [Registert](#1-register)
 2. [Deposit](#2-deposit)
+3. [Get Accounts](#3-get-accounts)
+
 
 # II. API Document
 # 1. Register
@@ -129,3 +131,60 @@
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
 |data.totalBalance|Number|x|L2|Tổng số dư|
+
+# 3. Get Accounts
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/get-accounts/{userId}/{type}       | 
+|Method | GET       | 
+## Raw Data
+**HTTP Request:**
+
+**Response:**
+```json
+{
+    "requestId": "1867e7a504c24ac082b3645f67bb791c",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593768407676,
+    "data": {
+    "accounts": [
+            {
+                "id": 4,
+                "cardNumber": 11,
+                "cardName": "Lang Lang",
+                "closeDate": "02/07/2024 15:59:08",
+                "createdAt": "03/07/2020 15:59:08",
+                "updatedAt": "03/07/2020 15:59:08",
+                "description": null,
+                "type": 1,
+                "balance": 0,
+                "userId": 3
+            }
+     ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userId|Number|x|L3|Định danh chủ tài khoản|
+|type|Number|x|PathVariable|1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm, 0 - get all|
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.accounts.id|Number|x|L3|Định danh tài khoản|
+|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
+|data.accounts.cardNnumber|Number|String|x|L3|Số tài khoản|
+|data.accounts.cardName|String|x|L3|Tên tài khoản|
+|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
+|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
+|data.accounts.description|String||L3|Thông tin thêm |
+|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệ
