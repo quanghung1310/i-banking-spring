@@ -3,8 +3,12 @@ package com.backend.mapper;
 import com.backend.constants.StringConstant;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.AccountSavingDTO;
+import com.backend.dto.UserDTO;
 import com.backend.model.Account;
+import com.backend.model.response.UserResponse;
 import com.backend.util.DataUtil;
+
+import java.util.List;
 
 public class UserMapper {
     public static Account toModelRegister(AccountPaymentDTO accountPaymentDTO) {
@@ -59,4 +63,19 @@ public class UserMapper {
         }
     }
 
+    public static UserResponse toModelUser(UserDTO userDTO, List<Account> accounts) {
+        if (userDTO == null) {
+            return null;
+        }
+        return UserResponse.builder()
+                .account(accounts)
+                .createdAt(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .email(userDTO.getEmail())
+                .id(userDTO.getId())
+                .name(userDTO.getName())
+                .password(userDTO.getPassword())
+                .phone(userDTO.getPhone())
+                .userName(userDTO.getUserName())
+                .build();
+    }
 }
