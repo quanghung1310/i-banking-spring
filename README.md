@@ -7,6 +7,7 @@
 # I. API Document
 # Index
 1. [Registert](#1-register)
+2. [Deposit](#2-deposit)
 
 # II. API Document
 # 1. Register
@@ -81,3 +82,50 @@
 |data.account.description|String||L3|Thông tin thêm |
 |data.account.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm( Luôn luôn là 1)|
 |data.account.updatedAt|String|x|L3|Thời gian chỉnh sửa thông tin tài khoản gần nhất|
+
+# 2. Deposit
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/deposit       | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+{
+    "userName": "langlang4",
+    "cardNumber": 1670707699074197,
+    "balance": 1000000
+}
+```
+
+**Response:**
+```json
+{
+    "requestId": "1867e7a504c24ac082b3645f67bb791c",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593768407676,
+    "data": {
+        "totalBalance": 15300000
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userName|String|x|L2|Tên đăng nhập (Nếu để trống -> phải truyền cardNumber)|
+|cardNumber|String|x|L2|Số tài khoản (Nếu để trống phải truyền userName)|
+|balance|Number|x|L2|Số tiền cần nạp vào tài khoản|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.totalBalance|Number|x|L2|Tổng số dư|

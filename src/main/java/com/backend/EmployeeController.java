@@ -1,14 +1,15 @@
 package com.backend;
 
 import com.backend.constants.ErrorConstant;
+import com.backend.model.request.DepositRequest;
 import com.backend.model.request.RegisterRequest;
 import com.backend.model.response.BaseResponse;
+import com.backend.model.response.DepositResponse;
 import com.backend.model.response.RegisterResponse;
-import com.backend.service.IUserService;
+import com.backend.service.IEmployeeService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class EmployeeController {
     private static final Gson PARSER = new Gson();
 
     @Autowired
-    IUserService userService;
+    IEmployeeService employeeService;
 
     @PostMapping(value = "/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
@@ -40,7 +41,7 @@ public class EmployeeController {
             }
             logger.info("{}| Valid data request register success!", logId);
 
-            RegisterResponse registerResponse = userService.register(logId, request);
+            RegisterResponse registerResponse = employeeService.register(logId, request);
 
             if (registerResponse == null || registerResponse.getAccount() == null) {
                 logger.warn("{}| Register fail!", logId);
@@ -63,32 +64,32 @@ public class EmployeeController {
     }
 
     @PostMapping(value = "/deposit")
-    public ResponseEntity<String> deposit(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> deposit(@RequestBody DepositRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
         BaseResponse response = new BaseResponse();
         try {
             if (!request.isValidData()) {
-                logger.warn("{}| Validate request register data: Fail!", logId);
+                logger.warn("{}| Validate request deposit data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
-            logger.info("{}| Valid data request register success!", logId);
+            logger.info("{}| Valid data request deposit success!", logId);
 
-            RegisterResponse registerResponse = userService.register(logId, request);
+            DepositResponse depositResponse = employeeService.deposit(logId, request);
 
-            if (registerResponse == null || registerResponse.getAccount() == null) {
-                logger.warn("{}| Register fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), registerResponse.toString());
-                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            if (depositResponse.getTotalBalance() == 0L) {
+                logger.warn("{}| Deposit fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), depositResponse.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), registerResponse.toString());
-            response.setData(new JsonObject(registerResponse.toString()));
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), depositResponse.toString());
+            response.setData(new JsonObject(depositResponse.toString()));
             logger.info("{}| Response to client: {}", logId, response.toString());
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("{}| Request register catch exception: ", logId, ex);
+            logger.error("{}| Request deposit catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(),null);
             ResponseEntity<String> responseEntity = new ResponseEntity<>(
                     response.toString(),
