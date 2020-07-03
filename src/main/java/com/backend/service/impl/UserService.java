@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Service
 public class UserService implements IUserService {
@@ -33,11 +34,26 @@ public class UserService implements IUserService {
     @Override
     public RegisterResponse register(String logId, RegisterRequest request) {
         Timestamp currentTime = new Timestamp(request.getRequestTime());
-        UserDTO userDTO = userRepository.save(UserProcess.createUser(logId, request));
+        String userName = request.getName().toLowerCase().replaceAll("\\s+","");
+        List<UserDTO> users = (List<UserDTO>) userRepository.findAll();
+        for (UserDTO user : users) {
+            if (user.getUserName().equals(userName)) {
+                logger.warn("{}| Username - {} was existed!", logId, userName);
+                return null;
+            }
+        }
+        logger.warn("{}| Username - {} is not exist!", logId, userName);
+        UserDTO userDTO = userRepository.save(UserProcess.createUser(logId, request, userName));
         Long userId = userDTO.getId();
-        logger.info("{}| Save user - {}: {}", logId, userId, userId == null ? "false" : "success");
 
-        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.save(UserProcess.createAccountPayment(logId, userId, request.getAdminId(), request.getCardName(), currentTime, request.getRequestTime()));
+        if (userId == null) {
+            logger.warn("{}| Save user false!", logId);
+            return null;
+        }
+        logger.info("{}| Save user - {}: success!", logId, userId);
+
+        List<AccountPaymentDTO> accounts = (List<AccountPaymentDTO>) accountPaymentRepository.findAll();
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.save(UserProcess.createAccountPayment(logId, accounts, userId, request.getAdminId(), request.getCardName(), currentTime, request.getRequestTime()));
         Long accountId = accountPaymentDTO.getId();
         logger.info("{}| Save account payment - {}:{}", logId, accountId, accountId == null ? "false" : "success");
         Account account = UserMapper.toModelRegister(accountPaymentDTO);

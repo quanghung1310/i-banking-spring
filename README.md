@@ -9,7 +9,7 @@
 1. [Registert](#1-register)
 
 # II. API Document
-# 1. Registert
+# 1. Register
 |Key | Value       | 
 |------- | ---------- |
 |URL | 127.0.0.1:8080/lh-bank/register       | 

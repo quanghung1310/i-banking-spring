@@ -61,4 +61,39 @@ public class EmployeeController {
             return responseEntity;
         }
     }
+
+    @PostMapping(value = "/deposit")
+    public ResponseEntity<String> deposit(@RequestBody RegisterRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+        BaseResponse response = new BaseResponse();
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request register data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request register success!", logId);
+
+            RegisterResponse registerResponse = userService.register(logId, request);
+
+            if (registerResponse == null || registerResponse.getAccount() == null) {
+                logger.warn("{}| Register fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), registerResponse.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), registerResponse.toString());
+            response.setData(new JsonObject(registerResponse.toString()));
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request register catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(),null);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+            return responseEntity;
+        }
+    }
 }
