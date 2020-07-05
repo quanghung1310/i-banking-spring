@@ -1,19 +1,14 @@
 package com.backend.service.impl;
 
 import com.backend.constants.ErrorConstant;
-import com.backend.dto.AccountPaymentDTO;
-import com.backend.dto.AccountSavingDTO;
-import com.backend.dto.ReminderDTO;
-import com.backend.dto.UserDTO;
+import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
+import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
-import com.backend.repository.IAccountPaymentRepository;
-import com.backend.repository.IAccountSavingRepository;
-import com.backend.repository.IReminderRepository;
-import com.backend.repository.IUserRepository;
+import com.backend.repository.*;
 import com.backend.service.IUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -41,6 +36,9 @@ public class UserService implements IUserService {
 
     @Autowired
     IReminderRepository reminderRepository;
+
+    @Autowired
+    IDebtRepository debtRepository;
 
     @Override
     public List<Account> getUsers(String logId, int type, long userId) {
@@ -200,5 +198,41 @@ public class UserService implements IUserService {
             return UserMapper.toModelUser(userDTO, null, false);
         }
         return UserMapper.toModelUser(userDTO, accounts, false);
+    }
+
+    @Override
+    public long createDebtor(String logId, CreateDebtorRequest request) {
+//        "debterId": 3,
+//                "cardNumber": 1575750842294193,
+//                "userId": 1,
+//                "amount": 0,
+//                "content": "Trả tiền đi má, nợ gì lâu vậy
+        ReminderDTO reminderDTO;
+        long debtorId = request.getDebtorId();
+        long cardNumber = request.getCardNumber();
+        long userId = request.getUserId();
+        long amount = request.getAmount();
+
+        //Step 1: Validate debtor
+        UserDTO userDTO = userRepository.findById(userId).get();
+        UserDTO debt = userRepository.findById(debtorId).get();
+
+        if (userDTO == null || debt == null) {
+            logger.warn("{}| User - {} or debt - {} not found", logId, userId, debtorId);
+            return -1;
+        }
+
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumberAndUserId(cardNumber, debtorId);
+
+        if (accountPaymentDTO == null) {
+            logger.warn("{}| card number - {} not found!", logId, cardNumber);
+            return -1;
+        }
+
+        DebtDTO debtDTO = UserProcess.createDebt(logId, request, new Timestamp(request.getRequestTime()));
+
+        DebtDTO debtor = debtRepository.save(debtDTO);
+
+        return debtor.getId();
     }
 }

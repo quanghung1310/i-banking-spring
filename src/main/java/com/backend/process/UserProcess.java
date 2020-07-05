@@ -1,11 +1,10 @@
 package com.backend.process;
 
-import com.backend.dto.AccountPaymentDTO;
-import com.backend.dto.AccountSavingDTO;
-import com.backend.dto.ReminderDTO;
-import com.backend.dto.UserDTO;
+import com.backend.constants.ActionConstant;
+import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
+import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.RegisterRequest;
 import com.backend.service.impl.UserService;
@@ -69,15 +68,15 @@ public class UserProcess {
                 .build();
     }
 
-    public static ReminderDTO createReminder(String logId, CreateReminderRequest request, Timestamp curretnTime) {
+    public static ReminderDTO createReminder(String logId, CreateReminderRequest request, Timestamp currentTime) {
         return ReminderDTO.builder()
-                .createdAt(curretnTime)
+                .createdAt(currentTime)
                 .isActive(1)
                 .nameReminisce(request.getNameReminisce())
                 .userId(request.getUserId())
                 .cardNumber(request.getCardNumber())
                 .merchantId(request.getMerchantId())
-                .updatedAt(curretnTime)
+                .updatedAt(currentTime)
                 .type(request.getType())
                 .build();
     }
@@ -102,5 +101,18 @@ public class UserProcess {
             logger.info("{}| Mapping account saving to account success with size: {}", logId, accountSavingDTOS.size());
         }
         return accounts;
+    }
+
+    public static DebtDTO createDebt(String logId, CreateDebtorRequest request, Timestamp currentTime) {
+        return DebtDTO.builder()
+                .createdAt(currentTime)
+                .action(ActionConstant.INIT.getValue())
+                .cardNumber(request.getCardNumber())
+                .content(request.getContent())
+                .debtorId(request.getDebtorId())
+                .isActive(1)
+                .userId(request.getUserId())
+                .updatedAt(currentTime)
+                .build();
     }
 }

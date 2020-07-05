@@ -13,4 +13,6 @@ public interface IAccountPaymentRepository extends CrudRepository<AccountPayment
     AccountPaymentDTO findFirstByUserId(long userId);
 
     List<AccountPaymentDTO> findAllByUserId(long userId);
+
+    AccountPaymentDTO findFirstByCardNumberAndUserId(long cardNumber, long userId);
 }

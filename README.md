@@ -14,6 +14,8 @@
 5. [Create Reminder](#5-create-reminder)
 6. [Get Reminders](#6-get-reminders)
 7. [Query Account](#7-query-account)
+7. [Create Debt](#8-create-debt) 
+
 
 
 
@@ -466,3 +468,54 @@
 |data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
 |data.accounts.description|String||L3|Thông tin thêm |
 |data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+
+# 8. Create Debt
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/create-debt       | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+{
+    "debtorId": 3,
+    "cardNumber": 1575750842294193,
+    "userId": 1,
+    "amount": 1000,
+    "content": "Trả tiền đi má, nợ gì lâu "
+}
+```
+
+**Response:**
+```json
+{
+    "requestId": "0291bd9a5df44e25b36f15f372c45264",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593951532323,
+    "data": {
+        "debtId": 11
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|cardNumber|String|x|L1|Số tài khoản của con nợ|
+|debtorId|Number|x|L1|Định danh con nợ|
+|userId|Number|x|L1|Người nhắc nợ|
+|amount|Number|x|L1|Số tiền cần nhắc nợ|
+|content|String|x|L1|Nội dung nhắc nợ|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.debtId|Number|x|L2|Định danh nhắc nợ|
