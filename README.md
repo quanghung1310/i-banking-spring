@@ -3,13 +3,16 @@
 |Version | Date       | Author    | Description         |
 |------- | ---------- | --------- | ------------------- |
 |1.0     | 03-07-2020 | Tran Thi Lang | Init document       |
+|1.1     | 05-07-2020 | Tran Thi Lang | Users API       |
 
 # I. API Document
 # Index
 1. [Registert](#1-register)
 2. [Deposit](#2-deposit)
 3. [Get Accounts](#3-get-accounts)
-4. [Login](#3-login)
+4. [Login](#4-login)
+5. [Create Reminder](#5-create-reminder)
+
 
 
 # II. API Document
@@ -265,3 +268,54 @@
 |data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
 |data.accounts.description|String||L3|Thông tin thêm |
 |data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+
+# 5. Create Reminder
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/create-reminder       | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+{
+    "nameReminisce": "con nợ Trần Thị Lạng",
+    "cardNumber": 1575750842294193,
+    "type": 2,
+    "userId": 1,
+    "merchantId": 0
+}
+```
+
+**Response:**
+```json
+{
+    "requestId": "181fe953d59042db991f863fe9b2afd3",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593939825552,
+    "data": {
+        "reminderId": 10
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|nameReminisce|String||L1|Tên gợi nhớ, Mặc định tên đăng nhập (username)|
+|cardNumber|String|x|L1|Số tài khoản|
+|type|Number|x|L1|Loại tài khoản cần lưu, 1 - chuyển tiền, 2 - Nhắc nợ|
+|userId|Number|x|L1|Người tạo ghi nhớ|
+|merchantId|Number|x|L1|Định danh ngân hàng của các tài khoản liên ngân hàng (Mặc định 0 nếu cùng ngân hàng)|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.reminderId|Number|x|L2|Định danh người ghi nhớ vừa được tạo|

@@ -1,7 +1,9 @@
 package com.backend.process;
 
 import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.ReminderDTO;
 import com.backend.dto.UserDTO;
+import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.RegisterRequest;
 
 import java.sql.Timestamp;
@@ -54,6 +56,19 @@ public class UserProcess {
                 .updatedAt(currentTime)
                 .closeDate(new Timestamp(milliseconds + (31536000000L*4)))
                 .admin(adminId)
+                .build();
+    }
+
+    public static ReminderDTO createReminder(String logId, CreateReminderRequest request, Timestamp curretnTime) {
+        return ReminderDTO.builder()
+                .createdAt(curretnTime)
+                .isActive(1)
+                .nameReminisce(request.getNameReminisce())
+                .userId(request.getUserId())
+                .cardNumber(request.getCardNumber())
+                .merchantId(request.getMerchantId())
+                .updatedAt(curretnTime)
+                .type(request.getType())
                 .build();
     }
 }

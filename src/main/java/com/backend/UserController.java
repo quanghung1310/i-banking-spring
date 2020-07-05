@@ -2,6 +2,7 @@ package com.backend;
 
 import com.backend.constants.ErrorConstant;
 import com.backend.model.Account;
+import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.LoginRequest;
 import com.backend.model.request.RegisterRequest;
 import com.backend.model.response.BaseResponse;
@@ -103,6 +104,46 @@ public class UserController {
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("{}| Request login catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+            return responseEntity;
+        }
+    }
+
+    @PostMapping("/create-reminder")
+    public ResponseEntity<String> createReminder(@RequestBody CreateReminderRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request create reminder data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request create reminder success!", logId);
+
+            long reminderId = userService.createReminder(logId, request);
+            JsonObject reminder = new JsonObject();
+            if (reminderId == -2) {
+                logger.warn("{}| Create reminder fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), reminder.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            if (reminderId <= 0) {
+                logger.warn("{}| Create reminder fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), reminder.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            reminder.put("reminderId", reminderId);
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), reminder.toString());
+            response.setData(new JsonObject(reminder.toString()));
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request create reminder catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
             ResponseEntity<String> responseEntity = new ResponseEntity<>(
                     response.toString(),
