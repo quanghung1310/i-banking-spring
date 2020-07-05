@@ -50,38 +50,17 @@ public class UserService implements IUserService {
         switch (type) {
             case 1:
                 accountPaymentDTOS = accountPaymentRepository.findAllByUserId(userId);
-//                accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-//                        AccountSavingDTO.builder().build(),
-//                        account,
-//                        1,
-//                        true)));
                 accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
 
                 break;
             case 2:
                 accountSavingDTOS = accountSavingRepository.findAllByUserId(userId);
-//                accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-//                        account,
-//                        AccountPaymentDTO.builder().build(),
-//                        2,
-//                        true)));
                 accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
 
                 break;
             default:
                 accountPaymentDTOS = accountPaymentRepository.findAllByUserId(userId);
-//                accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-//                        AccountSavingDTO.builder().build(),
-//                        account,
-//                        1,
-//                        true)));
-
                 accountSavingDTOS = accountSavingRepository.findAllByUserId(userId);
-//                accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-//                        account,
-//                        AccountPaymentDTO.builder().build(),
-//                        2,
-//                        true)));
                 accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
                 break;
         }
@@ -100,21 +79,10 @@ public class UserService implements IUserService {
         } else {
             long userId = userDTO.getId();
             accountPaymentDTOS = accountPaymentRepository.findAllByUserId(userId);
-//            accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-//                    AccountSavingDTO.builder().build(),
-//                    account,
-//                    1,
-//                    true)));
-
             accountSavingDTOS = accountSavingRepository.findAllByUserId(userId);
-//            accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-//                    account,
-//                    AccountPaymentDTO.builder().build(),
-//                    2,
-//                    true)));
             accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
 
-            return UserMapper.toModelUser(userDTO, accounts);
+            return UserMapper.toModelUser(userDTO, accounts, true);
         }
     }
 
@@ -182,7 +150,7 @@ public class UserService implements IUserService {
         UserDTO userDTO = userRepository.findById(userId).get();
         if (reminderDTOS.size() <= 0) {
             logger.warn("{}| user - {} haven't reminder!", logId, userId);
-            return UserMapper.toModelUser(userDTO, null);
+            return UserMapper.toModelUser(userDTO, null, true);
         }
         logger.info("{}| user - {} have {} reminder!", logId, userId, reminderDTOS.size());
 
@@ -203,9 +171,34 @@ public class UserService implements IUserService {
                 logger.info("{}| Đã làm đâu mà gọi! (reminderId - {})", logId, reminder.getId());
             }
         }
-
-
         //Step 2: Build response
-        return UserMapper.toModelUser(userDTO, accounts);
+        return UserMapper.toModelUser(userDTO, accounts, false);
+    }
+
+    @Override
+    public UserResponse queryAccount(String logId, long cardNumber, long merchantId) {
+        List<Account> accounts = new ArrayList<>();
+        long userId = 0;
+        if (merchantId == 0) {
+            //Cung ngan hang
+            AccountPaymentDTO accountPaymentDTO;
+            accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
+            accounts.add(UserMapper.toModelAccount(
+                    AccountSavingDTO.builder().build(),
+                    accountPaymentDTO,
+                    1,
+                    false));
+            userId = accountPaymentDTO.getUserId();
+        } else {
+          //Lien ngan hang
+            /// TODO: 7/5/2020
+        }
+
+        UserDTO userDTO = userRepository.findById(userId).get();
+        if (userDTO == null) {
+            logger.warn("{}| user - {} not found!", logId, userId);
+            return UserMapper.toModelUser(userDTO, null, false);
+        }
+        return UserMapper.toModelUser(userDTO, accounts, false);
     }
 }

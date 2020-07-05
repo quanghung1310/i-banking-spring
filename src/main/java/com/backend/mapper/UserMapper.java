@@ -66,19 +66,24 @@ public class UserMapper {
         return account;
     }
 
-    public static UserResponse toModelUser(UserDTO userDTO, List<Account> accounts) {
+    public static UserResponse toModelUser(UserDTO userDTO, List<Account> accounts, boolean isOwner) {
+        UserResponse userResponse = UserResponse.builder().build();
         if (userDTO == null) {
             return null;
         }
-        return UserResponse.builder()
-                .account(accounts)
-                .createdAt(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
-                .email(userDTO.getEmail())
-                .id(userDTO.getId())
-                .name(userDTO.getName())
-                .password(userDTO.getPassword())
-                .phone(userDTO.getPhone())
-                .userName(userDTO.getUserName())
-                .build();
+
+        if (isOwner) {
+            userResponse.setUserName(userDTO.getUserName());
+            userResponse.setPassword(userDTO.getPassword());
+        }
+
+        userResponse.setAccount(accounts);
+        userResponse.setCreatedAt(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+        userResponse.setEmail(userDTO.getEmail());
+        userResponse.setId(userDTO.getId());
+        userResponse.setName(userDTO.getName());
+        userResponse.setPhone(userDTO.getPhone());
+
+        return userResponse;
     }
 }

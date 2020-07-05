@@ -157,7 +157,7 @@ public class UserController {
                                                @PathVariable int type,
                                                @PathVariable (name = "cardNumber", required = false) Long cardNumber) {
         String logId = DataUtil.createRequestId();
-        logger.info("{}| Request data: {}", logId, type);
+        logger.info("{}| Request data: userId - {}, type - {}, cardNumber - {}", logId, userId, type, cardNumber);
         BaseResponse response;
         try {
             if (type <= 0 || type > 2 || userId < 0) {
@@ -186,5 +186,37 @@ public class UserController {
             return responseEntity;
         }
     }
+    @GetMapping("/query-account/{cardNumber}/{merchantId}")
+    public ResponseEntity<String> queryAccount(@PathVariable long cardNumber,
+                                               @PathVariable long merchantId) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: cardNumber - {}, merchantId - {}", logId, cardNumber, merchantId);
+        BaseResponse response;
+        try {
+            if (cardNumber <= 0 || merchantId < 0) {
+                logger.warn("{}| Validate request query account data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
 
+            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId);
+            if (userResponse == null) {
+                logger.warn("{}| query account fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, userResponse.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
+            response.setData(new JsonObject(userResponse.toString()));
+            logger.info("{}| Response to client: {}", logId, userResponse.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request query account catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+            return responseEntity;
+        }
+    }
 }
