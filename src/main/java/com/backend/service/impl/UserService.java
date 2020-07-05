@@ -44,36 +44,45 @@ public class UserService implements IUserService {
 
     @Override
     public List<Account> getUsers(String logId, int type, long userId) {
-        List<AccountPaymentDTO> accountPaymentDTOS;
-        List<AccountSavingDTO> accountSavingDTOS;
-        List<Account> accounts = new ArrayList<>();
+        List<AccountPaymentDTO> accountPaymentDTOS = new ArrayList<>();
+        List<AccountSavingDTO> accountSavingDTOS = new ArrayList<>();
+        List<Account> accounts;
         switch (type) {
             case 1:
                 accountPaymentDTOS = accountPaymentRepository.findAllByUserId(userId);
-                accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                        AccountSavingDTO.builder().build(),
-                        account,
-                        1)));
+//                accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+//                        AccountSavingDTO.builder().build(),
+//                        account,
+//                        1,
+//                        true)));
+                accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
+
                 break;
             case 2:
                 accountSavingDTOS = accountSavingRepository.findAllByUserId(userId);
-                accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                        account,
-                        AccountPaymentDTO.builder().build(),
-                        2)));
+//                accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+//                        account,
+//                        AccountPaymentDTO.builder().build(),
+//                        2,
+//                        true)));
+                accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
+
                 break;
             default:
                 accountPaymentDTOS = accountPaymentRepository.findAllByUserId(userId);
-                accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                        AccountSavingDTO.builder().build(),
-                        account,
-                        1)));
+//                accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+//                        AccountSavingDTO.builder().build(),
+//                        account,
+//                        1,
+//                        true)));
 
                 accountSavingDTOS = accountSavingRepository.findAllByUserId(userId);
-                accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                        account,
-                        AccountPaymentDTO.builder().build(),
-                        2)));
+//                accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+//                        account,
+//                        AccountPaymentDTO.builder().build(),
+//                        2,
+//                        true)));
+                accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
                 break;
         }
 
@@ -84,23 +93,26 @@ public class UserService implements IUserService {
     public UserResponse login(String logId, String userName, String password) {
         List<AccountPaymentDTO> accountPaymentDTOS;
         List<AccountSavingDTO> accountSavingDTOS;
-        List<Account> accounts = new ArrayList<>();
+        List<Account> accounts;
         UserDTO userDTO = userRepository.findFirstByUserNameAndPassword(userName, password);
         if (userDTO == null) {
             return UserResponse.builder().build();
         } else {
             long userId = userDTO.getId();
             accountPaymentDTOS = accountPaymentRepository.findAllByUserId(userId);
-            accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                    AccountSavingDTO.builder().build(),
-                    account,
-                    1)));
+//            accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+//                    AccountSavingDTO.builder().build(),
+//                    account,
+//                    1,
+//                    true)));
 
             accountSavingDTOS = accountSavingRepository.findAllByUserId(userId);
-            accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                    account,
-                    AccountPaymentDTO.builder().build(),
-                    2)));
+//            accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+//                    account,
+//                    AccountPaymentDTO.builder().build(),
+//                    2,
+//                    true)));
+            accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
 
             return UserMapper.toModelUser(userDTO, accounts);
         }
@@ -155,5 +167,45 @@ public class UserService implements IUserService {
         } else {
             return reminderDTO.getId();
         }
+    }
+
+    @Override
+    public UserResponse getReminders(String logId, long userId, int type, Long cardNumber) {
+        List<ReminderDTO> reminderDTOS;
+        List<Account> accounts = new ArrayList<>();
+        if (cardNumber != null) {
+            reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndCardNumberAndIsActive(userId, type, cardNumber, 1);
+        } else {
+            reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndIsActive(userId, type, 1);
+        }
+        //Step 1: validate reminders
+        UserDTO userDTO = userRepository.findById(userId).get();
+        if (reminderDTOS.size() <= 0) {
+            logger.warn("{}| user - {} haven't reminder!", logId, userId);
+            return UserMapper.toModelUser(userDTO, null);
+        }
+        logger.info("{}| user - {} have {} reminder!", logId, userId, reminderDTOS.size());
+
+        for (ReminderDTO reminder : reminderDTOS) {
+            AccountPaymentDTO accountPaymentDTO;
+            if (reminder.getMerchantId() == 0) {
+                //1.1 reminder same bank
+                accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(reminder.getCardNumber());
+                accounts.add(UserMapper.toModelAccount(
+                        AccountSavingDTO.builder().build(),
+                        accountPaymentDTO,
+                        1,
+                        false));
+
+            } else {
+                //1.2: reminder diff bank
+                //todo
+                logger.info("{}| Đã làm đâu mà gọi! (reminderId - {})", logId, reminder.getId());
+            }
+        }
+
+
+        //Step 2: Build response
+        return UserMapper.toModelUser(userDTO, accounts);
     }
 }

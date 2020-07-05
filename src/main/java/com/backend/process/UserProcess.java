@@ -1,16 +1,26 @@
 package com.backend.process;
 
 import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.AccountSavingDTO;
 import com.backend.dto.ReminderDTO;
 import com.backend.dto.UserDTO;
+import com.backend.mapper.UserMapper;
+import com.backend.model.Account;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.RegisterRequest;
+import com.backend.service.impl.UserService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class UserProcess {
+    private static final Logger logger = LogManager.getLogger(UserProcess.class);
+
+
     public static UserDTO createUser(String logId, RegisterRequest request, String userName) {
         int leftLimit = 97; // letter 'a'
         int rightLimit = 122; // letter 'z'
@@ -70,5 +80,27 @@ public class UserProcess {
                 .updatedAt(curretnTime)
                 .type(request.getType())
                 .build();
+    }
+
+    public static List<Account> formatToAccounts(String logId, List<AccountPaymentDTO> accountPaymentDTOS, List<AccountSavingDTO> accountSavingDTOS, boolean isQueryBalance) {
+        List<Account> accounts = new ArrayList<>();
+
+        if (accountPaymentDTOS.size() > 0) {
+            accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+                    AccountSavingDTO.builder().build(),
+                    account,
+                    1,
+                    isQueryBalance)));
+            logger.info("{}| Mapping account payment to account success with size: {}", logId, accountPaymentDTOS.size());
+        }
+        if (accountSavingDTOS.size() > 0) {
+            accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+                    account,
+                    AccountPaymentDTO.builder().build(),
+                    2,
+                    isQueryBalance)));
+            logger.info("{}| Mapping account saving to account success with size: {}", logId, accountSavingDTOS.size());
+        }
+        return accounts;
     }
 }

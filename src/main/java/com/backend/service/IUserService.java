@@ -12,4 +12,7 @@ public interface IUserService {
     UserResponse login(String logId, String userName, String password);
 
     long createReminder(String logId, CreateReminderRequest request);
+
+    UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
+
 }

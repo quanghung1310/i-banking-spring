@@ -12,6 +12,8 @@
 3. [Get Accounts](#3-get-accounts)
 4. [Login](#4-login)
 5. [Create Reminder](#5-create-reminder)
+6. [Get Reminders](#6-get-reminders)
+
 
 
 
@@ -319,3 +321,79 @@
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
 |data.reminderId|Number|x|L2|Định danh người ghi nhớ vừa được tạo|
+
+# 6. Get Reminders
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/get-reminders/{userId}/{type}/{cardNumber}        | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+```
+
+**Response:**
+```json
+{
+    "requestId": "1b7ac1af8a4e4295a62cbb54ea81946b",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593944513086,
+    "data": {
+        "id": 1,
+        "userName": "tranlang",
+        "password": "agtwtmktsvziojh",
+        "email": "tranlang.dtnt@gmail.com",
+        "name": "Tran Lang",
+        "phone": "0327421137",
+        "createdAt": "05/07/2020 15:38:30",
+        "account": [
+            {
+                "id": 4,
+                "cardNumber": 1575750842294193,
+                "cardName": "Tran Thi Lang",
+                "closeDate": "04/07/2024 15:40:20",
+                "createdAt": "05/07/2020 15:40:20",
+                "updatedAt": "05/07/2020 15:40:20",
+                "description": null,
+                "type": 1,
+                "balance": null,
+                "userId": 3
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|)|
+|type|Number|x|L1|Loại tài khoản ghi nhớ, 1 - chuyển tiền, 2 - Nhắc nợ|
+|userId|Number|x|L1|Người tạo ghi nhớ|
+|cardNumber|Number||L1|Số tài khoản, Mặc định lấy hết các tài khoản đã lưu theo type|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.id|Number|x|L2|Định danh user|
+|data.userName|String|x|L2|Tên đăng nhập|
+|data.password|String|x|L2|Mật khẩu|
+|data.createdAt|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.email|String|x|L2|Địa chỉ email|
+|data.name|String|x|L2|Tên khách hàng|
+|data.phone|String|x|L2|Số điện thoại (Đầu số mới)
+|data.accounts.id|Number|x|L3|Định danh tài khoản|
+|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
+|data.accounts.cardNnumber|Number|String|x|L3|Số tài khoản|
+|data.accounts.cardName|String|x|L3|Tên tài khoản|
+|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
+|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
+|data.accounts.description|String||L3|Thông tin thêm |
+|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|

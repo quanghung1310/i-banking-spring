@@ -151,4 +151,40 @@ public class UserController {
             return responseEntity;
         }
     }
+
+    @GetMapping({"/get-reminders/{userId}/{type}/{cardNumber}", "/get-reminders/{userId}/{type}"})
+    public ResponseEntity<String> getReminders(@PathVariable long userId,
+                                               @PathVariable int type,
+                                               @PathVariable (name = "cardNumber", required = false) Long cardNumber) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: {}", logId, type);
+        BaseResponse response;
+        try {
+            if (type <= 0 || type > 2 || userId < 0) {
+                logger.warn("{}| Validate request get reminders data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            UserResponse userResponse = userService.getReminders(logId, userId, type, cardNumber);
+            if (userResponse == null) {
+                logger.warn("{}| Get reminders fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, userResponse.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
+            response.setData(new JsonObject(userResponse.toString()));
+            logger.info("{}| Response to client: {}", logId, userResponse.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request get users catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+            return responseEntity;
+        }
+    }
+
 }
