@@ -7,6 +7,7 @@ import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.LoginRequest;
 import com.backend.model.request.RegisterRequest;
 import com.backend.model.response.BaseResponse;
+import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
@@ -38,7 +39,7 @@ public class UserController {
     public ResponseEntity<String> getCustomers(@PathVariable int userId,
             @PathVariable int type) {
         String logId = DataUtil.createRequestId();
-        logger.info("{}| Request data: {}", logId, type);
+        logger.info("{}| Request data: userId - {}, type - {}", logId, userId, type);
         BaseResponse response;
         try {
             if (type < 0 || type > 2 || userId < 0) {
@@ -253,6 +254,41 @@ public class UserController {
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("{}| Request create debtor catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+            return responseEntity;
+        }
+    }
+
+    @GetMapping("/get-debts/{userId}/{action}/{type}")
+    public ResponseEntity<String> getDebt(@PathVariable long userId,
+                                               @PathVariable int action,
+                                               @PathVariable int type) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: userId - {}, type - {}", logId, userId, type);
+        BaseResponse response;
+        try {
+            if (type <= 0 || type > 2 || userId < 0 || action < 0) {
+                logger.warn("{}| Validate request get debts data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            DebtorResponse debtorResponse = userService.getDebts(logId, userId, action, type);
+            if (debtorResponse == null) {
+                logger.warn("{}| Get debts fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, debtorResponse.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, debtorResponse.toString());
+            response.setData(new JsonObject(debtorResponse.toString()));
+            logger.info("{}| Response to client: {}", logId, debtorResponse.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request get users catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
             ResponseEntity<String> responseEntity = new ResponseEntity<>(
                     response.toString(),

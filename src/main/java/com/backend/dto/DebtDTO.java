@@ -32,4 +32,6 @@ public class DebtDTO {
     private Timestamp updatedAt;
 
     private int action;
+
+    private long amount;
 }

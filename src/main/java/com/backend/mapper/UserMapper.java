@@ -3,8 +3,10 @@ package com.backend.mapper;
 import com.backend.constants.StringConstant;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.AccountSavingDTO;
+import com.backend.dto.DebtDTO;
 import com.backend.dto.UserDTO;
 import com.backend.model.Account;
+import com.backend.model.Debt;
 import com.backend.model.response.UserResponse;
 import com.backend.util.DataUtil;
 
@@ -85,5 +87,19 @@ public class UserMapper {
         userResponse.setPhone(userDTO.getPhone());
 
         return userResponse;
+    }
+
+    public static Debt toModelDebt(DebtDTO debtDTO, UserDTO userDTO) {
+        return Debt.builder()
+                .action(debtDTO.getAction())
+                .amount(debtDTO.getAmount())
+                .content(debtDTO.getContent())
+                .createdAt(DataUtil.convertTimeWithFormat(debtDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .creditEmail(userDTO.getEmail())
+                .creditName(userDTO.getName())
+                .creditorId(userDTO.getId())
+                .creditPhone(userDTO.getPhone())
+                .updatedAt(DataUtil.convertTimeWithFormat(debtDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .build();
     }
 }

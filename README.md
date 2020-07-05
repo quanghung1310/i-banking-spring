@@ -14,7 +14,8 @@
 5. [Create Reminder](#5-create-reminder)
 6. [Get Reminders](#6-get-reminders)
 7. [Query Account](#7-query-account)
-7. [Create Debt](#8-create-debt) 
+8. [Create Debt](#8-create-debt) 
+9. [Get Debts](#9-get-debts) 
 
 
 
@@ -519,3 +520,62 @@
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
 |data.debtId|Number|x|L2|Định danh nhắc nợ|
+
+# 9. Get Debts
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/get-debts/{userId}/{action}/{type}| 
+|Method | GET       | 
+## Raw Data
+**HTTP Request:**
+
+**Response:**
+```json
+{
+    "requestId": "479f65c15f564c5f97f602ae2633d084",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593955000145,
+    "data": {
+        "debts": [
+            {
+                "creditorId": 1,
+                "creditEmail": "tranlang.dtnt@gmail.com",
+                "creditName": "Tran Lang",
+                "creditPhone": "0327421137",
+                "amount": 1500,
+                "content": "Trả tiền đi má, nợ gì lâu ",
+                "action": 1,
+                "createdAt": "05/07/2020 20:11:42",
+                "updatedAt": "05/07/2020 20:11:42"
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userId|Number|x|PathVariable|Người thực hiện hành động|
+|action|Number|x|PathVariable|1 - Nhắc nợ được khởi tạo|
+|type|Number|x|PathVariable|1 - Nhắc nợ do userId tạo, 2 - Nhắc nợ được gửi tới userId|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.debts.id|Number|x|L3|Định danh nhắc nợ|
+|data.debts.creditorId|Number|x|L3|Định danh: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1 )|
+|data.debts.creditEmail|String|x|L3|Địa chỉ email: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.creditPhone|String|x|L3|Số điện thoại: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.amount|Number|x|L3|Số tiền nợ|
+|data.debts.action|Number|x|L3|1 - Nợ được khởi tạo|
+|data.debts.content|String|x|L3|Nội dung nhắc nợ|
+|data.debts.createdAt|String|x|L3|Ngày khởi tạo - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.debts.updatedAt|String|x|L2|Thời gian thay đổi gần nhất - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|

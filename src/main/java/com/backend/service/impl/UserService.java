@@ -1,11 +1,14 @@
 package com.backend.service.impl;
 
+import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
+import com.backend.model.Debt;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
+import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
@@ -234,5 +237,32 @@ public class UserService implements IUserService {
         DebtDTO debtor = debtRepository.save(debtDTO);
 
         return debtor.getId();
+    }
+
+    @Override
+    public DebtorResponse getDebts(String logId, long userId, int action, int type) {
+        List<Debt> debts = new ArrayList<>();
+        List<DebtDTO> debtDTOS;
+        UserDTO userDTO = userRepository.findById(userId).get();
+        if (userDTO == null) {
+            logger.warn("{}| User - {} not found", logId, userId);
+            return null;
+        }
+
+        if (type == 1) {
+            //danh sach no minh tao
+            debtDTOS = debtRepository.findAllByUserIdAndAction(userId, ActionConstant.INIT.getValue());
+            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getDebtorId()).get())));
+        } else {
+            //danh sach bi nhac no
+            debtDTOS = debtRepository.findAllByDebtorIdAndAction(userId, ActionConstant.INIT.getValue());
+            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getUserId()).get())));
+        }
+        if (type == 1) {
+            logger.info("{}| User - {} create: {} debt", logId, userId, debts.size());
+        } else {
+            logger.info("{}| User - {} have: {} debt", logId, userId, debts.size());
+        }
+        return DebtorResponse.builder().debts(debts).build();
     }
 }

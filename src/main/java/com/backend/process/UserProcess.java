@@ -113,6 +113,7 @@ public class UserProcess {
                 .isActive(1)
                 .userId(request.getUserId())
                 .updatedAt(currentTime)
+                .amount(request.getAmount())
                 .build();
     }
 }
