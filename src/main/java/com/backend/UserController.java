@@ -4,7 +4,9 @@ import com.backend.constants.ErrorConstant;
 import com.backend.model.Account;
 import com.backend.model.request.LoginRequest;
 import com.backend.model.request.RegisterRequest;
+import com.backend.model.request.TransactionRequest;
 import com.backend.model.response.BaseResponse;
+import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
@@ -103,6 +105,35 @@ public class UserController {
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("{}| Request login catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+            return responseEntity;
+        }
+    }
+
+    @PostMapping(value = "/transaction")
+    public ResponseEntity<String> createTransaction(@RequestBody TransactionRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request deposit data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request deposit success!", logId);
+
+            TransactionResponse transactionResponse = userService.transaction(logId, request);
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), transactionResponse.toString());
+            response.setData(new JsonObject(transactionResponse.toString()));
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request transaction catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
             ResponseEntity<String> responseEntity = new ResponseEntity<>(
                     response.toString(),
