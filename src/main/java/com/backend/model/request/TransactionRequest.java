@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 public class TransactionRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private String cardNumber;
+    private Long cardNumber;
     private Integer typeFee;
     private Integer typeTrans;
     private String content;
@@ -21,8 +21,8 @@ public class TransactionRequest {
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
-                    || StringUtils.isBlank(this.cardNumber)
                     || StringUtils.isBlank(this.content)
+                    || cardNumber <= 0
                     || requestTime <= 0
                     || amount < 0
                     || typeFee < 0

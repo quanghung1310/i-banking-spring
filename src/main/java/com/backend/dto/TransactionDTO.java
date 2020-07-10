@@ -17,7 +17,7 @@ public class TransactionDTO {
     private Long id;
 
     @Column(length = 20)
-    private String transId;
+    private Long transId;
 
     private long amount;
 
@@ -29,7 +29,7 @@ public class TransactionDTO {
     private String cardName;
 
     @Column(length = 20)
-    private String cardNumber;
+    private Long cardNumber;
 
     private Integer typeTrans;
 
@@ -37,6 +37,9 @@ public class TransactionDTO {
 
     @Column(length = 100)
     private String content;
+
+    @Column(length = 30)
+    private String status;
 
     private Timestamp createdAt;
 

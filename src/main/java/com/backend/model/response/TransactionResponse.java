@@ -1,6 +1,5 @@
 package com.backend.model.response;
 
-import com.backend.model.Account;
 import io.vertx.core.json.jackson.DatabindCodec;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,16 +11,16 @@ import java.sql.Timestamp;
 @Setter
 @Builder
 public class TransactionResponse {
-    private Long id;
-    private String transId;
-    private Integer typeFee;
-    private Long amount;
-    private Long fee;
+    private Long transId;
     private String cardName;
-    private String cardNumber;
+    private Long cardNumber;
+    private Long amount;
+    private Integer typeFee;
+    private Long fee;
     private String content;
     private Timestamp createDate;
     private Long merchantId;
+    private String status;
 
     @Override
     public String toString() {

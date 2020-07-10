@@ -4,8 +4,8 @@ import com.backend.dto.TransactionDTO;
 import org.springframework.data.repository.CrudRepository;
 
 public interface ITransactionRepository extends CrudRepository<TransactionDTO, Long> {
-    TransactionDTO findFirstByTransId(String transId);
+    TransactionDTO findFirstByTransId(Long transId);
 
-    TransactionDTO findAllByCardNumber(String cardNumber);
+    TransactionDTO findAllByCardNumber(Long cardNumber);
     
 }
