@@ -117,4 +117,23 @@ public class UserProcess {
                 .amount(request.getAmount())
                 .build();
     }
+
+    public static TransactionDTO createTransaction(String logId, Timestamp currentTime, TransactionRequest request, String cardName) {
+        Long tranId = 1000000000L + (long)(new Random().nextDouble() * 999999999L);
+
+        return TransactionDTO.builder()
+                .transId(tranId)
+                .amount(request.getAmount())
+                .fee(500L)
+                .typeFee(request.getTypeFee())
+                .cardName(cardName)
+                .cardNumber(request.getCardNumber())
+                .typeTrans(request.getTypeTrans())
+                .merchantId(request.getMerchantId())
+                .content(request.getContent())
+                .status("pending")
+                .createdAt(currentTime)
+                .updatedAt(currentTime)
+                .build();
+    }
 }

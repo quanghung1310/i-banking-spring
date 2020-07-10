@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name="reminder")
+@Entity(name="reminders")
 public class ReminderDTO {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)

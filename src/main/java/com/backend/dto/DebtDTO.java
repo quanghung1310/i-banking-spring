@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name="debt")
+@Entity(name="debts")
 public class DebtDTO {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)

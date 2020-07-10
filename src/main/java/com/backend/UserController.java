@@ -5,7 +5,6 @@ import com.backend.model.Account;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.LoginRequest;
-import com.backend.model.request.RegisterRequest;
 import com.backend.model.request.TransactionRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
@@ -21,12 +20,15 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import java.security.Principal;
 import java.util.List;
+
+//import org.springframework.security.core.Authentication;
 
 @Controller
 public class UserController {
@@ -190,7 +192,7 @@ public class UserController {
             return responseEntity;
         }
     }
-    @GetMapping("/query-account/{cardNumber}/{merchantId}")
+    @GetMapping("/get-account/{cardNumber}/{merchantId}")
     public ResponseEntity<String> queryAccount(@PathVariable long cardNumber,
                                                @PathVariable long merchantId) {
         String logId = DataUtil.createRequestId();
