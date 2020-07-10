@@ -1,155 +1,580 @@
-# "Internet Banking" Document
+# LH-BANK
 
 |Version | Date       | Author    | Description         |
 |------- | ---------- | --------- | ------------------- |
-|1.0     | 15-05-2020 | Tran Thi Lang | Init document       |
-# I. Getting Started
-1. What You Need
-    * JDK 1.8
-    * IDE: IntelliJ IDEA
-    * Lombok
-    * Gradle 4+ or Maven 3.2+
-    * MySql
-2. Run application:
-    * Step 1: open "Edit Run/Debug configurations "
-    * Step 2: "Configuration" tab -> Enter "com.backend.Application" to Main Class
-    * Step 3: Run/ Debug
-    * 
-# II. API Document
+|1.0     | 03-07-2020 | Tran Thi Lang | Init document       |
+|1.1     | 05-07-2020 | Tran Thi Lang | Users API       |
+
+# I. API Document
 # Index
+1. [Register](#1-register)
+2. [Deposit](#2-deposit)
+3. [Get Accounts](#3-get-accounts)
+4. [Login](#4-login)
+5. [Create Reminder](#5-create-reminder)
+6. [Get Reminders](#6-get-reminders)
+7. [Query Account](#7-query-account)
+8. [Create Debt](#8-create-debt) 
+9. [Get Debts](#9-get-debts) 
 
-1. [Get Bank Account Info](#1-get-bank-account-info)
-2. [Transfer Bank](#2-transfer-bank)
 
-# 1. Get Bank Account Info
 
+
+
+# II. API Document
+# 1. Register
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/register       | 
+|Method | POST       | 
 ## Raw Data
-**Request:**
+**HTTP Request:**
 
 ```json
 {
-  "requestId": "0e28ddd4-4017-decf-8ade-972e8c4d0cc6",
-  "initiator": "abc",
-  "requestType": "GET_BANK_ACCOUNT_INFO",
-  "data": {
-	    "requestTime": 1555472829549,
-	    "partnerCode": "Merchant123556666",
-	    "numberAccount": "23645895232623",
-	    "typeAccount": 1,
-	    "hash": "cd0d82ad983098a2fb99b8e49266ed7bd4db85ebf77d13b2db2f755ff0600fa0",
-	    "description": "kiểm tra số dư tài khoản thanh toán"
-  }
+    "email": "tranlang.dtnt@gmail.com",
+    "name": "Tran Thi Lang",
+    "phone": "0327421137",
+    "cardName": "Lang Lang",
+    "adminId": 1
 }
 ```
 
 **Response:**
 ```json
 {
-  "requestId": "0e28ddd4-4017-decf-8ade-972e8c4d0cc6",
-  "resultCode": 0,
-  "message": "success",
-  "data": {
-        "responseTime": 1555472829580,
-        "customerName": "TRAN THI LANG",
-        "customerPhone": "0963****714",
-        "customerEmail": "tranlang.dtnt@gmail.com",
-        "isActive": true,
-        "agency": 1, 
-        "openDate": "2018-07-12 09:46:32",
-        "closeDate": "2020-07-12 09:46:33"
-  }
+    "requestId": "1867e7a504c24ac082b3645f67bb791c",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593768407676,
+    "data": {
+        "userName": "tranthilang",
+        "password": "bjfvpzhnebzhvoo",
+        "createDate": "03/07/2020 16:26:45",
+        "account": {
+            "id": 20,
+            "cardNumber": 13,
+            "cardName": "Lang Lang",
+            "closeDate": "02/07/2024 16:26:45",
+            "createdAt": "03/07/2020 16:26:45",
+            "updatedAt": "03/07/2020 16:26:45",
+            "description": null,
+            "type": 1
+        }
+    }
 }
 ```
 
 **Request:**
 
-|Name|Type|Length|Required|Level|Description|
-|----|----|:----:|:------:|:---:|-----------|
-|requestId|String|50|x|L1|Định danh mỗi yêu cầu|
-|initiator|String|15|x|L1|Định danh người gửi yêu cầu(đối tác/ người dùng)|
-|requestType|String|20|x|L1|Bắt buộc là GET_BANK_ACCOUNT_INFO|
-|**data**|**JsonObject**||**x**|**L1**||
-|requestTime|long||x|L2|Thời gian gọi request (tính theo millisecond) Múi giờ: GMT +7|
-|partnerCode|String|50|x|L2|Mã đối tác|
-|numberAccount|String|15|x|L2|Số tài khoản cần truy vấn|
-|typeAccount|int||x|L2|Loại tài khoản [1: thanh toán, 2: tiết kiệm]|
-|hash|String|1000|x|L2|Chữ ký để kiểm tra thông tin. Sử dụng thuật toán HMAC_SHA256. Dữ liệu đầu vào bao gồm SecretKey (LHBank cung cấp) và data, data được tạo ra theo định dạng:  numberAccount=$numberAccount&partnerCode=$partnerCode&requestTime=$requestTime&typeAccount=$typeAccount|
-|description|String|50||L2|Thông tin thêm|
-
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|email|String|x|L2|Địa chỉ email|
+|name|String|x|L2|Tên khách hàng|
+|phone|String|x|L2|Số điện thoại (Đầu số mới)|
+|cardName|String|x|L2|Định danh thẻ|
+|adminId|Number|x|L2|Định danh employee thực hiện tạo tài khoản|
 
 **Response:**
 
-|Name|Type|Length|Required|Level|Description|
-|----|----|:----:|:------:|:---:|-----------|
-|requestId|String|50|x|L1|Giống với yêu cầu ban đầu|
-|resultCode|number|2|x|L1|Kết quả của request|
-|message|String|24|x|L1|Mô tả chi tiết kết quả request|
-|**data**|**JsonObject**||**x**|**L1**||
-|responseTime|long||x|L2|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
-|customerName|String|50|x|L2|Tên chủ tài khoản|
-|customerPhone|String|10|x|L2|Số điện thoại chủ tài khoản,  chỉ hiển thị 4 số đầu và 3 số cuối|
-|customerEmail|String|100|x|L2|Địa chỉ mail của khách hàng|
-|isActive|boolean||x|L2|true: Tài khoản còn hoạt động, false: Tài khoản bị khóa|
-|agency|int||x|L2|Mã chi nhánh ngân hàng của tài khoản|
-|openDate|String|19|x|L2|Ngày tạo tài khoản Định dạng: yyyy-MM-dd HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
-|closeDate|String|19|x|L2|Ngày tài khoản hết hạn Định dạng: yyyy-MM-dd HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.userName|String|x|L2|Tên đăng nhập|
+|data.password|String|x|L2|Mật khẩu|
+|data.createDate|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.account.id|Number|x|L3|Định danh tài khoản|
+|data.account.cardNnumber|Number|String|x|L3|Số tài khoản|
+|data.account.cardName|String|x|L3|Tên tài khoản|
+|data.account.closeDate|String|x|L3|Hạn sử dụng tài khoản|
+|data.account.createdAt|String|x|L3|Ngày tạo tài khoản|
+|data.account.description|String||L3|Thông tin thêm |
+|data.account.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm( Luôn luôn là 1)|
+|data.account.updatedAt|String|x|L3|Thời gian chỉnh sửa thông tin tài khoản gần nhất|
 
-
-
-# 2. Transfer Bank
-
+# 2. Deposit
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/deposit       | 
+|Method | POST       | 
 ## Raw Data
-**Request:**
+**HTTP Request:**
+
 ```json
 {
-  "requestId": "0e28ddd4-4017-decf-8ade-972e8c4d0cc6",
-  "initiatior": "VIETCOMBANK",
-  "requestType": "TRANSFER_BANK",
-  "data": {
-    "requestTime": 1555472829549,
-    "partnerCode": "VCB_1",
-    "partnerRefId": "VCB_t123556666",
-    "amount": 40000,
-    "accountNumber": 1234567852135,
-    "hash": "b6e7302c7a2df244bc76e3592b2e3f7ff39abc2a3b6ea161830acea57a427b5f",
-    "signature": "A7WFmmnpn6TRX42Akh/....Gr/0BQUWgunpDPrmCosf9A==",
-    "description": "Nop tien tu Vietcombank vao LangBank"
-  }
+    "userName": "langlang4",
+    "cardNumber": 1670707699074197,
+    "balance": 1000000
 }
 ```
 
 **Response:**
 ```json
 {
-  "requestId": "0e28ddd4-4017-decf-8ade-972e8c4d0cc6",
-  "resultCode": 0,
-  "message": "success",
-  "data": {
-  }
+    "requestId": "1867e7a504c24ac082b3645f67bb791c",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593768407676,
+    "data": {
+        "totalBalance": 15300000
+    }
 }
 ```
 
 **Request:**
 
-|Name|Type|Length|Required|Level|Description|
-|----|----|:----:|:------:|:---:|-----------|
-|requestId|String|50|x|L1|Định danh mỗi yêu cầu|
-|initiator|String|15|x|L1|Định danh người gửi yêu cầu(đối tác/ người dùng)|
-|requestType|String|20|x|L1|Bắt buộc là TRANSFER_BANK|
-|**data**|**JsonObject**||**x**|**L1**|**detail**|
-|||||||
-
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userName|String|x|L2|Tên đăng nhập (Nếu để trống -> phải truyền cardNumber)|
+|cardNumber|String|x|L2|Số tài khoản (Nếu để trống phải truyền userName)|
+|balance|Number|x|L2|Số tiền cần nạp vào tài khoản|
 
 **Response:**
 
-|Name|Type|Length|Required|Level|Description|
-|---|---|:---:|:---:|:--:|---------------|
-|requestId|String|50|x|L1|Giống với yêu cầu ban đầu|
-|resultCode|number|2|x|L1|Mã lỗi|
-|message|String|24|x|L1|Mô tả lỗi|
-|**data**|**JsonObject**||**x**|**L1**|**detail**|
-|||||||
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.totalBalance|Number|x|L2|Tổng số dư|
 
+# 3. Get Accounts
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/get-accounts/{userId}/{type}       | 
+|Method | GET       | 
+## Raw Data
+**HTTP Request:**
 
+**Response:**
+```json
+{
+    "requestId": "1867e7a504c24ac082b3645f67bb791c",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593768407676,
+    "data": {
+    "accounts": [
+            {
+                "id": 4,
+                "cardNumber": 11,
+                "cardName": "Lang Lang",
+                "closeDate": "02/07/2024 15:59:08",
+                "createdAt": "03/07/2020 15:59:08",
+                "updatedAt": "03/07/2020 15:59:08",
+                "description": null,
+                "type": 1,
+                "balance": 0,
+                "userId": 3
+            }
+     ]
+    }
+}
+```
 
+**Request:**
 
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userId|Number|x|PathVariable|Định danh chủ tài khoản|
+|type|Number|x|PathVariable|1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm, 0 - get all|
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.accounts.id|Number|x|L3|Định danh tài khoản|
+|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
+|data.accounts.cardNnumber|Number|String|x|L3|Số tài khoản|
+|data.accounts.cardName|String|x|L3|Tên tài khoản|
+|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
+|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
+|data.accounts.description|String||L3|Thông tin thêm |
+|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+
+# 4. Login
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/login       | 
+|Method | POS       | 
+## Raw Data
+**HTTP Request:**
+```json
+{
+    "userName": "tranlang",
+    "password": "yvlikcfnzywqdcj"
+}
+```
+**Response:**
+```json
+{
+    "requestId": "263ef3e4a8d04ba2aeb81f865a7d6cd4",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593786139161,
+    "data": {
+        "id": 33,
+        "userName": "tranlang",
+        "password": "yvlikcfnzywqdcj",
+        "email": "tranlang.dtnt@gmail.com",
+        "name": "Tran Lang",
+        "phone": "0327421137",
+        "createdAt": "03/07/2020 21:21:24",
+        "account": [
+            {
+                "id": 34,
+                "cardNumber": 1387184392910303,
+                "cardName": "Tran Lang",
+                "closeDate": "02/07/2024 21:21:24",
+                "createdAt": "03/07/2020 21:21:24",
+                "updatedAt": "03/07/2020 21:21:24",
+                "description": null,
+                "type": 1,
+                "balance": 0,
+                "userId": 33
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userName|String|x|L1|Tên đăng nhập|
+|password|String|x|L1|Mật khẩu|
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.id|Number|x|L2|Định danh user|
+|data.userName|String|x|L2|Tên đăng nhập|
+|data.password|String|x|L2|Mật khẩu|
+|data.createdAt|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.email|String|x|L2|Địa chỉ email|
+|data.name|String|x|L2|Tên khách hàng|
+|data.phone|String|x|L2|Số điện thoại (Đầu số mới)
+|data.accounts.id|Number|x|L3|Định danh tài khoản|
+|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
+|data.accounts.cardNnumber|Number|String|x|L3|Số tài khoản|
+|data.accounts.cardName|String|x|L3|Tên tài khoản|
+|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
+|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
+|data.accounts.description|String||L3|Thông tin thêm |
+|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+
+# 5. Create Reminder
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/create-reminder       | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+{
+    "nameReminisce": "con nợ Trần Thị Lạng",
+    "cardNumber": 1575750842294193,
+    "type": 2,
+    "userId": 1,
+    "merchantId": 0
+}
+```
+
+**Response:**
+```json
+{
+    "requestId": "181fe953d59042db991f863fe9b2afd3",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593939825552,
+    "data": {
+        "reminderId": 10
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|nameReminisce|String||L1|Tên gợi nhớ, Mặc định tên đăng nhập (username)|
+|cardNumber|String|x|L1|Số tài khoản|
+|type|Number|x|L1|Loại tài khoản cần lưu, 1 - chuyển tiền, 2 - Nhắc nợ|
+|userId|Number|x|L1|Người tạo ghi nhớ|
+|merchantId|Number|x|L1|Định danh ngân hàng của các tài khoản liên ngân hàng (Mặc định 0 nếu cùng ngân hàng)|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.reminderId|Number|x|L2|Định danh người ghi nhớ vừa được tạo|
+
+# 6. Get Reminders
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/get-reminders/{userId}/{type}/{cardNumber}        | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+```
+
+**Response:**
+```json
+{
+    "requestId": "1b7ac1af8a4e4295a62cbb54ea81946b",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593944513086,
+    "data": {
+        "id": 1,
+        "userName": "tranlang",
+        "password": "agtwtmktsvziojh",
+        "email": "tranlang.dtnt@gmail.com",
+        "name": "Tran Lang",
+        "phone": "0327421137",
+        "createdAt": "05/07/2020 15:38:30",
+        "account": [
+            {
+                "id": 4,
+                "cardNumber": 1575750842294193,
+                "cardName": "Tran Thi Lang",
+                "closeDate": "04/07/2024 15:40:20",
+                "createdAt": "05/07/2020 15:40:20",
+                "updatedAt": "05/07/2020 15:40:20",
+                "description": null,
+                "type": 1,
+                "balance": null,
+                "userId": 3
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|type|Number|x|PathVariable|Loại tài khoản ghi nhớ, 1 - chuyển tiền, 2 - Nhắc nợ|
+|userId|Number|x|PathVariable|Người tạo ghi nhớ|
+|cardNumber|Number||PathVariable|Số tài khoản, Mặc định lấy hết các tài khoản đã lưu theo type|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.id|Number|x|L2|Định danh user|
+|data.userName|String|x|L2|Tên đăng nhập|
+|data.password|String|x|L2|Mật khẩu|
+|data.createdAt|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.email|String|x|L2|Địa chỉ email|
+|data.name|String|x|L2|Tên khách hàng|
+|data.phone|String|x|L2|Số điện thoại (Đầu số mới)
+|data.accounts.id|Number|x|L3|Định danh tài khoản|
+|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
+|data.accounts.cardNnumber|Number|x|L3|Số tài khoản|
+|data.accounts.cardName|String|x|L3|Tên tài khoản|
+|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
+|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
+|data.accounts.description|String||L3|Thông tin thêm |
+|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+
+# 7. Query Account
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/query-account/{cardNumber}/{merchantId}| 
+|Method | GET       | 
+## Raw Data
+**HTTP Request:**
+
+**Response:**
+```json
+{
+    "requestId": "1c16c8c232ad4c07844455b7e6f23a4f",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593947006613,
+    "data": {
+        "id": 3,
+        "email": "tranthilang.dtnt@gmail.com",
+        "name": "Tran Thi Lang",
+        "phone": "0327421137",
+        "createdAt": "05/07/2020 15:40:20",
+        "account": [
+            {
+                "id": 4,
+                "cardNumber": 1575750842294193,
+                "cardName": "Tran Thi Lang",
+                "closeDate": "04/07/2024 15:40:20",
+                "createdAt": "05/07/2020 15:40:20",
+                "updatedAt": "05/07/2020 15:40:20",
+                "description": null,
+                "type": 1,
+                "userId": 3
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|cardNumber|Number|x|PathVariable|Số tài khoản|
+|merchantId|Number|x|PathVariable|Định danh ngân hàng, Mặc định là O nếu cùng ngân hàng|
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.id|Number|x|L2|Định danh user|
+|data.userName|String|x|L2|Tên đăng nhập|
+|data.password|String|x|L2|Mật khẩu|
+|data.createdAt|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.email|String|x|L2|Địa chỉ email|
+|data.name|String|x|L2|Tên khách hàng|
+|data.phone|String|x|L2|Số điện thoại (Đầu số mới)
+|data.accounts.id|Number|x|L3|Định danh tài khoản|
+|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
+|data.accounts.cardNnumber|Number|x|L3|Số tài khoản|
+|data.accounts.cardName|String|x|L3|Tên tài khoản|
+|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
+|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
+|data.accounts.description|String||L3|Thông tin thêm |
+|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+
+# 8. Create Debt
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/create-debt       | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+{
+    "debtorId": 3,
+    "cardNumber": 1575750842294193,
+    "userId": 1,
+    "amount": 1000,
+    "content": "Trả tiền đi má, nợ gì lâu "
+}
+```
+
+**Response:**
+```json
+{
+    "requestId": "0291bd9a5df44e25b36f15f372c45264",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593951532323,
+    "data": {
+        "debtId": 11
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|cardNumber|String|x|L1|Số tài khoản của con nợ|
+|debtorId|Number|x|L1|Định danh con nợ|
+|userId|Number|x|L1|Người nhắc nợ|
+|amount|Number|x|L1|Số tiền cần nhắc nợ|
+|content|String|x|L1|Nội dung nhắc nợ|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.debtId|Number|x|L2|Định danh nhắc nợ|
+
+# 9. Get Debts
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/get-debts/{userId}/{action}/{type}| 
+|Method | GET       | 
+## Raw Data
+**HTTP Request:**
+
+**Response:**
+```json
+{
+    "requestId": "479f65c15f564c5f97f602ae2633d084",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1593955000145,
+    "data": {
+        "debts": [
+            {
+                "creditorId": 1,
+                "creditEmail": "tranlang.dtnt@gmail.com",
+                "creditName": "Tran Lang",
+                "creditPhone": "0327421137",
+                "amount": 1500,
+                "content": "Trả tiền đi má, nợ gì lâu ",
+                "action": 1,
+                "createdAt": "05/07/2020 20:11:42",
+                "updatedAt": "05/07/2020 20:11:42"
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userId|Number|x|PathVariable|Người thực hiện hành động|
+|action|Number|x|PathVariable|1 - Nhắc nợ được khởi tạo|
+|type|Number|x|PathVariable|1 - Nhắc nợ do userId tạo, 2 - Nhắc nợ được gửi tới userId|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.debts.id|Number|x|L3|Định danh nhắc nợ|
+|data.debts.creditorId|Number|x|L3|Định danh: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1 )|
+|data.debts.creditEmail|String|x|L3|Địa chỉ email: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.creditPhone|String|x|L3|Số điện thoại: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.amount|Number|x|L3|Số tiền nợ|
+|data.debts.action|Number|x|L3|1 - Nợ được khởi tạo|
+|data.debts.content|String|x|L3|Nội dung nhắc nợ|
+|data.debts.createdAt|String|x|L3|Ngày khởi tạo - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
