@@ -9,12 +9,12 @@ import lombok.Setter;
 @Builder
 public class Transaction {
     public long id;
-    public String transId;
+    public long transId;
     public long amount;
     public long fee;
     public Integer typeFee;
     public String cardName;
-    public String cardNumber;
+    public long cardNumber;
     public Integer typeTrans;
     public long merchantId;
     public String content;
