@@ -4,6 +4,8 @@ import com.backend.model.Account;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.response.DebtorResponse;
+import com.backend.model.request.TransactionRequest;
+import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 
 import java.util.List;
@@ -23,4 +25,5 @@ public interface IUserService {
 
     DebtorResponse getDebts(String logId, long userId, int action, int type);
 
+    TransactionResponse transaction(String logId, TransactionRequest transactionRequest);
 }

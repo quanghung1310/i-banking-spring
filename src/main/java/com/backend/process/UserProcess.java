@@ -7,6 +7,7 @@ import com.backend.model.Account;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.RegisterRequest;
+import com.backend.model.request.TransactionRequest;
 import com.backend.service.impl.UserService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

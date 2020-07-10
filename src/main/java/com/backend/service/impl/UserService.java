@@ -8,7 +8,9 @@ import com.backend.model.Account;
 import com.backend.model.Debt;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
+import com.backend.model.request.TransactionRequest;
 import com.backend.model.response.DebtorResponse;
+import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
@@ -42,6 +44,9 @@ public class UserService implements IUserService {
 
     @Autowired
     IDebtRepository debtRepository;
+
+	@Autowired
+    ITransactionRepository transactionRepository;
 
     @Override
     public List<Account> getUsers(String logId, int type, long userId) {
@@ -264,5 +269,40 @@ public class UserService implements IUserService {
             logger.info("{}| User - {} have: {} debt", logId, userId, debts.size());
         }
         return DebtorResponse.builder().debts(debts).build();
+    }
+
+    @Override
+    public TransactionResponse transaction(String logId, TransactionRequest request) {
+        Timestamp currentTime = new Timestamp(request.getRequestTime());
+        Long cardNumber = request.getCardNumber();
+        List<AccountPaymentDTO> accounts = (List<AccountPaymentDTO>) accountPaymentRepository.findAll();
+        String cardName = null;
+        for (AccountPaymentDTO account : accounts) {
+            if (account.getCardNumber() == cardNumber) {
+                cardName = account.getCardName();
+            }
+        }
+
+        if (cardName == null) {
+            logger.warn("{}| Card number is not exist!", logId);
+            return null;
+        }
+
+        TransactionDTO transactionDTO = transactionRepository.save(UserProcess.createTransaction(logId, currentTime, request, cardName));
+        Long transactionId = transactionDTO.getId();
+        logger.info("{}| Save transaction - {}:{}", logId, transactionId, transactionId == null ? "false" : "success");
+
+        return TransactionResponse.builder()
+                .transId(transactionDTO.getTransId())
+                .cardName(transactionDTO.getCardName())
+                .cardNumber(transactionDTO.getCardNumber())
+                .amount(transactionDTO.getAmount())
+                .typeFee(transactionDTO.getTypeFee())
+                .fee(transactionDTO.getFee())
+                .content(transactionDTO.getContent())
+                .createDate(transactionDTO.getCreatedAt())
+                .merchantId(transactionDTO.getMerchantId())
+                .status(transactionDTO.getStatus())
+                .build();
     }
 }
