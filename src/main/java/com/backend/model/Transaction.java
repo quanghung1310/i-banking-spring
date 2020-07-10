@@ -10,6 +10,7 @@ import lombok.Setter;
 public class Transaction {
     public long id;
     public long transId;
+    public long userId;
     public long amount;
     public long fee;
     public Integer typeFee;

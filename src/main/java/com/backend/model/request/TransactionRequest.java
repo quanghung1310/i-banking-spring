@@ -15,7 +15,6 @@ public class TransactionRequest {
     private Integer typeTrans;
     private String content;
     private long amount;
-    private long userId;
     private long merchantId;
 
     public boolean isValidData() {
@@ -26,7 +25,6 @@ public class TransactionRequest {
                     || requestTime <= 0
                     || amount < 0
                     || typeFee < 0
-                    || userId < 0
                     || typeTrans < 0);
         }
         catch (Exception ex) {

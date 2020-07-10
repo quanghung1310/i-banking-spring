@@ -19,6 +19,8 @@ public class TransactionDTO {
     @Column(length = 20)
     private Long transId;
 
+    private Long userId;
+
     private long amount;
 
     private long fee;

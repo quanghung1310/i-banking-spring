@@ -88,6 +88,7 @@ public class UserMapper {
         return Transaction.builder()
                 .id(transactionDTO.getId())
                 .transId(transactionDTO.getTransId())
+                .userId(transactionDTO.getUserId())
                 .amount(transactionDTO.getAmount())
                 .fee(transactionDTO.getFee())
                 .typeFee(transactionDTO.getTypeFee())
