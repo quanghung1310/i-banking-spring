@@ -99,7 +99,12 @@
 			<artifactId>bcpg-jdk15on</artifactId>
 			<version>1.48</version>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcpg-jdk14 -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpg-jdk14</artifactId>
+			<version>1.47</version>
+		</dependency>
 
 	</dependencies>
 

@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.*;
 import sun.misc.BASE64Encoder;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
@@ -114,6 +115,17 @@ public class MerchantTest {
                     "=yonD\n" +
                     "-----END PGP PRIVATE KEY BLOCK-----\n";
 
+    public final static String signBank1 =
+    "-----BEGIN PGP MESSAGE-----\n" +
+            "Version: BCPG v1.46\n" +
+            "\n" +
+            "owJ4nJvAy8zAxBj1IXFKzeG9KoynJZM44p39/YL9fVzjhc66lxQl5pVkZOYk5qV3\n" +
+            "bGVhYGRikGdlAklIyIDEDBVswJRDem5iZo5ecn6uHQMXpwDMuMdlzP/9JzKs/nO+\n" +
+            "7b7QjFfV9/o196+XqYxnEFibk5r4VXvG4uUHdlc97pi7h+lmxdTcM9b+m5nUNkro\n" +
+            "3/sQoGy1onGO96XzLnti+D6v+rrsoHn6DqZjd5nX3/Z4pHYzuOKO+Jb5/jM/vA8v\n" +
+            "edWV8M1aj4M7+LRt9Ndb6xzEjuXlx5dOzP2TX/XlTqouAB6gYzQ=\n" +
+            "=ogLQ\n" +
+            "-----END PGP MESSAGE-----";
 //    @PostMapping(value = "/transfer/bank")
 //    public ResponseEntity<String> transfer(@RequestBody TransferRequest request) {
     public static String transfer() {
@@ -180,7 +192,7 @@ public class MerchantTest {
 //                PGPSignature signature = signatureGenerator.generateCertification(pubKey);
 
 
-                messageSignature = MerchantProcess.signMessageByteArray(message, pgpSec,
+                messageSignature = MerchantProcess.signaturePgp(message, pgpSec,
                         privateKeyPassword.toCharArray());
             } catch (NoSuchAlgorithmException | NoSuchProviderException
                     | SignatureException | IOException | PGPException e) {
@@ -200,8 +212,8 @@ public class MerchantTest {
         }
     }
 
-    public static void main(String[] args) {
-        String sig = transfer();
+    public static void main(String[] args) throws PGPException {
+        boolean sig = MerchantProcess.verifySignaturePgp(signBank1.getBytes(StandardCharsets.UTF_8), publicKeyBank1);
         logger.info("sig: {}", sig);
     }
 }

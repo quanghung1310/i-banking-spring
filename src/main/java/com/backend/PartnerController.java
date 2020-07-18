@@ -98,7 +98,7 @@ public class PartnerController {
             logger.info("{}| Valid data session success!", logId);
 
             //Step 3: A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa
-            if (!MerchantProcess.validateHash(logId, partner, request)) {
+            if (!MerchantProcess.validateQueryAccountHash(logId, partner, request)) {
                 logger.warn("{}| Hash - {} wrong!", logId, request.getHash());
                 response = DataUtil.buildResponse(ErrorConstant.CHECK_SIGNATURE_FAIL, request.getRequestId(),null);
                 return new ResponseEntity<>(

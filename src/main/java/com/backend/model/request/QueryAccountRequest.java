@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Getter
 public class QueryAccountRequest {
-    private String requestId = DataUtil.createRequestId();
+    private String requestId;
     private Long requestTime;
     private String bankCode;
     private long accountNumber;

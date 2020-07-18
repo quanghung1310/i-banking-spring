@@ -2,6 +2,7 @@ package com.backend.process;
 
 import com.backend.model.Partner;
 import com.backend.model.request.QueryAccountRequest;
+import com.backend.model.request.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
 import io.vertx.core.json.JsonObject;
@@ -10,7 +11,9 @@ import org.apache.logging.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+//import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import sun.misc.BASE64Encoder;
 
@@ -63,7 +66,7 @@ public class MerchantProcess {
         return key;
     }
 
-    public static String signMessageByteArray(String message,
+    public static String signaturePgp(String message,
                                                PGPSecretKey pgpSec, char[] pass) throws IOException,
             NoSuchAlgorithmException, NoSuchProviderException, PGPException,
             SignatureException {
@@ -133,14 +136,88 @@ public class MerchantProcess {
 
         return encOut.toString();
     }
+//Partner partner
+    public static boolean verifySignaturePgp( byte[] signedMessage, String pub) throws PGPException
+    {
+        try
+        {
+            Security.addProvider(new BouncyCastleProvider());
 
-    public static Boolean validateHash(String logId, Partner partner, QueryAccountRequest request)
+            PGPPublicKey publicKey = readPublicKey(pub); //partner.getPublicKey()
+            InputStream in = PGPUtil.getDecoderStream( new ByteArrayInputStream( signedMessage ) );
+
+            PGPObjectFactory  pgpFact = new PGPObjectFactory ( in );
+
+            PGPCompressedData c1 = ( PGPCompressedData ) pgpFact.nextObject();
+
+            pgpFact = new PGPObjectFactory ( c1.getDataStream() );
+
+            PGPOnePassSignatureList p1 = ( PGPOnePassSignatureList ) pgpFact.nextObject();
+
+            PGPOnePassSignature ops = p1.get( 0 );
+
+            PGPLiteralData p2 = ( PGPLiteralData ) pgpFact.nextObject();
+
+            InputStream dIn = p2.getInputStream();
+            int ch;
+
+
+            ops.initVerify(publicKey, "BC");
+
+            while ( ( ch = dIn.read() ) >= 0 )
+            {
+                ops.update( ( byte ) ch );
+            }
+
+            PGPSignatureList p3 = ( PGPSignatureList ) pgpFact.nextObject();
+
+            if ( ops.verify( p3.get( 0 ) ) )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch ( Exception e )
+        {
+            throw new PGPException( "Error in verify", e );
+        }
+    }
+
+
+    public static Boolean validateQueryAccountHash(String logId, Partner partner, QueryAccountRequest request)
             throws IOException, PGPException {
         JsonObject dataToHash = new JsonObject();
         dataToHash.put("accountNumber", request.getAccountNumber())
                 .put("bankCode", request.getBankCode())
                 .put("requestId", request.getRequestId())
                 .put("requestTime", request.getRequestTime());
+        PGPPublicKey publicKey = readPublicKey(partner.getPublicKey());
+        String secretKey = DataUtil.pgpSecretKeyToString(readSecretKey(partner.getSecretKey(), publicKey.getKeyID()));
+        String hashGen = DataUtil.createHash(dataToHash, secretKey, logId);
+        String hash    = request.getHash();
+        logger.info("{}| LHBank hash {} - Partner hash: {}", logId, hashGen, hash);
+        if (!hashGen.equalsIgnoreCase(hash)) {
+            logger.warn("{}| Valid signature: Fail!", logId);
+            return false;
+        }
+        logger.info("{}| Validate hash: Success!", logId);
+        return true;
+    }
+
+    public static Boolean validateTransferHash(String logId, Partner partner, TransferRequest request)
+            throws IOException, PGPException {
+        JsonObject dataToHash = new JsonObject();
+        dataToHash.put("bankCode", request.getBankCode())
+                .put("from ", request.getFrom())
+                .put("isTransfer", request.getIsTransfer())
+                .put("merchantCode", request.getMerchantCode())
+                .put("requestId", request.getRequestId())
+                .put("requestTime", request.getRequestTime())
+                .put("to", request.getTo())
+                .put("value", request.getValue());
         PGPPublicKey publicKey = readPublicKey(partner.getPublicKey());
         String secretKey = DataUtil.pgpSecretKeyToString(readSecretKey(partner.getSecretKey(), publicKey.getKeyID()));
         String hashGen = DataUtil.createHash(dataToHash, secretKey, logId);
