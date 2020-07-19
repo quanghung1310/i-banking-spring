@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -28,6 +29,9 @@ import java.util.List;
 @Service
 public class UserService implements IUserService {
     private static final Logger logger = LogManager.getLogger(UserService.class);
+
+    @Value( "${my.bank.id}" )
+    private long myBankId;
 
     @Autowired
     IAccountPaymentRepository accountPaymentRepository;
@@ -181,29 +185,26 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse queryAccount(String logId, long cardNumber, long merchantId) {
+    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) {
         List<Account> accounts = new ArrayList<>();
         long userId = 0;
-        if (merchantId == 0) {
+        if (merchantId == myBankId) {
             //Cung ngan hang
             AccountPaymentDTO accountPaymentDTO;
             accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
             accounts.add(UserMapper.toModelAccount(
                     AccountSavingDTO.builder().build(),
                     accountPaymentDTO,
-                    1,
-                    false));
+                    typeAccount,
+                    isBalance));
             userId = accountPaymentDTO.getUserId();
         } else {
           //Lien ngan hang
             /// TODO: 7/5/2020
+            return null;
         }
 
         UserDTO userDTO = userRepository.findById(userId).get();
-        if (userDTO == null) {
-            logger.warn("{}| user - {} not found!", logId, userId);
-            return UserMapper.toModelUser(userDTO, null, false);
-        }
         return UserMapper.toModelUser(userDTO, accounts, false);
     }
 

@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -35,6 +36,9 @@ public class UserController {
     private static final Logger logger = LogManager.getLogger(UserController.class);
 
     private static final Gson PARSER = new Gson();
+
+    @Value( "${type.account.payment}" )
+    private int paymentBank;
 
     @Autowired
     IUserService userService;
@@ -205,7 +209,8 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId);
+            //account of my bank
+            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId, paymentBank, false);
             if (userResponse == null) {
                 logger.warn("{}| query account fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, userResponse.toString());

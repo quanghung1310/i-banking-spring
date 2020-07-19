@@ -40,7 +40,7 @@ public class UserMapper {
             if (isQueryBalance) {
                 account.setBalance(accountPaymentDTO.getBalance());
             }
-            account.setCardName(accountPaymentDTO.getCardName());
+            account.setCardNumber(accountPaymentDTO.getCardNumber());
             account.setCardName(accountPaymentDTO.getCardName());
             account.setCloseDate(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCloseDate().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setCreatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));

@@ -13,7 +13,6 @@ import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 //import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.*;
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import sun.misc.BASE64Encoder;
 
@@ -23,8 +22,8 @@ import java.util.Date;
 import java.util.Iterator;
 
 
-public class MerchantProcess {
-    private static final Logger logger = LogManager.getLogger(MerchantProcess.class);
+public class PartnerProcess {
+    private static final Logger logger = LogManager.getLogger(PartnerProcess.class);
 
     @Autowired
     IPartnerService partnerService;
@@ -137,7 +136,7 @@ public class MerchantProcess {
         return encOut.toString();
     }
 //Partner partner
-    public static boolean verifySignaturePgp( byte[] signedMessage, String pub) throws PGPException
+    public static boolean verifySignaturePgp(String logId, byte[] signedMessage, String pub) throws PGPException
     {
         try
         {
@@ -190,8 +189,8 @@ public class MerchantProcess {
     public static Boolean validateQueryAccountHash(String logId, Partner partner, QueryAccountRequest request)
             throws IOException, PGPException {
         JsonObject dataToHash = new JsonObject();
-        dataToHash.put("accountNumber", request.getAccountNumber())
-                .put("bankCode", request.getBankCode())
+        dataToHash.put("cardNumber", request.getCardNumber())
+                .put("partnerCode", request.getPartnerCode())
                 .put("requestId", request.getRequestId())
                 .put("requestTime", request.getRequestTime());
         PGPPublicKey publicKey = readPublicKey(partner.getPublicKey());

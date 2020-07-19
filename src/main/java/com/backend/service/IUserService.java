@@ -19,11 +19,13 @@ public interface IUserService {
 
     UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
 
-    UserResponse queryAccount(String logId, long cardNumber, long merchantId);
+    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance);
 
     long createDebtor(String logId, CreateDebtorRequest request);
 
     DebtorResponse getDebts(String logId, long userId, int action, int type);
 
     TransactionResponse transaction(String logId, TransactionRequest transactionRequest);
+
+
 }
