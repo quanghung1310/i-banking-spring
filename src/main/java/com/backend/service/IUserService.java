@@ -1,8 +1,10 @@
 package com.backend.service;
 
 import com.backend.model.Account;
+import com.backend.model.Transaction;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
+import com.backend.model.request.TransferRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.request.TransactionRequest;
 import com.backend.model.response.TransactionResponse;
@@ -27,5 +29,5 @@ public interface IUserService {
 
     TransactionResponse transaction(String logId, TransactionRequest transactionRequest);
 
-
+    long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName);
 }

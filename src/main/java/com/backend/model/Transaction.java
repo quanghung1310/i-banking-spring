@@ -20,4 +20,5 @@ public class Transaction {
     public long merchantId;
     public String content;
     public String createdAt;
+    public long cardRoot;
 }

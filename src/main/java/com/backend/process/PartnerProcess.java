@@ -51,7 +51,6 @@ public class PartnerProcess {
 
     public static PGPSecretKey readSecretKey(String input, long keyId)
             throws IOException, PGPException {
-
         InputStream in = new ByteArrayInputStream(input.getBytes());
         in = org.bouncycastle.openpgp.PGPUtil.getDecoderStream(in);
 
@@ -65,8 +64,7 @@ public class PartnerProcess {
         return key;
     }
 
-    public static String signaturePgp(String message,
-                                               PGPSecretKey pgpSec, char[] pass) throws IOException,
+    public static String signaturePgp(String message, PGPSecretKey pgpSec, char[] pass) throws IOException,
             NoSuchAlgorithmException, NoSuchProviderException, PGPException,
             SignatureException {
         byte[] messageCharArray = message.getBytes();
@@ -135,14 +133,13 @@ public class PartnerProcess {
 
         return encOut.toString();
     }
-//Partner partner
-    public static boolean verifySignaturePgp(String logId, byte[] signedMessage, String pub) throws PGPException
-    {
+
+    public static boolean verifySignaturePgp(String logId, byte[] signedMessage, String pub) throws PGPException {
         try
         {
             Security.addProvider(new BouncyCastleProvider());
 
-            PGPPublicKey publicKey = readPublicKey(pub); //partner.getPublicKey()
+            PGPPublicKey publicKey = readPublicKey(pub);
             InputStream in = PGPUtil.getDecoderStream( new ByteArrayInputStream( signedMessage ) );
 
             PGPObjectFactory  pgpFact = new PGPObjectFactory ( in );
@@ -179,9 +176,9 @@ public class PartnerProcess {
                 return false;
             }
         }
-        catch ( Exception e )
-        {
-            throw new PGPException( "Error in verify", e );
+        catch ( Exception e ) {
+            logger.error("{}| Verify signature catch exception: ", logId, e);
+            return false;
         }
     }
 
@@ -208,14 +205,16 @@ public class PartnerProcess {
 
     public static Boolean validateTransferHash(String logId, Partner partner, TransferRequest request)
             throws IOException, PGPException {
-        JsonObject dataToHash = new JsonObject();
-        dataToHash.put("bankCode", request.getBankCode())
-                .put("from ", request.getFrom())
+        JsonObject dataToHash = new JsonObject()
+                .put("cardName", request.getCardName())
+                .put("bankCode", request.getBankCode())
+                .put("from", request.getFrom())
                 .put("isTransfer", request.getIsTransfer())
-                .put("merchantCode", request.getMerchantCode())
+                .put("merchantCode", request.getPartnerCode())
                 .put("requestId", request.getRequestId())
                 .put("requestTime", request.getRequestTime())
                 .put("to", request.getTo())
+                .put("typeFee", request.getTypeFee())
                 .put("value", request.getValue());
         PGPPublicKey publicKey = readPublicKey(partner.getPublicKey());
         String secretKey = DataUtil.pgpSecretKeyToString(readSecretKey(partner.getSecretKey(), publicKey.getKeyID()));

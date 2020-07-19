@@ -1,6 +1,6 @@
 package com.backend.cryption;
 
-import com.backend.constant.StringConstant;
+import com.backend.constants.StringConstant;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.Logger;
 

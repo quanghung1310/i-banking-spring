@@ -6,9 +6,11 @@ import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
+import com.backend.model.Transaction;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.TransactionRequest;
+import com.backend.model.request.TransferRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
@@ -33,6 +35,12 @@ public class UserService implements IUserService {
     @Value( "${my.bank.id}" )
     private long myBankId;
 
+    @Value( "${fee.transfer}" )
+    private long fee;
+
+    @Value( "${status.transfer}" )
+    private String status;
+
     @Autowired
     IAccountPaymentRepository accountPaymentRepository;
 
@@ -48,7 +56,7 @@ public class UserService implements IUserService {
     @Autowired
     IDebtRepository debtRepository;
 
-	@Autowired
+    @Autowired
     ITransactionRepository transactionRepository;
 
     @Override
@@ -199,7 +207,7 @@ public class UserService implements IUserService {
                     isBalance));
             userId = accountPaymentDTO.getUserId();
         } else {
-          //Lien ngan hang
+            //Lien ngan hang
             /// TODO: 7/5/2020
             return null;
         }
@@ -304,5 +312,33 @@ public class UserService implements IUserService {
                 .merchantId(transactionDTO.getMerchantId())
                 .status(transactionDTO.getStatus())
                 .build();
+    }
+
+    @Override
+    public long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName) {
+        //Build TransactionRequest
+        TransactionRequest transactionRequest = TransactionRequest.builder()
+                .requestId(request.getRequestId())
+                .requestTime(request.getRequestTime())
+                .amount(request.getValue())
+                .cardNumber(request.getFrom())
+                .content(request.getDescription())
+                .merchantId(merchantId)
+                .typeFee(request.getTypeFee())
+                .typeTrans(request.getIsTransfer() ? 1 : 2)
+                .userId(userId)
+                .build();
+        //Build transactionDTO
+        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), transactionRequest, cardName, status, fee);
+        TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
+        Long transactionId = transactionDTO.getId();
+
+        if (transactionId == null) {
+            logger.warn("{}| Save transaction - {} fail!", logId, firstTrans.getTransId());
+            return -1;
+        } else {
+            logger.info("{}| Save transaction success with id: {}", logId, transactionId);
+            return transactionDTO.getTransId();
+        }
     }
 }

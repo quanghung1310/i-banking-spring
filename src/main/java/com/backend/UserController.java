@@ -102,9 +102,9 @@ public class UserController {
             }
 
             UserResponse userResponse = userService.login(logId, userName, password);
-            if (userResponse == null) {
+            if (userResponse == null || userResponse.getId() <= 0) {
                 logger.warn("{}| Login fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, userResponse.toString());
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
@@ -115,10 +115,9 @@ public class UserController {
         } catch (Exception ex) {
             logger.error("{}| Request login catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+            return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
-            return responseEntity;
         }
     }
 

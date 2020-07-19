@@ -9,6 +9,7 @@ import com.backend.model.request.TransferRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.PartnerProcess;
+import com.backend.process.UserProcess;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IPartnerService;
 import com.backend.service.IUserService;
@@ -17,6 +18,8 @@ import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -32,7 +35,7 @@ public class PartnerController {
 
     private static final Gson PARSER = new Gson();
 
-    private static final long SESSION = 300000; //TODO CONFIG IN PROPERTIES
+//    private static final long SESSION = 300000; //TODO CONFIG IN PROPERTIES
 
     @Value( "${type.account.payment}" )
     private int paymentBank;
@@ -42,6 +45,12 @@ public class PartnerController {
 
     @Value( "${my.bank.id}" )
     private long myBankId;
+
+    @Value( "${session.request}" )
+    private int session;
+
+    @Value( "${fee.transfer}" )
+    private int feeTransfer;
 
     @Autowired
     IPartnerService partnerService;
@@ -88,9 +97,9 @@ public class PartnerController {
             logger.info("{}| Valid information my bank success!", logId);
 
             //Step 1: A kiểm tra lời gọi api có phải xuất phát từ B (đã đăng ký liên kết từ trước) hay không
-            Partner partner = partnerService.findByPartnerCode(request.getMerchantCode());
+            Partner partner = partnerService.findByPartnerCode(request.getPartnerCode());
             if (partner == null) {
-                logger.warn("{}| Partner - {} not fount!", logId, request.getMerchantCode());
+                logger.warn("{}| Partner - {} not fount!", logId, request.getPartnerCode());
                 response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
@@ -99,8 +108,8 @@ public class PartnerController {
             logger.info("{}| Valid data partner success!", logId);
 
             //Step 2: A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn
-            if (request.getRequestTime() < SESSION) { //todo config in properties
-                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), SESSION);
+            if (System.currentTimeMillis() - request.getRequestTime() > session) {
+                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
                 response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
@@ -111,7 +120,7 @@ public class PartnerController {
             //Step 3: A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa
             if (!PartnerProcess.validateTransferHash(logId, partner, request)) {
                 logger.warn("{}| Hash - {} wrong!", logId, request.getHash());
-                response = DataUtil.buildResponse(ErrorConstant.CHECK_SIGNATURE_FAIL, request.getRequestId(),null);
+                response = DataUtil.buildResponse(ErrorConstant.HASH_NOT_VALID, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
                         HttpStatus.BAD_REQUEST);
@@ -119,17 +128,23 @@ public class PartnerController {
             logger.info("{}| Valid request hash success!", logId);
 
             //Step 4: verify chữ ký bất đối xứng PGP
-            String dataSig = new JsonObject()
-                    .put("bankCode", request.getBankCode())
-                    .put("from", request.getFrom())
-                    .put("isTransfer", request.getIsTransfer())
-                    .put("merchantCode", request.getMerchantCode())
-                    .put("requestId", request.getRequestId())
-                    .put("requestTime", request.getRequestTime())
-                    .put("to", request.getTo())
-                    .put("value", request.getValue())
-                    .put("hash", request.getHash()).toString();
-            boolean isVerify = PartnerProcess.verifySignaturePgp(logId, dataSig.getBytes(), partner.getPublicKey());
+//            String dataSig = new JsonObject()
+//                    .put("bankCode", request.getBankCode())
+//                    .put("cardName", request.getCardName())
+//                    .put("from", request.getFrom())
+//                    .put("isTransfer", request.getIsTransfer())
+//                    .put("partnerCode", request.getPartnerCode())
+//                    .put("requestId", request.getRequestId())
+//                    .put("requestTime", request.getRequestTime())
+//                    .put("to", request.getTo())
+//                    .put("typeFee", request.getTypeFee())
+//                    .put("value", request.getValue())
+//                    .put("hash", request.getHash())
+//                    .toString();
+//            PGPSecretKey pgpSecretKey = PartnerProcess.readSecretKey(partner.getSecretKey(),
+//                    PartnerProcess.readPublicKey(partner.getPublicKey()).getKeyID());
+//            String genSig = PartnerProcess.signaturePgp(dataSig, pgpSecretKey, partner.getPassword().toCharArray());
+            boolean isVerify = PartnerProcess.verifySignaturePgp(logId, request.getSignature().getBytes(), partner.getPublicKey());
             if (!isVerify) {
                 logger.warn("{}| Signature - {} wrong!", logId, request.getHash());
                 response = DataUtil.buildResponse(ErrorConstant.CHECK_SIGNATURE_FAIL, request.getRequestId(),null);
@@ -141,12 +156,13 @@ public class PartnerController {
 
             //Step 5: process transfer
             Account account = toUser.getAccount().get(0);
-            long newBalance = request.getValue();
+            long newBalance = 0;
             long currentBalance = account.balance;
             long accountId = account.id;
+            long balanceTransfer = request.getValue();
 
             if (request.getIsTransfer()) {
-                newBalance += currentBalance;
+                newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
             } else {
                 //5.1: Check balance
                 if (newBalance > currentBalance) {
@@ -156,9 +172,21 @@ public class PartnerController {
                             response.toString(),
                             HttpStatus.BAD_REQUEST);
                 }
-                newBalance = currentBalance - newBalance;
+                newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
             }
 
+            //5.2: Insert transaction
+            long transId = userService.insertTransaction(logId, request, partner.getId(), toUser.getId(), request.getCardName());
+            if (transId <= 0) {
+                logger.warn("{}| Insert new transaction fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(),null);
+                return new ResponseEntity<>(
+                        response.toString(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            logger.info("{}| Insert new transaction success with transId: {}!", logId, transId);
+
+            //5.3: Update balance
             AccountPaymentDTO accountPaymentDTO = accountPaymentService.updateBalance(logId, accountId, newBalance);
             if (accountPaymentDTO == null) {
                 logger.warn("{}| Update new balance - {} to account - {} fail!", logId, newBalance, accountId);
@@ -167,9 +195,10 @@ public class PartnerController {
                         response.toString(),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             } else {
-                return new ResponseEntity<>(
-                        "success",
-                        HttpStatus.INTERNAL_SERVER_ERROR);
+                String dataResponse = new JsonObject().put("transId", transId).toString();
+                response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, dataResponse);
+                logger.info("{}| Response to client: {}", logId, dataResponse);
+                return new ResponseEntity<>(response.toString(), HttpStatus.OK);
             }
         } catch (Exception ex) {
             logger.error("{}| Request transfer bank catch exception: ", logId, ex);
@@ -206,8 +235,8 @@ public class PartnerController {
             logger.info("{}| Valid data partner success!", logId);
 
             //Step 2: A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn
-            if (request.getRequestTime() < SESSION) { //todo config in properties
-                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), SESSION);
+            if (System.currentTimeMillis() - request.getRequestTime() > session) {
+                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
                 response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
