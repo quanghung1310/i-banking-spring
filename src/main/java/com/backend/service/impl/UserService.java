@@ -14,11 +14,14 @@ import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
+import com.backend.util.DataUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -385,5 +388,42 @@ public class UserService implements IUserService {
             logger.error("{}| Delete debt in db catch exception: ", logId, e);
             return -2;
         }
+    }
+
+    @Override
+    public long payDebt(String logId, TransactionRequest request) {
+        //Step 0: validate debt
+        long debtId = request.getDebtId();
+        DebtDTO debtDTO = debtRepository.findFirstByIdAndActionAndIsActive(debtId, ActionConstant.INIT.getValue(), 1);
+        if (debtDTO == null) {
+            logger.warn("{}| Debt - {} not found", logId, debtId);
+            return -1;
+        }
+        logger.info("{}| Validate debt - {} success!", logId, debtId);
+
+        //Step 1: validate FROM
+        AccountPaymentDTO accountFrom = accountPaymentRepository.findFirstByCardNumber(request.getCardNumber());
+        if (accountFrom == null) {
+            logger.warn("{}| Card number sender - {} not fount!", logId, request.getCardNumber());
+            return -1;
+        }
+        logger.info("{}| Account sender  -{} is existed!", logId, accountFrom.getId());
+
+        //Step 2: validate TO
+
+        //Step 3: validate otp
+
+        //Step 4: validate balance FROM
+
+        //Step 5: update balance of FROM
+
+        //Step 6: update balance of TO
+
+        //Step 7: Update action debt to COMPLETED
+
+        //Step 8: insert transaction
+
+        //Step 9: response transId
+        return 0;
     }
 }

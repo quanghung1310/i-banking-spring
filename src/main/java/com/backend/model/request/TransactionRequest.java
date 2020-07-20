@@ -15,11 +15,13 @@ public class TransactionRequest {
     private Long requestTime = System.currentTimeMillis();
     private Long cardNumber; //from
     private Integer typeFee; //1: người nhận trả, 2. người mua trả
-    private Integer typeTrans; //1: Chuyển tiền (update balance = userId.accountPayment.balance + amount), 2. Nhận tiền (update balance = userId.accountPayment.balance - amount)
+    private Integer typeTrans; //1: Chuyển tiền  2. Nhận tiền
     private String content;
     private long amount;
     private long merchantId; //merchant của from
     private long userId; //to
+    private int otp;
+    private long debtId;
 
     public boolean isValidData() {
         try {

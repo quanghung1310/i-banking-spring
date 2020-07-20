@@ -29,4 +29,6 @@ public interface IUserService {
     long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName);
 
     long deleteDebt(String logId, DeleteDebtRequest request);
+
+    long payDebt(String logId, TransactionRequest request);
 }

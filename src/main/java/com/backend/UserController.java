@@ -364,4 +364,35 @@ public class UserController {
                     HttpStatus.BAD_REQUEST);
         }
     }
+
+    @PostMapping(value = "/pay/debt")
+    public ResponseEntity<String> payDebt(@RequestBody TransactionRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request pay debt data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request pay debt data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request pay debt success!", logId);
+
+//            TransactionResponse transactionResponse = userService.transaction(logId, request);
+            long result = userService.payDebt(logId, request);
+            //// TODO: 7/20/20 validate result -> response
+            JsonObject dateResponse = new JsonObject()
+                    .put("transId", result);
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), dateResponse.toString());
+            response.setData(new JsonObject(dateResponse.toString()));
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
 }
