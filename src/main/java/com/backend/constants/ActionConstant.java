@@ -2,7 +2,8 @@ package com.backend.constants;
 
 
 public enum ActionConstant {
-    INIT (1);
+    INIT (1),
+    DELETE(2);
 
     private int value;
 

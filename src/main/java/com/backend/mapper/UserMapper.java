@@ -93,6 +93,7 @@ public class UserMapper {
 
     public static Debt toModelDebt(DebtDTO debtDTO, UserDTO userDTO) {
         return Debt.builder()
+                .id(debtDTO.getId())
                 .action(debtDTO.getAction())
                 .amount(debtDTO.getAmount())
                 .content(debtDTO.getContent())

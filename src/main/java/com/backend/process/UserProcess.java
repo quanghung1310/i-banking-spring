@@ -99,10 +99,10 @@ public class UserProcess {
         return accounts;
     }
 
-    public static DebtDTO createDebt(String logId, CreateDebtorRequest request, Timestamp currentTime) {
+    public static DebtDTO createDebt(String logId, int action, CreateDebtorRequest request, Timestamp currentTime) {
         return DebtDTO.builder()
                 .createdAt(currentTime)
-                .action(ActionConstant.INIT.getValue())
+                .action(action)
                 .cardNumber(request.getCardNumber())
                 .content(request.getContent())
                 .debtorId(request.getDebtorId())

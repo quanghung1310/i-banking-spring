@@ -287,7 +287,7 @@
 ```json
 {
     "nameReminisce": "con nợ Trần Thị Lạng",
-    "cardNumber": 1575750842294193,
+    "cardNumber": 1448127665849225,
     "type": 2,
     "userId": 1,
     "merchantId": 0
@@ -297,12 +297,12 @@
 **Response:**
 ```json
 {
-    "requestId": "181fe953d59042db991f863fe9b2afd3",
+    "requestId": "9a71bc7b534d47ef9733f211ae99ff5a",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1593939825552,
+    "responseTime": 1595246694052,
     "data": {
-        "reminderId": 10
+        "reminderId": 7
     }
 }
 ```
@@ -474,7 +474,7 @@
 # 8. Create Debt
 |Key | Value       | 
 |------- | ---------- |
-|URL | 127.0.0.1:8080/lh-bank/create-debt       | 
+|URL | 127.0.0.1:8080/lh-bank/create-debtor       | 
 |Method | POST       | 
 ## Raw Data
 **HTTP Request:**
@@ -672,3 +672,52 @@
 |data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
 |data.accounts.description|String||L3|Thông tin thêm |
 |data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+
+# 11. Delete Debt
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/delete-debt       | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+{
+    "debtId": 12,
+    "userId": 5,
+    "content": "Xóa lần nợ 8 lần 1"
+}
+```
+
+**Response:**
+```json
+{
+    "requestId": "1da69e2f98914b5880bfa3b3efe7615c",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1595250464036,
+    "data": {
+        "debtId": 13,
+        "action": "DELETE"
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|debtId|Number|x|L1|Định danh nhắc nợ cần xóa |
+|userId|Number|x|L1|Người gửi yêu cầu xóa nợ|
+|content|String|x|L1|Nội dung xáoguiwr xóa nhắc nợ|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.debtId|Number|x|L2|Định danh nhắc nợ|
+|data.action|Number|x|L2|Luôn là "DELETE"|

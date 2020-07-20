@@ -1,11 +1,9 @@
 package com.backend;
 
+import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.model.Account;
-import com.backend.model.request.CreateDebtorRequest;
-import com.backend.model.request.CreateReminderRequest;
-import com.backend.model.request.LoginRequest;
-import com.backend.model.request.TransactionRequest;
+import com.backend.model.request.*;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
@@ -154,10 +152,9 @@ public class UserController {
         } catch (Exception ex) {
             logger.error("{}| Request create reminder catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+            return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
-            return responseEntity;
         }
     }
 
@@ -189,10 +186,9 @@ public class UserController {
         } catch (Exception ex) {
             logger.error("{}| Request get users catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+            return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
-            return responseEntity;
         }
     }
     @GetMapping("/get-account/{cardNumber}/{merchantId}")
@@ -223,10 +219,9 @@ public class UserController {
         } catch (Exception ex) {
             logger.error("{}| Request query account catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+            return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
-            return responseEntity;
         }
     }
 
@@ -263,10 +258,9 @@ public class UserController {
         } catch (Exception ex) {
             logger.error("{}| Request create debtor catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+            return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
-            return responseEntity;
         }
     }
 
@@ -331,6 +325,43 @@ public class UserController {
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
             return responseEntity;
+        }
+    }
+
+    @PostMapping(value = "/delete-debt")
+    public ResponseEntity<String> deleteDebt(@RequestBody DeleteDebtRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request delete debt data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request delete debt success!", logId);
+
+            long result = userService.deleteDebt(logId, request);
+            if (result == -1) {
+                logger.warn("{}| Data delete not found: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            } else if (result == -2) {
+                logger.warn("{}| Delete database: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), new JsonObject().put("debtId", result)
+                                                                                                                    .put("action", ActionConstant.DELETE).toString());
+                logger.info("{}| Response to client: {}", logId, response.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            }
+        } catch (Exception ex) {
+            logger.error("{}| Request transaction catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
         }
     }
 }

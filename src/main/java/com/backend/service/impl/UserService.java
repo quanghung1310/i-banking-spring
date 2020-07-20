@@ -7,10 +7,7 @@ import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
 import com.backend.model.Transaction;
-import com.backend.model.request.CreateDebtorRequest;
-import com.backend.model.request.CreateReminderRequest;
-import com.backend.model.request.TransactionRequest;
-import com.backend.model.request.TransferRequest;
+import com.backend.model.request.*;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
@@ -27,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService implements IUserService {
@@ -218,11 +216,6 @@ public class UserService implements IUserService {
 
     @Override
     public long createDebtor(String logId, CreateDebtorRequest request) {
-//        "debterId": 3,
-//                "cardNumber": 1575750842294193,
-//                "userId": 1,
-//                "amount": 0,
-//                "content": "Trả tiền đi má, nợ gì lâu vậy
         ReminderDTO reminderDTO;
         long debtorId = request.getDebtorId();
         long cardNumber = request.getCardNumber();
@@ -230,8 +223,8 @@ public class UserService implements IUserService {
         long amount = request.getAmount();
 
         //Step 1: Validate debtor
-        UserDTO userDTO = userRepository.findById(userId).get();
-        UserDTO debt = userRepository.findById(debtorId).get();
+        Optional<UserDTO> userDTO = userRepository.findById(userId);
+        Optional<UserDTO> debt = userRepository.findById(debtorId);
 
         if (userDTO == null || debt == null) {
             logger.warn("{}| User - {} or debt - {} not found", logId, userId, debtorId);
@@ -245,7 +238,7 @@ public class UserService implements IUserService {
             return -1;
         }
 
-        DebtDTO debtDTO = UserProcess.createDebt(logId, request, new Timestamp(request.getRequestTime()));
+        DebtDTO debtDTO = UserProcess.createDebt(logId, ActionConstant.INIT.getValue(), request, new Timestamp(request.getRequestTime()));
 
         DebtDTO debtor = debtRepository.save(debtDTO);
 
@@ -257,18 +250,19 @@ public class UserService implements IUserService {
         List<Debt> debts = new ArrayList<>();
         List<DebtDTO> debtDTOS;
         UserDTO userDTO = userRepository.findById(userId).get();
-        if (userDTO == null) {
+        if (userDTO.getId() <= 0) {
             logger.warn("{}| User - {} not found", logId, userId);
             return null;
         }
 
+        int isActive = 1;
         if (type == 1) {
             //danh sach no minh tao
-            debtDTOS = debtRepository.findAllByUserIdAndAction(userId, ActionConstant.INIT.getValue());
+            debtDTOS = debtRepository.findAllByUserIdAndActionAndIsActive(userId, ActionConstant.INIT.getValue(), isActive);
             debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getDebtorId()).get())));
         } else {
             //danh sach bi nhac no
-            debtDTOS = debtRepository.findAllByDebtorIdAndAction(userId, ActionConstant.INIT.getValue());
+            debtDTOS = debtRepository.findAllByDebtorIdAndActionAndIsActive(userId, ActionConstant.INIT.getValue(), isActive);
             debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getUserId()).get())));
         }
         if (type == 1) {
@@ -339,6 +333,57 @@ public class UserService implements IUserService {
         } else {
             logger.info("{}| Save transaction success with id: {}", logId, transactionId);
             return transactionDTO.getTransId();
+        }
+    }
+
+    @Override
+    public long deleteDebt(String logId, DeleteDebtRequest request) {
+        try {
+            //Step 1: Validate user
+            long userId = request.getUserId();
+            Timestamp currentTime = new Timestamp(request.getRequestTime());
+            
+            Optional<UserDTO> userDTO = userRepository.findById(userId);
+            if (userDTO == null) {
+                logger.warn("{}| User - {} not found", logId, userId);
+                return -1;
+            }
+
+            //Step 2: Validate debt
+            long debtId = request.getDebtId();
+            DebtDTO debtDTO = debtRepository.findFirstByIdAndActionAndIsActive(debtId, ActionConstant.INIT.getValue(), 1);
+            if (debtDTO == null) {
+                logger.warn("{}| Debt - {} not found", logId, debtId);
+                return -1;
+            }
+            logger.info("{}| Debt - {} can delete", logId, debtId);
+
+            //Step 3: Update isActive = 0
+            debtDTO.setAction(ActionConstant.DELETE.getValue());
+            debtDTO.setUpdatedAt(currentTime);
+
+            debtRepository.save(debtDTO);
+
+            //Step 4: insert new debt with action = DELETE
+            //4.1. Build CreateDebtorRequest
+            CreateDebtorRequest createDebtorRequest = new CreateDebtorRequest();
+            createDebtorRequest.setAmount(debtDTO.getAmount());
+            createDebtorRequest.setCardNumber(debtDTO.getCardNumber());
+            createDebtorRequest.setContent(request.getContent());
+            createDebtorRequest.setDebtorId(debtDTO.getDebtorId());
+            createDebtorRequest.setRequestId(request.getRequestId());
+            createDebtorRequest.setRequestTime(request.getRequestTime());
+            createDebtorRequest.setUserId(userId);
+            //4.2 Build DebtDTO
+            DebtDTO debtDelete = UserProcess.createDebt(logId, ActionConstant.DELETE.getValue(), createDebtorRequest, currentTime);
+            debtDelete = debtRepository.save(debtDelete);
+            
+            return debtDelete.getId();
+            //Step 5: send notify
+            //// TODO: 7/20/20 send notify 
+        } catch (Exception e) {
+            logger.error("{}| Delete debt in db catch exception: ", logId, e);
+            return -2;
         }
     }
 }
