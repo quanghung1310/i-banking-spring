@@ -578,4 +578,3 @@
 |data.debts.action|Number|x|L3|1 - Nợ được khởi tạo|
 |data.debts.content|String|x|L3|Nội dung nhắc nợ|
 |data.debts.createdAt|String|x|L3|Ngày khởi tạo - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
-|data.debts.updatedAt|String|x|L2|Thời gian thay đổi gần nhất - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|

@@ -29,7 +29,8 @@ public class ErrorConstant {
         errorMap.put(BAD_REQUEST, "Yêu cầu không tồn tại");
         errorMap.put(REQUEST_ID_EXISTED, "RequestId đã tồn tại. Vui lòng tạo requestId mới");
         errorMap.put(CANT_MINE, "Người dùng không thể mining");
-        errorMap.put(TIME_EXPIRED, "Chữ ký không hợp lệ");
+        errorMap.put(TIME_EXPIRED, "Yêu cầu hết thời hạn");
+        errorMap.put(HASH_NOT_VALID, "Mã hóa thất bại. Vui lòng kiểm tra lại");
     }
 
     public static String getMessage(int errorCode) {

@@ -1,5 +1,6 @@
 package com.backend.service.impl;
 
+import com.backend.dto.PartnerDTO;
 import com.backend.mapper.PartnerMapper;
 import com.backend.model.Partner;
 import com.backend.repository.IPartnerRepository;
@@ -22,4 +23,11 @@ public class PartnerService implements IPartnerService {
 
         return result;
     }
+
+    @Override
+    public Partner findByPartnerCode(String partnerCode) {
+        return PartnerMapper.toModel(partnerRepository.findFirstByPartnerCode(partnerCode));
+    }
+
+
 }

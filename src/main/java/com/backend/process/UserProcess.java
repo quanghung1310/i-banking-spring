@@ -4,11 +4,7 @@ import com.backend.constants.ActionConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
-import com.backend.model.request.CreateDebtorRequest;
-import com.backend.model.request.CreateReminderRequest;
-import com.backend.model.request.RegisterRequest;
-import com.backend.model.request.TransactionRequest;
-import com.backend.service.impl.UserService;
+import com.backend.model.request.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,7 +15,6 @@ import java.util.Random;
 
 public class UserProcess {
     private static final Logger logger = LogManager.getLogger(UserProcess.class);
-
 
     public static UserDTO createUser(String logId, RegisterRequest request, String userName) {
         int leftLimit = 97; // letter 'a'
@@ -119,21 +114,39 @@ public class UserProcess {
     }
 
     public static TransactionDTO createTransaction(String logId, Timestamp currentTime, TransactionRequest request, String cardName) {
+        return buildTransaction(currentTime, request, cardName, "pending", 500L);
+    }
+
+    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, String cardName, String status, long fee) {
         Long tranId = 1000000000L + (long)(new Random().nextDouble() * 999999999L);
 
         return TransactionDTO.builder()
                 .transId(tranId)
                 .amount(request.getAmount())
-                .fee(500L)
+                .fee(fee)
                 .typeFee(request.getTypeFee())
                 .cardName(cardName)
                 .cardNumber(request.getCardNumber())
                 .typeTrans(request.getTypeTrans())
                 .merchantId(request.getMerchantId())
                 .content(request.getContent())
-                .status("pending")
+                .status(status) //TODO ĐỊnh nghĩa các loại status trong 1 class nào đó để t xài chung nữa
                 .createdAt(currentTime)
                 .updatedAt(currentTime)
+                .userId(request.getUserId())
                 .build();
+    }
+
+    public static long newBalance(boolean isTransfer, int typeFee, long fee, long amount, long currentBalance) {
+        long balance = 0L;
+        if(isTransfer) { //lh-bank nhận tiền
+            balance = currentBalance + amount;
+        } else { //lh-bank bị trừ tiền
+            balance = currentBalance - amount;
+        }
+        if (typeFee == 2) {
+            balance -= fee;
+        }
+        return balance;
     }
 }

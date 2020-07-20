@@ -6,9 +6,11 @@ import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
+import com.backend.model.Transaction;
 import com.backend.model.request.CreateDebtorRequest;
 import com.backend.model.request.CreateReminderRequest;
 import com.backend.model.request.TransactionRequest;
+import com.backend.model.request.TransferRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
@@ -19,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -28,6 +31,15 @@ import java.util.List;
 @Service
 public class UserService implements IUserService {
     private static final Logger logger = LogManager.getLogger(UserService.class);
+
+    @Value( "${my.bank.id}" )
+    private long myBankId;
+
+    @Value( "${fee.transfer}" )
+    private long fee;
+
+    @Value( "${status.transfer}" )
+    private String status;
 
     @Autowired
     IAccountPaymentRepository accountPaymentRepository;
@@ -44,7 +56,7 @@ public class UserService implements IUserService {
     @Autowired
     IDebtRepository debtRepository;
 
-	@Autowired
+    @Autowired
     ITransactionRepository transactionRepository;
 
     @Override
@@ -181,29 +193,26 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse queryAccount(String logId, long cardNumber, long merchantId) {
+    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) {
         List<Account> accounts = new ArrayList<>();
         long userId = 0;
-        if (merchantId == 0) {
+        if (merchantId == myBankId) {
             //Cung ngan hang
             AccountPaymentDTO accountPaymentDTO;
             accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
             accounts.add(UserMapper.toModelAccount(
                     AccountSavingDTO.builder().build(),
                     accountPaymentDTO,
-                    1,
-                    false));
+                    typeAccount,
+                    isBalance));
             userId = accountPaymentDTO.getUserId();
         } else {
-          //Lien ngan hang
+            //Lien ngan hang
             /// TODO: 7/5/2020
+            return null;
         }
 
         UserDTO userDTO = userRepository.findById(userId).get();
-        if (userDTO == null) {
-            logger.warn("{}| user - {} not found!", logId, userId);
-            return UserMapper.toModelUser(userDTO, null, false);
-        }
         return UserMapper.toModelUser(userDTO, accounts, false);
     }
 
@@ -303,5 +312,33 @@ public class UserService implements IUserService {
                 .merchantId(transactionDTO.getMerchantId())
                 .status(transactionDTO.getStatus())
                 .build();
+    }
+
+    @Override
+    public long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName) {
+        //Build TransactionRequest
+        TransactionRequest transactionRequest = TransactionRequest.builder()
+                .requestId(request.getRequestId())
+                .requestTime(request.getRequestTime())
+                .amount(request.getValue())
+                .cardNumber(request.getFrom())
+                .content(request.getDescription())
+                .merchantId(merchantId)
+                .typeFee(request.getTypeFee())
+                .typeTrans(request.getIsTransfer() ? 1 : 2)
+                .userId(userId)
+                .build();
+        //Build transactionDTO
+        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), transactionRequest, cardName, status, fee);
+        TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
+        Long transactionId = transactionDTO.getId();
+
+        if (transactionId == null) {
+            logger.warn("{}| Save transaction - {} fail!", logId, firstTrans.getTransId());
+            return -1;
+        } else {
+            logger.info("{}| Save transaction success with id: {}", logId, transactionId);
+            return transactionDTO.getTransId();
+        }
     }
 }

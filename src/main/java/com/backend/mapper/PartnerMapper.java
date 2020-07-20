@@ -14,6 +14,8 @@ public class PartnerMapper {
                 .partnerCode(partnerDTO.getPartnerCode())
                 .phoneNumber(partnerDTO.getPhoneNumber())
                 .publicKey(partnerDTO.getPublicKey())
+                .secretKey(partnerDTO.getPrivateKey())
+                .password(partnerDTO.getPassword())
                 .build();
     }
 }
