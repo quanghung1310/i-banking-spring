@@ -1,7 +1,6 @@
 package com.backend.model.request;
 
 import com.backend.util.DataUtil;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;

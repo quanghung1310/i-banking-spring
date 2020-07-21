@@ -19,13 +19,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.mail.*;
+import javax.mail.internet.*;
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 //import org.springframework.security.core.Authentication;
 
@@ -40,6 +47,9 @@ public class UserController {
 
     @Autowired
     IUserService userService;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
 
     @GetMapping("/get-accounts/{userId}/{type}")
     public ResponseEntity<String> getCustomers(@PathVariable int userId,
@@ -371,15 +381,17 @@ public class UserController {
         logger.info("{}| Request pay debt data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
         try {
-            if (!request.isValidData()) {
+           /* if (!request.isValidData()) {
                 logger.warn("{}| Validate request pay debt data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-            }
+            }*/
             logger.info("{}| Valid data request pay debt success!", logId);
 
-//            TransactionResponse transactionResponse = userService.transaction(logId, request);
-            long result = userService.payDebt(logId, request);
+            long result = 1;//userService.payDebt(logId, request);
+            if (result > 0) {
+                sendmail();
+            }
             //// TODO: 7/20/20 validate result -> response
             JsonObject dateResponse = new JsonObject()
                     .put("transId", result);
@@ -394,5 +406,14 @@ public class UserController {
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
         }
+    }
+    private void sendmail() throws AddressException, MessagingException, IOException {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo("tranlang.dtnt@gmail.com", "lang.tran@mservice.com.vn");
+
+        msg.setSubject("Testing from Spring Boot");
+        msg.setText("Hello World \n Spring Boot Email");
+
+        javaMailSender.send(msg);
     }
 }
