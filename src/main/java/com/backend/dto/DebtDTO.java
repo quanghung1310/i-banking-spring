@@ -16,22 +16,22 @@ public class DebtDTO {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
 
-    private long userId;
+    private long userId; //chủ nợ
 
-    private long cardNumber;
+    private long cardNumber; // stk con nợ
 
-    private long debtorId;
+    private long debtorId; //con nợ
 
     @Column(length = 100)
     private String content;
 
-    private int isActive;
+    private int isActive; //khong can thiet luu?
 
     private Timestamp createdAt;
 
     private Timestamp updatedAt;
 
-    private int action;
+    private int action; //1. INIT, 2.DELETE, 3.COMPLETED
 
-    private long amount;
+    private long amount; //so tien nợ
 }

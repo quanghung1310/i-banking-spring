@@ -20,8 +20,6 @@ public class TransactionRequest {
     private long amount;
     private long merchantId; //merchant của from
     private long userId; //to
-    private int otp;
-    private long debtId;
 
     public boolean isValidData() {
         try {

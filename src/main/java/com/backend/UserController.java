@@ -366,7 +366,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/pay/debt")
-    public ResponseEntity<String> payDebt(@RequestBody TransactionRequest request) {
+    public ResponseEntity<String> payDebt(@RequestBody PayDebtRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request pay debt data: {}", logId, PARSER.toJson(request));
         BaseResponse response;

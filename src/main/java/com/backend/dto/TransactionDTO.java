@@ -19,9 +19,9 @@ public class TransactionDTO {
     @Column(length = 20)
     private Long transId;
 
-    private Long userId;
+    private Long userId; //from
 
-    private long amount;
+    private long amount; //value
 
     private long fee;
 
@@ -31,9 +31,9 @@ public class TransactionDTO {
     private String cardName;
 
     @Column(length = 20)
-    private Long cardNumber;
+    private Long cardNumber; //to
 
-    private Integer typeTrans;
+    private Integer typeTrans; //1. deposit, 2.debt
 
     private long merchantId;
 

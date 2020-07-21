@@ -25,5 +25,9 @@ public class OtpDTO {
 
     private Timestamp updatedAt;
 
-    private int action; //1: otp payment, 2: otp pay debt
+//    private int action; //1: otp payment, 2: otp pay debt
+
+    private int status; //1. INIT, 2.DELETE
+
+    private long userId; //người nhận được otp (người cần chuyển tiền)
 }

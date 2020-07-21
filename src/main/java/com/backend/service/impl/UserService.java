@@ -42,6 +42,9 @@ public class UserService implements IUserService {
     @Value( "${status.transfer}" )
     private String status;
 
+    @Value( "${session.request}" )
+    private int session;
+
     @Autowired
     IAccountPaymentRepository accountPaymentRepository;
 
@@ -59,6 +62,9 @@ public class UserService implements IUserService {
 
     @Autowired
     ITransactionRepository transactionRepository;
+
+    @Autowired
+    IOtpRepository otpRepository;
 
     @Override
     public List<Account> getUsers(String logId, int type, long userId) {
@@ -391,9 +397,17 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public long payDebt(String logId, TransactionRequest request) {
+    public long payDebt(String logId, PayDebtRequest request) {
+        //from - to - value (A chuyển cho B 1000)
+        //debtor -> userId  - (debtId -> getAmount) = value
+
         //Step 0: validate debt
         long debtId = request.getDebtId();
+        int otp = request.getOtp();
+        long userId = request.getUserId();
+
+        Timestamp currentTime = new Timestamp(request.getRequestTime());
+
         DebtDTO debtDTO = debtRepository.findFirstByIdAndActionAndIsActive(debtId, ActionConstant.INIT.getValue(), 1);
         if (debtDTO == null) {
             logger.warn("{}| Debt - {} not found", logId, debtId);
@@ -402,28 +416,78 @@ public class UserService implements IUserService {
         logger.info("{}| Validate debt - {} success!", logId, debtId);
 
         //Step 1: validate FROM
-        AccountPaymentDTO accountFrom = accountPaymentRepository.findFirstByCardNumber(request.getCardNumber());
+        AccountPaymentDTO accountFrom = accountPaymentRepository.findFirstByUserId(userId);
         if (accountFrom == null) {
-            logger.warn("{}| Card number sender - {} not fount!", logId, request.getCardNumber());
+            logger.warn("{}| Debtor - {} not fount!", logId, userId);
             return -1;
         }
-        logger.info("{}| Account sender  -{} is existed!", logId, accountFrom.getId());
+        logger.info("{}| Debtor  -{} is existed!", logId, accountFrom.getId());
 
         //Step 2: validate TO
+        AccountPaymentDTO accountTo = accountPaymentRepository.findFirstByCardNumber(debtDTO.getUserId());
+        if (accountTo == null) {
+            logger.warn("{}| Creditor - {} not fount!", logId, debtDTO.getUserId());
+            return -1;
+        }
+        logger.info("{}| Creditor  -{} is existed!", logId, debtDTO.getUserId());
 
         //Step 3: validate otp
+        OtpDTO otpDTO = otpRepository.findFirstByUserIdAndOtpAndStatus(userId, otp, ActionConstant.INIT.getValue());
+
+        //3.1. Sai OTP
+        if (otpDTO == null) {
+            logger.warn("{}| Otp - {} not fount!", logId, request.getUserId());
+            return -1;
+        }
+
+        //3.2. OTP het han
+        if (currentTime.getTime() - otpDTO.getCreatedAt().getTime() > session ) {
+            logger.warn("{}|OTP - {} out of session with - {} milliseconds!", logId, otp, session);
+            return -1;
+        }
+        logger.info("{}| Validate otp - {} success!", logId, otp);
 
         //Step 4: validate balance FROM
+        long amountPay          = debtDTO.getAmount();
+        long currentBalanceFrom = accountFrom.getBalance();
+        long currentBalanceTo   = accountTo.getBalance();
+
+        if (request.getTypeFee() == 1) { //from tra fee
+            if (currentBalanceFrom < amountPay + fee) {
+                logger.warn("{}|Balance debtor: {} < {} (amountPay)", logId, currentBalanceFrom, amountPay + fee);
+                return -3;
+            }
+            accountFrom.setBalance(currentBalanceFrom - amountPay - fee);
+            accountTo.setBalance(currentBalanceTo + amountPay);
+        } else {
+            if (currentBalanceFrom < amountPay) {
+                logger.warn("{}|Balance debtor: {} < {} (amountPay)", logId, currentBalanceFrom, amountPay);
+                return -3;
+            }
+            accountFrom.setBalance(currentBalanceFrom - amountPay);
+            accountTo.setBalance(currentBalanceTo + amountPay - fee);
+        }
+        logger.info("{}| Debtor - {} can pay debt!", logId, userId);
 
         //Step 5: update balance of FROM
+        accountFrom.setUpdatedAt(currentTime);
+        accountPaymentRepository.save(accountFrom);
 
         //Step 6: update balance of TO
+        accountTo.setUpdatedAt(currentTime);
+        accountPaymentRepository.save(accountTo);
 
         //Step 7: Update action debt to COMPLETED
+        debtDTO.setAction(ActionConstant.COMPLETED.getValue());
+        debtDTO.setUpdatedAt(currentTime);
+        debtRepository.save(debtDTO);
 
         //Step 8: insert transaction
-
+        //// TODO: 7/21/20 build transaction 
+        TransactionDTO transactionDTO = new TransactionDTO();
+        
         //Step 9: response transId
+        
         return 0;
     }
 }

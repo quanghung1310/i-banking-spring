@@ -30,5 +30,5 @@ public interface IUserService {
 
     long deleteDebt(String logId, DeleteDebtRequest request);
 
-    long payDebt(String logId, TransactionRequest request);
+    long payDebt(String logId, PayDebtRequest request);
 }

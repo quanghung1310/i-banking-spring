@@ -138,7 +138,7 @@ public class UserProcess {
     }
 
     public static long newBalance(boolean isTransfer, int typeFee, long fee, long amount, long currentBalance) {
-        long balance = 0L;
+        long balance;
         if(isTransfer) { //lh-bank nhận tiền
             balance = currentBalance + amount;
         } else { //lh-bank bị trừ tiền
