@@ -216,11 +216,9 @@ public class UserService implements IUserService {
 
     @Override
     public long createDebtor(String logId, CreateDebtorRequest request) {
-        ReminderDTO reminderDTO;
         long debtorId = request.getDebtorId();
         long cardNumber = request.getCardNumber();
         long userId = request.getUserId();
-        long amount = request.getAmount();
 
         //Step 1: Validate debtor
         Optional<UserDTO> userDTO = userRepository.findById(userId);
@@ -311,17 +309,16 @@ public class UserService implements IUserService {
     @Override
     public long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName) {
         //Build TransactionRequest
-        TransactionRequest transactionRequest = TransactionRequest.builder()
-                .requestId(request.getRequestId())
-                .requestTime(request.getRequestTime())
-                .amount(request.getValue())
-                .cardNumber(request.getFrom())
-                .content(request.getDescription())
-                .merchantId(merchantId)
-                .typeFee(request.getTypeFee())
-                .typeTrans(request.getIsTransfer() ? 1 : 2)
-                .userId(userId)
-                .build();
+        TransactionRequest transactionRequest = new TransactionRequest();
+        transactionRequest.setRequestId(request.getRequestId());
+        transactionRequest.setRequestTime(request.getRequestTime());
+        transactionRequest.setAmount(request.getValue());
+        transactionRequest.setCardNumber(request.getFrom());
+        transactionRequest.setContent(request.getDescription());
+        transactionRequest.setMerchantId(merchantId);
+        transactionRequest.setTypeFee(request.getTypeFee());
+        transactionRequest.setTypeTrans(request.getIsTransfer() ? 1 : 2);
+        transactionRequest.setUserId(userId);
         //Build transactionDTO
         TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), transactionRequest, cardName, status, fee);
         TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
