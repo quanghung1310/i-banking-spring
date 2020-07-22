@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
-@Builder
 public class TransactionRequest {
     //from (merchant nào) - to (luôn luôn là LH-Bank) - value (bao nhiêu tiền) - typeTrans
     private String requestId = DataUtil.createRequestId();
