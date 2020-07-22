@@ -31,7 +31,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static Account toModelAccount(AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
+    public static Account toModelAccount(long reminderId, AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
         Account account = Account.builder().build();
         if (type == 1) {
             if (accountPaymentDTO == null) {
@@ -49,6 +49,7 @@ public class UserMapper {
             account.setType(type);
             account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setUserId(accountPaymentDTO.getUserId());
+            account.setReminderId(reminderId);
         } else {
             if (accountSavingDTO == null) {
                 return null;

@@ -6,7 +6,6 @@ import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
-import com.backend.model.Transaction;
 import com.backend.model.request.*;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
@@ -121,7 +120,7 @@ public class UserService implements IUserService {
             return -1;
         }
         //Step 2: Validate account
-        if (merchantId == 0) { //Tài khoản cùng ngân hàng
+        if (merchantId == myBankId) { //Tài khoản cùng ngân hàng
             AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
             if (accountPaymentDTO == null) {
                 logger.warn("{}| Card number - {} not existed!", logId, cardNumber);
@@ -175,6 +174,7 @@ public class UserService implements IUserService {
                 //1.1 reminder same bank
                 accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(reminder.getCardNumber());
                 accounts.add(UserMapper.toModelAccount(
+                        reminder.getId(),
                         AccountSavingDTO.builder().build(),
                         accountPaymentDTO,
                         1,
@@ -199,6 +199,7 @@ public class UserService implements IUserService {
             AccountPaymentDTO accountPaymentDTO;
             accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
             accounts.add(UserMapper.toModelAccount(
+                    0,
                     AccountSavingDTO.builder().build(),
                     accountPaymentDTO,
                     typeAccount,
@@ -224,7 +225,7 @@ public class UserService implements IUserService {
         Optional<UserDTO> userDTO = userRepository.findById(userId);
         Optional<UserDTO> debt = userRepository.findById(debtorId);
 
-        if (userDTO == null || debt == null) {
+        if (!userDTO.isPresent() || !debt.isPresent()) {
             logger.warn("{}| User - {} or debt - {} not found", logId, userId, debtorId);
             return -1;
         }
@@ -382,5 +383,15 @@ public class UserService implements IUserService {
             logger.error("{}| Delete debt in db catch exception: ", logId, e);
             return -2;
         }
+    }
+
+    @Override
+    public Optional<ReminderDTO> getReminder(long id) {
+        return reminderRepository.findById(id);
+    }
+
+    @Override
+    public ReminderDTO saveReminder(ReminderDTO reminderDTO) {
+        return reminderRepository.save(reminderDTO);
     }
 }

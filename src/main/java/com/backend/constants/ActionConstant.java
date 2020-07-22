@@ -3,7 +3,8 @@ package com.backend.constants;
 
 public enum ActionConstant {
     INIT (1),
-    DELETE(2);
+    DELETE(2),
+    UPDATE(3);
 
     private int value;
 

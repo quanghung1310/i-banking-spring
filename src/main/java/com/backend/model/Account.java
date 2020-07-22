@@ -19,6 +19,7 @@ public class Account {
     public Integer type;
     public Long balance;
     public Long userId;
+    public long reminderId;
 
     @Override
     public String toString() {

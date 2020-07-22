@@ -2,12 +2,14 @@ package com.backend;
 
 import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
+import com.backend.dto.ReminderDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
+import com.backend.repository.IReminderRepository;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Optional;
 
 //import org.springframework.security.core.Authentication;
 
@@ -40,6 +43,9 @@ public class UserController {
 
     @Autowired
     IUserService userService;
+
+    @Autowired
+    IReminderRepository reminderRepository;
 
     @GetMapping("/get-accounts/{userId}/{type}")
     public ResponseEntity<String> getCustomers(@PathVariable int userId,
@@ -173,16 +179,7 @@ public class UserController {
             }
 
             UserResponse userResponse = userService.getReminders(logId, userId, type, cardNumber);
-            if (userResponse == null) {
-                logger.warn("{}| Get reminders fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, userResponse.toString());
-                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
-            response.setData(new JsonObject(userResponse.toString()));
-            logger.info("{}| Response to client: {}", logId, userResponse.toString());
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            return getStringResponseEntity(logId, userResponse);
         } catch (Exception ex) {
             logger.error("{}| Request get users catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
@@ -363,5 +360,73 @@ public class UserController {
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @PostMapping(value = "update-reminder")
+    public ResponseEntity<String> updateReminder(@RequestBody CreateReminderRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            //Step 1: Validate base request
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request update/delete reminder data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            //Step 2: Validate request update/delete
+            if (request.getReminderId() == null
+                    || (!request.getAction().equals(ActionConstant.DELETE.name()) && !request.getAction().equals(ActionConstant.UPDATE.name()))) {
+                logger.warn("{}| Reminder id - {} or action - {} are not empty!", logId, request.getReminderId(), request.getAction());
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid base data request update reminder success!", logId);
+
+            //Step 2: Validate reminder
+            Optional<ReminderDTO> reminderDTO = reminderRepository.findById(request.getReminderId());
+            if (!reminderDTO.isPresent()) {
+                logger.warn("{}| Reminder - {} not found!", logId, request.getReminderId());
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid request update reminder success!", logId);
+
+            if (request.getAction().equals(ActionConstant.UPDATE.name())) {
+                if (StringUtils.isBlank(request.getNameReminisce()) && (request.getCardNumber() == null)) {
+                    logger.warn("{}| Data update bad format: name - {}, cardNumber - {}, reminderId - {}", logId, request.getNameReminisce(), request.getCardNumber(), request.getReminderId());
+                    response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                    return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+                }
+                reminderDTO.get().setCardNumber(request.getCardNumber());
+                reminderDTO.get().setNameReminisce(request.getNameReminisce());
+            } else {
+                reminderDTO.get().setIsActive(0);
+            }
+            ReminderDTO reminder = reminderRepository.save(reminderDTO.get());
+            UserResponse userResponse = userService.getReminders(logId, reminder.getUserId(), reminder.getType(), reminder.getCardNumber());
+            return getStringResponseEntity(logId, userResponse);
+        } catch (Exception ex) {
+            logger.error("{}| Request create reminder catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private ResponseEntity<String> getStringResponseEntity(String logId, UserResponse userResponse) {
+        BaseResponse response;
+        if (userResponse == null) {
+            logger.warn("{}| Get reminders fail!", logId);
+            response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, userResponse.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
+        response.setData(new JsonObject(userResponse.toString()));
+        logger.info("{}| Response to client: {}", logId, userResponse.toString());
+        return new ResponseEntity<>(response.toString(), HttpStatus.OK);
     }
 }
