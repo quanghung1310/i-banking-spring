@@ -13,4 +13,6 @@ public class Partner {
     private String publicKey;
     private String email;
     private String phoneNumber;
+    private String secretKey;
+    private String password;
 }

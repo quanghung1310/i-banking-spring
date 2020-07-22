@@ -1,86 +1,27 @@
-package com.backend.util;
+package com.backend.cryption;
 
-
-import com.backend.constants.ErrorConstant;
-import com.backend.model.response.BaseResponse;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import sun.misc.BASE64Encoder;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Formatter;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 
-import static com.backend.cryption.SHA256.HMAC_SHA256;
-import static com.backend.cryption.SHA256.signHmacSHA256;
+public class SHA256 {
+    private static final Logger LOGGER = LogManager.getLogger(SHA256.class);
+    public static final String HMAC_SHA256 = "HmacSHA256";
 
-public class DataUtil {
-    private static final Logger logger = LogManager.getLogger(DataUtil.class);
-
-    public static String createRequestId() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
-
-    public static BaseResponse buildResponse(int resultCode, String requestId, String responseBody) {
-        BaseResponse baseResponse = new BaseResponse();
-        baseResponse.setResultCode(resultCode);
-        baseResponse.setMessage(ErrorConstant.getMessage(resultCode));
-        baseResponse.setResponseTime(System.currentTimeMillis());
-        baseResponse.setRequestId(requestId);
-        if (responseBody != null) {
-            baseResponse.setData(new JsonObject(responseBody));
-        }
-
-        return baseResponse;
-    }
-
-    public static String convertTimeWithFormat(long timeInMillisecond, String format) {
-        try {
-            DateFormat f = new SimpleDateFormat(format);
-            return f.format(timeInMillisecond);
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public static String convertPublicKeyToString(PublicKey publicKey) {
-        String plk = "";
-        BASE64Encoder base64Encoder = new BASE64Encoder();
-        plk = base64Encoder.encode(publicKey.getEncoded()).replaceAll("\\r\\n|\\r|\\n|", "");
-        return plk;
-    }
-
-    public static String convertPrivateKeyToString(PrivateKey privateKey) {
-        String prkey = "";
-        BASE64Encoder base64Encoder = new BASE64Encoder();
-        prkey = base64Encoder.encode(privateKey.getEncoded()).replaceAll("\\r\\n|\\r|\\n", "");
-        return prkey;
-    }
-
-    public static String pgpSecretKeyToString(PGPSecretKey secretKey) throws IOException {
-        String secKey = "";
-        BASE64Encoder base64Encoder = new BASE64Encoder();
-        secKey = base64Encoder.encode(secretKey.getEncoded()).replaceAll("\\r\\n|\\r|\\n", "");
-        return secKey;
-    }
     public static String createHash(JsonObject json, String secretKey, String logId) {
         try {
             JsonObject jsonSimple = toSimpleJsonObject(new JsonObject(), json, true);
-            String dataCryption = buildRawDataHash(jsonSimple);
-            logger.info("{}| Data crypto: {}", logId, dataCryption);
+            String dataCryption = buildRawDataSignature(jsonSimple);
+            LOGGER.info("{}| Data cryption: {}", logId, dataCryption);
             return signHmacSHA256(dataCryption, secretKey);
         } catch (Exception ex) {
             return "";
@@ -99,7 +40,8 @@ public class DataUtil {
         }
         return jsonSimple;
     }
-    public static String buildRawDataHash(JsonObject rawData) {
+
+    public static String buildRawDataSignature(JsonObject rawData) {
         StringBuilder result = new StringBuilder();
         if (rawData == null) {
             return result.toString();
@@ -143,6 +85,4 @@ public class DataUtil {
         mac.init(secretKeySpec);
         return mac.doFinal(data);
     }
-
-
 }

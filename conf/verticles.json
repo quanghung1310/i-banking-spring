@@ -1,0 +1,18 @@
+{
+  "verticles": [
+		{
+		  "name": "PartnerVerticle",
+		  "block": false,
+		  "address": "com.backend.PartnerVerticle",
+		  "instances": 1,
+		  "isDeployed": true
+		},
+	  {
+		  "name": "DatabaseVerticle",
+		  "block": true,
+		  "address": "com.backend.database.DatabaseVerticle",
+		  "instances": 1,
+		  "isDeployed": true
+	  }
+  ]
+}

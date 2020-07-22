@@ -50,4 +50,6 @@ public class StringConstant {
     public static final String BLOCK_ID     = "blockId";
     public static final String MINER        = "miner";
 
+    public static final String PRIVATE_KEY = "privateKey";
+    public static final String PUBLIC_KEY = "publicKey";
 }

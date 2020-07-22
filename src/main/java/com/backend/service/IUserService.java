@@ -1,7 +1,9 @@
 package com.backend.service;
 
 import com.backend.model.Account;
-import com.backend.model.request.TransactionRequest;
+import com.backend.model.Transaction;
+import com.backend.model.request.*;
+import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 
@@ -12,5 +14,19 @@ public interface IUserService {
 
     UserResponse login(String logId, String userName, String password);
 
+    long createReminder(String logId, CreateReminderRequest request);
+
+    UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
+
+    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance);
+
+    long createDebtor(String logId, CreateDebtorRequest request);
+
+    DebtorResponse getDebts(String logId, long userId, int action, int type);
+
     TransactionResponse transaction(String logId, TransactionRequest transactionRequest);
+
+    long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName);
+
+    long deleteDebt(String logId, DeleteDebtRequest request);
 }

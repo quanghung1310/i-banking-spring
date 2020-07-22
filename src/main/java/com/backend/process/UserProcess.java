@@ -1,16 +1,21 @@
 package com.backend.process;
 
-import com.backend.dto.AccountPaymentDTO;
-import com.backend.dto.TransactionDTO;
-import com.backend.dto.UserDTO;
-import com.backend.model.request.RegisterRequest;
-import com.backend.model.request.TransactionRequest;
+import com.backend.constants.ActionConstant;
+import com.backend.dto.*;
+import com.backend.mapper.UserMapper;
+import com.backend.model.Account;
+import com.backend.model.request.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class UserProcess {
+    private static final Logger logger = LogManager.getLogger(UserProcess.class);
+
     public static UserDTO createUser(String logId, RegisterRequest request, String userName) {
         int leftLimit = 97; // letter 'a'
         int rightLimit = 122; // letter 'z'
@@ -58,22 +63,90 @@ public class UserProcess {
                 .admin(adminId)
                 .build();
     }
+
+    public static ReminderDTO createReminder(String logId, CreateReminderRequest request, Timestamp currentTime) {
+        return ReminderDTO.builder()
+                .createdAt(currentTime)
+                .isActive(1)
+                .nameReminisce(request.getNameReminisce())
+                .userId(request.getUserId())
+                .cardNumber(request.getCardNumber())
+                .merchantId(request.getMerchantId())
+                .updatedAt(currentTime)
+                .type(request.getType())
+                .build();
+    }
+
+    public static List<Account> formatToAccounts(String logId, List<AccountPaymentDTO> accountPaymentDTOS, List<AccountSavingDTO> accountSavingDTOS, boolean isQueryBalance) {
+        List<Account> accounts = new ArrayList<>();
+
+        if (accountPaymentDTOS.size() > 0) {
+            accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+                    AccountSavingDTO.builder().build(),
+                    account,
+                    1,
+                    isQueryBalance)));
+            logger.info("{}| Mapping account payment to account success with size: {}", logId, accountPaymentDTOS.size());
+        }
+        if (accountSavingDTOS.size() > 0) {
+            accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
+                    account,
+                    AccountPaymentDTO.builder().build(),
+                    2,
+                    isQueryBalance)));
+            logger.info("{}| Mapping account saving to account success with size: {}", logId, accountSavingDTOS.size());
+        }
+        return accounts;
+    }
+
+    public static DebtDTO createDebt(String logId, int action, CreateDebtorRequest request, Timestamp currentTime) {
+        return DebtDTO.builder()
+                .createdAt(currentTime)
+                .action(action)
+                .cardNumber(request.getCardNumber())
+                .content(request.getContent())
+                .debtorId(request.getDebtorId())
+                .isActive(1)
+                .userId(request.getUserId())
+                .updatedAt(currentTime)
+                .amount(request.getAmount())
+                .build();
+    }
+
     public static TransactionDTO createTransaction(String logId, Timestamp currentTime, TransactionRequest request, String cardName) {
+        return buildTransaction(currentTime, request, cardName, "pending", 500L);
+    }
+
+    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, String cardName, String status, long fee) {
         Long tranId = 1000000000L + (long)(new Random().nextDouble() * 999999999L);
 
         return TransactionDTO.builder()
                 .transId(tranId)
                 .amount(request.getAmount())
-                .fee(500L)
+                .fee(fee)
                 .typeFee(request.getTypeFee())
                 .cardName(cardName)
                 .cardNumber(request.getCardNumber())
                 .typeTrans(request.getTypeTrans())
                 .merchantId(request.getMerchantId())
                 .content(request.getContent())
-                .status("pending")
+                .status(status) //TODO ĐỊnh nghĩa các loại status trong 1 class nào đó để t xài chung nữa
                 .createdAt(currentTime)
                 .updatedAt(currentTime)
+                .userId(request.getUserId())
                 .build();
+    }
+
+    public static long newBalance(boolean isTransfer, int typeFee, long fee, long amount, long currentBalance) {
+        long balance = 0L;
+        if(isTransfer) { //lh-bank nhận tiền
+            balance = currentBalance + amount;
+        } else { //lh-bank bị trừ tiền
+            balance = currentBalance - amount;
+        }
+        if (typeFee == 2) {
+            balance -= fee;
+        }
+        return balance;
     }
 }

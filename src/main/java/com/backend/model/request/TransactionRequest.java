@@ -1,21 +1,25 @@
 package com.backend.model.request;
 
 import com.backend.util.DataUtil;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
+@Builder
 public class TransactionRequest {
+    //from (merchant nào) - to (luôn luôn là LH-Bank) - value (bao nhiêu tiền) - typeTrans
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private Long cardNumber;
-    private Integer typeFee;
-    private Integer typeTrans;
+    private Long cardNumber; //from
+    private Integer typeFee; //1: người nhận trả, 2. người mua trả
+    private Integer typeTrans; //1: Chuyển tiền (update balance = userId.accountPayment.balance + amount), 2. Nhận tiền (update balance = userId.accountPayment.balance - amount)
     private String content;
     private long amount;
-    private long merchantId;
+    private long merchantId; //merchant của from
+    private long userId; //to
 
     public boolean isValidData() {
         try {
