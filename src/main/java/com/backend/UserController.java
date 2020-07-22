@@ -138,23 +138,21 @@ public class UserController {
             }
             logger.info("{}| Valid data request create reminder success!", logId);
 
-            long reminderId = userService.createReminder(logId, request);
+            ReminderDTO reminderDTO = userService.createReminder(logId, request);
             JsonObject reminder = new JsonObject();
-            if (reminderId == -2) {
-                logger.warn("{}| Create reminder fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), reminder.toString());
-                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            if (reminderId <= 0) {
+            if (reminderDTO == null) {
                 logger.warn("{}| Create reminder fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), reminder.toString());
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            } else {
+                UserResponse userResponse = userService.getReminders(logId, reminderDTO.getUserId(), reminderDTO.getType(), reminderDTO.getCardNumber());
+                return getUserResponseEntity(logId, userResponse);
             }
-            reminder.put("reminderId", reminderId);
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), reminder.toString());
-            response.setData(new JsonObject(reminder.toString()));
-            logger.info("{}| Response to client: {}", logId, response.toString());
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+//            reminder.put("reminderId", reminderId);
+//            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), reminder.toString());
+//            response.setData(new JsonObject(reminder.toString()));
+//            logger.info("{}| Response to client: {}", logId, response.toString());
+//            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("{}| Request create reminder catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
@@ -179,7 +177,7 @@ public class UserController {
             }
 
             UserResponse userResponse = userService.getReminders(logId, userId, type, cardNumber);
-            return getStringResponseEntity(logId, userResponse);
+            return getUserResponseEntity(logId, userResponse);
         } catch (Exception ex) {
             logger.error("{}| Request get users catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
@@ -362,7 +360,7 @@ public class UserController {
         }
     }
 
-    @PostMapping(value = "update-reminder")
+    @PostMapping(value = "/update-reminder")
     public ResponseEntity<String> updateReminder(@RequestBody CreateReminderRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
@@ -406,7 +404,7 @@ public class UserController {
             }
             ReminderDTO reminder = reminderRepository.save(reminderDTO.get());
             UserResponse userResponse = userService.getReminders(logId, reminder.getUserId(), reminder.getType(), reminder.getCardNumber());
-            return getStringResponseEntity(logId, userResponse);
+            return getUserResponseEntity(logId, userResponse);
         } catch (Exception ex) {
             logger.error("{}| Request create reminder catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
@@ -416,11 +414,11 @@ public class UserController {
         }
     }
 
-    private ResponseEntity<String> getStringResponseEntity(String logId, UserResponse userResponse) {
+    private ResponseEntity<String> getUserResponseEntity(String logId, UserResponse userResponse) {
         BaseResponse response;
         if (userResponse == null) {
             logger.warn("{}| Get reminders fail!", logId);
-            response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, userResponse.toString());
+            response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
             return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 

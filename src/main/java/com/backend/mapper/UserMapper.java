@@ -1,11 +1,7 @@
 package com.backend.mapper;
 
 import com.backend.constants.StringConstant;
-import com.backend.dto.AccountPaymentDTO;
-import com.backend.dto.AccountSavingDTO;
-import com.backend.dto.DebtDTO;
-import com.backend.dto.TransactionDTO;
-import com.backend.dto.UserDTO;
+import com.backend.dto.*;
 import com.backend.model.Account;
 import com.backend.model.Debt;
 import com.backend.model.Transaction;
@@ -31,7 +27,16 @@ public class UserMapper {
                 .build();
     }
 
-    public static Account toModelAccount(long reminderId, AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
+    public static Account toModelReminder(ReminderDTO reminderDTO, AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
+        Account account = toModelAccount(accountSavingDTO, accountPaymentDTO, type, isQueryBalance);
+        if (account == null) {
+            return null;
+        }
+        account.setReminderId(reminderDTO.getId());
+        account.setCardName(reminderDTO.getNameReminisce());
+        return account;
+    }
+    public static Account toModelAccount(AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
         Account account = Account.builder().build();
         if (type == 1) {
             if (accountPaymentDTO == null) {
@@ -49,7 +54,6 @@ public class UserMapper {
             account.setType(type);
             account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setUserId(accountPaymentDTO.getUserId());
-            account.setReminderId(reminderId);
         } else {
             if (accountSavingDTO == null) {
                 return null;

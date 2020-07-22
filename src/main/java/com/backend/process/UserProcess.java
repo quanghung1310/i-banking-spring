@@ -82,7 +82,6 @@ public class UserProcess {
 
         if (accountPaymentDTOS.size() > 0) {
             accountPaymentDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                    0,
                     AccountSavingDTO.builder().build(),
                     account,
                     1,
@@ -91,7 +90,6 @@ public class UserProcess {
         }
         if (accountSavingDTOS.size() > 0) {
             accountSavingDTOS.forEach(account -> accounts.add(UserMapper.toModelAccount(
-                    0,
                     account,
                     AccountPaymentDTO.builder().build(),
                     2,
