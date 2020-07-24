@@ -16,7 +16,7 @@ public class Account {
     public String createdAt;
     public String updatedAt;
     public String description;
-    public Integer type;
+    public String type;
     public Long balance;
     public Long userId;
     public long reminderId;

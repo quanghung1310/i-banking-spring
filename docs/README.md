@@ -7,6 +7,7 @@
 
 # I. API Document
 # Index
+0. [Authenicate](#0-authenticate)
 1. [Register](#1-register)
 2. [Deposit](#2-deposit)
 3. [Get Accounts](#3-get-accounts)
@@ -23,6 +24,38 @@
 
 
 # II. API Document
+# 0. Authenticate
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/authenticate       | 
+|Method | POS       | 
+## Raw Data
+**HTTP Request:**
+```json
+{
+    "userName": "tranthilang",
+    "password": "mvfkvuztexxbwxz"
+}
+```
+**Response:**
+```json
+{
+    "bearerToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTYyMTQyNywiaWF0IjoxNTk1NTg1NDI3fQ.BheYyeb0zlEZg14hpS1T6BCc05p_TDyKBzany6kWAQc"
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|userName|String|x|L1|Tên đăng nhập|
+|password|String|x|L1|Mật khẩu|
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|bearerToken|String|x|L1|token|
+
 # 1. Register
 |Key | Value       | 
 |------- | ---------- |
@@ -205,6 +238,7 @@
 |------- | ---------- |
 |URL | 127.0.0.1:8080/lh-bank/login       | 
 |Method | POS       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
 ## Raw Data
 **HTTP Request:**
 ```json
@@ -216,32 +250,16 @@
 **Response:**
 ```json
 {
-    "requestId": "263ef3e4a8d04ba2aeb81f865a7d6cd4",
+    "requestId": "09633a244ff544f9b52505612f3415e9",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1593786139161,
+    "responseTime": 1595585601360,
     "data": {
-        "id": 33,
-        "userName": "tranlang",
-        "password": "yvlikcfnzywqdcj",
-        "email": "tranlang.dtnt@gmail.com",
-        "name": "Tran Lang",
+        "id": 1,
+        "email": "tranthilang.dtnt@gmail.com",
+        "name": "Tran Thi Lang",
         "phone": "0327421137",
-        "createdAt": "03/07/2020 21:21:24",
-        "account": [
-            {
-                "id": 34,
-                "cardNumber": 1387184392910303,
-                "cardName": "Tran Lang",
-                "closeDate": "02/07/2024 21:21:24",
-                "createdAt": "03/07/2020 21:21:24",
-                "updatedAt": "03/07/2020 21:21:24",
-                "description": null,
-                "type": 1,
-                "balance": 0,
-                "userId": 33
-            }
-        ]
+        "createdAt": "10/07/2020 08:17:37"
     }
 }
 ```
@@ -267,14 +285,6 @@
 |data.email|String|x|L2|Địa chỉ email|
 |data.name|String|x|L2|Tên khách hàng|
 |data.phone|String|x|L2|Số điện thoại (Đầu số mới)
-|data.accounts.id|Number|x|L3|Định danh tài khoản|
-|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
-|data.accounts.cardNnumber|Number|String|x|L3|Số tài khoản|
-|data.accounts.cardName|String|x|L3|Tên tài khoản|
-|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
-|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
-|data.accounts.description|String||L3|Thông tin thêm |
-|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
 
 # 5. Create Reminder
 |Key | Value       | 

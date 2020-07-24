@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface IUserService {
     List<Account> getUsers(String logId, int type, long userId);
 
-    UserResponse login(String logId, String userName, String password);
+    UserResponse login(String logId, String userName);
 
     ReminderDTO createReminder(String logId, CreateReminderRequest request);
 

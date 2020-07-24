@@ -38,23 +38,27 @@ public class UserService implements IUserService {
     @Value( "${status.transfer}" )
     private String status;
 
-    @Autowired
     IAccountPaymentRepository accountPaymentRepository;
-
-    @Autowired
     IAccountSavingRepository accountSavingRepository;
-
-    @Autowired
     IUserRepository userRepository;
-
-    @Autowired
     IReminderRepository reminderRepository;
-
-    @Autowired
     IDebtRepository debtRepository;
+    ITransactionRepository transactionRepository;
 
     @Autowired
-    ITransactionRepository transactionRepository;
+    public UserService(IAccountPaymentRepository accountPaymentRepository,
+            IAccountSavingRepository accountSavingRepository,
+            IUserRepository userRepository,
+            IReminderRepository reminderRepository,
+            IDebtRepository debtRepository,
+            ITransactionRepository transactionRepository) {
+        this.accountPaymentRepository   = accountPaymentRepository;
+        this.accountSavingRepository    = accountSavingRepository;
+        this.userRepository             = userRepository;
+        this.reminderRepository         = reminderRepository;
+        this.debtRepository             = debtRepository;
+        this.transactionRepository      = transactionRepository;
+    }
 
     @Override
     public List<Account> getUsers(String logId, int type, long userId) {
@@ -83,21 +87,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse login(String logId, String userName, String password) {
-        List<AccountPaymentDTO> accountPaymentDTOS;
-        List<AccountSavingDTO> accountSavingDTOS;
-        List<Account> accounts;
-        UserDTO userDTO = userRepository.findFirstByUserNameAndPassword(userName, password);
-        if (userDTO == null) {
-            return UserResponse.builder().build();
-        } else {
-            long userId = userDTO.getId();
-            accountPaymentDTOS = accountPaymentRepository.findAllByUserId(userId);
-            accountSavingDTOS = accountSavingRepository.findAllByUserId(userId);
-            accounts = UserProcess.formatToAccounts(logId, accountPaymentDTOS, accountSavingDTOS, true);
-
-            return UserMapper.toModelUser(userDTO, accounts, true);
-        }
+    public UserResponse login(String logId, String userName) {
+        return UserMapper.toModelUser(userRepository.findFirstByUserName(userName), new ArrayList<>());
     }
 
     @Override
@@ -164,7 +155,7 @@ public class UserService implements IUserService {
         UserDTO userDTO = userRepository.findById(userId).get();
         if (reminderDTOS.size() <= 0) {
             logger.warn("{}| user - {} haven't reminder!", logId, userId);
-            return UserMapper.toModelUser(userDTO, null, false);
+            return UserMapper.toModelUser(userDTO, null);
         }
         logger.info("{}| user - {} have {} reminder!", logId, userId, reminderDTOS.size());
 
@@ -187,7 +178,7 @@ public class UserService implements IUserService {
             }
         }
         //Step 2: Build response
-        return UserMapper.toModelUser(userDTO, accounts, false);
+        return UserMapper.toModelUser(userDTO, accounts);
     }
 
     @Override
@@ -211,7 +202,7 @@ public class UserService implements IUserService {
         }
 
         UserDTO userDTO = userRepository.findById(userId).get();
-        return UserMapper.toModelUser(userDTO, accounts, false);
+        return UserMapper.toModelUser(userDTO, accounts);
     }
 
     @Override

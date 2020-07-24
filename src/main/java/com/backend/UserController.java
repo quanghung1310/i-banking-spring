@@ -3,7 +3,6 @@ package com.backend;
 import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.ReminderDTO;
-import com.backend.dto.UserDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.BaseResponse;
@@ -23,10 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,11 +34,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.print.attribute.standard.Media;
 import java.util.List;
 import java.util.Optional;
-
-//import org.springframework.security.core.Authentication;
 
 @Controller
 public class UserController {
@@ -68,12 +65,6 @@ public class UserController {
         this.jwtUtil = jwtUtil;
     }
 
-    //login
-    @GetMapping(value = "/")
-    public ResponseEntity<String> welcome() {
-       return new ResponseEntity<>("OK", HttpStatus.OK);
-    }
-
     @PostMapping("/authenticate")
     public ResponseEntity<String> generateToken(@RequestBody AuthRequest authRequest) {
         try {
@@ -83,7 +74,7 @@ public class UserController {
         } catch (Exception ex) {
             return new ResponseEntity<>("BAD REQUEST DATA", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(jwtUtil.generateToken(authRequest.getUserName()), HttpStatus.OK);
+        return new ResponseEntity<>(new JsonObject().put("bearerToken", jwtUtil.generateToken(authRequest.getUserName())).toString(), HttpStatus.OK);
     }
 
     @GetMapping("/get-accounts/{userId}/{type}")
@@ -119,9 +110,8 @@ public class UserController {
         }
     }
 
-    //todo login tam thoi!!!!
-    @PostMapping(value = "/login-v1")
-    public ResponseEntity<String> loginTemp(@RequestBody LoginRequest request) {
+    @PostMapping(value = "/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
@@ -134,7 +124,16 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            UserResponse userResponse = userService.login(logId, userName, password);
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            String username = ((UserDetails)principal).getUsername();
+            String pass     = ((UserDetails)principal).getPassword();
+
+            if (!userName.equals(username) || !password.equals(pass)) {
+                logger.warn("{}| userName or password wrong!", logId);
+                return new ResponseEntity<>(DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null).toString(), HttpStatus.UNAUTHORIZED);
+            }
+
+            UserResponse userResponse = userService.login(logId, username);
             if (userResponse == null || userResponse.getId() <= 0) {
                 logger.warn("{}| Login fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);

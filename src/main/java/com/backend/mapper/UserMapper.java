@@ -22,7 +22,7 @@ public class UserMapper {
                 .createdAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .description(accountPaymentDTO.getDescription())
                 .id(accountPaymentDTO.getId())
-                .type(1)
+                .type("payment")
                 .updatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .build();
     }
@@ -51,7 +51,7 @@ public class UserMapper {
             account.setCreatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setDescription(accountPaymentDTO.getDescription());
             account.setId(accountPaymentDTO.getId());
-            account.setType(type);
+            account.setType("payment");
             account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setUserId(accountPaymentDTO.getUserId());
         } else {
@@ -68,24 +68,18 @@ public class UserMapper {
             account.setCreatedAt(DataUtil.convertTimeWithFormat(accountSavingDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setDescription(accountSavingDTO.getDescription());
             account.setId(accountSavingDTO.getId());
-            account.setType(type);
+            account.setType("saving");
             account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountSavingDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setUserId(accountSavingDTO.getUserId());
         }
         return account;
     }
 
-    public static UserResponse toModelUser(UserDTO userDTO, List<Account> accounts, boolean isOwner) {
+    public static UserResponse toModelUser(UserDTO userDTO, List<Account> accounts) {
         UserResponse userResponse = UserResponse.builder().build();
         if (userDTO == null) {
             return null;
         }
-
-        if (isOwner) {
-            userResponse.setUserName(userDTO.getUserName());
-            userResponse.setPassword(userDTO.getPassword());
-        }
-
         userResponse.setAccount(accounts);
         userResponse.setCreatedAt(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
         userResponse.setEmail(userDTO.getEmail());
