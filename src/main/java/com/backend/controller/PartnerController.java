@@ -1,4 +1,4 @@
-package com.backend;
+package com.backend.controller;
 
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.AccountPaymentDTO;
@@ -18,8 +18,6 @@ import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
