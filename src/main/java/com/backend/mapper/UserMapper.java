@@ -9,6 +9,7 @@ import com.backend.model.response.UserResponse;
 import com.backend.util.DataUtil;
 
 import java.util.List;
+import java.util.Optional;
 
 public class UserMapper {
     public static Account toModelRegister(AccountPaymentDTO accountPaymentDTO) {
@@ -93,19 +94,24 @@ public class UserMapper {
         return userResponse;
     }
 
-    public static Debt toModelDebt(DebtDTO debtDTO, UserDTO userDTO) {
-        return Debt.builder()
-                .id(debtDTO.getId())
-                .action(debtDTO.getAction())
-                .amount(debtDTO.getAmount())
-                .content(debtDTO.getContent())
-                .createdAt(DataUtil.convertTimeWithFormat(debtDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
-                .partnerEmail(userDTO.getEmail())
-                .partnerName(userDTO.getName())
-                .partnerId(userDTO.getId())
-                .partnerPhone(userDTO.getPhone())
-                .updatedAt(DataUtil.convertTimeWithFormat(debtDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
-                .build();
+    public static Debt toModelDebt(DebtDTO debtDTO, Optional<UserDTO> user) {
+        if (!user.isPresent()) {
+            return null;
+        } else {
+            UserDTO userDTO = user.get();
+            return Debt.builder()
+                    .id(debtDTO.getId())
+                    .action(debtDTO.getAction())
+                    .amount(debtDTO.getAmount())
+                    .content(debtDTO.getContent())
+                    .createdAt(DataUtil.convertTimeWithFormat(debtDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                    .partnerEmail(userDTO.getEmail())
+                    .partnerName(userDTO.getName())
+                    .partnerId(userDTO.getId())
+                    .partnerPhone(userDTO.getPhone())
+                    .updatedAt(DataUtil.convertTimeWithFormat(debtDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                    .build();
+        }
     }
 
     public static Transaction toModelTransaction(TransactionDTO transactionDTO) {

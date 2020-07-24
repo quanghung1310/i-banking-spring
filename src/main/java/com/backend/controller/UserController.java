@@ -3,6 +3,7 @@ package com.backend.controller;
 import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.ReminderDTO;
+import com.backend.dto.UserDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.BaseResponse;
@@ -293,21 +294,21 @@ public class UserController {
         }
     }
 
-    @GetMapping("/get-debts/{userId}/{action}/{type}")
-    public ResponseEntity<String> getDebt(@PathVariable long userId,
-                                               @PathVariable int action,
+    @GetMapping("/get-debts/{action}/{type}")
+    public ResponseEntity<String> getDebt(@PathVariable int action,
                                                @PathVariable int type) {
         String logId = DataUtil.createRequestId();
-        logger.info("{}| Request data: userId - {}, type - {}", logId, userId, type);
+        logger.info("{}| Request data: action - {}, type - {}", logId, action, type);
         BaseResponse response;
         try {
-            if (type <= 0 || type > 2 || userId < 0 || action < 0) {
+            if (type <= 0 || type > 2 || action < 0) {
                 logger.warn("{}| Validate request get debts data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
-            DebtorResponse debtorResponse = userService.getDebts(logId, userId, action, type);
+            DebtorResponse debtorResponse = userService.getDebts(logId, user.getId(), action, type);
             if (debtorResponse == null) {
                 logger.warn("{}| Get debts fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);

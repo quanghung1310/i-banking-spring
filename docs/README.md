@@ -564,30 +564,33 @@
 # 9. Get Debts
 |Key | Value       | 
 |------- | ---------- |
-|URL | 127.0.0.1:8080/lh-bank/get-debts/{userId}/{action}/{type}| 
+|URL | 127.0.0.1:8080/lh-bank/get-debts/{action}/{type}| 
 |Method | GET       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
+
 ## Raw Data
 **HTTP Request:**
-
+127.0.0.1:1111/lh-bank/get-debts/1/1
 **Response:**
 ```json
 {
-    "requestId": "479f65c15f564c5f97f602ae2633d084",
+    "requestId": "cfc869adb4414e689996afa558142d74",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1593955000145,
+    "responseTime": 1595621535647,
     "data": {
         "debts": [
             {
-                "creditorId": 1,
-                "creditEmail": "tranlang.dtnt@gmail.com",
-                "creditName": "Tran Lang",
-                "creditPhone": "0327421137",
-                "amount": 1500,
-                "content": "Trả tiền đi má, nợ gì lâu ",
+                "id": 46,
+                "partnerId": 1,
+                "partnerEmail": "tranthilang.dtnt@gmail.com",
+                "partnerName": "Tran Thi Lang",
+                "partnerPhone": "0327421137",
+                "amount": 36000,
+                "content": "Đòi tiền debt tranthilang",
                 "action": 1,
-                "createdAt": "05/07/2020 20:11:42",
-                "updatedAt": "05/07/2020 20:11:42"
+                "createdAt": "25/07/2020 03:05:27",
+                "updatedAt": "25/07/2020 03:05:27"
             }
         ]
     }
@@ -598,9 +601,8 @@
 
 |Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
-|userId|Number|x|PathVariable|Người thực hiện hành động|
-|action|Number|x|PathVariable|1 - Nhắc nợ được khởi tạo|
-|type|Number|x|PathVariable|1 - Nhắc nợ do userId tạo, 2 - Nhắc nợ được gửi tới userId|
+|action|Number|x|PathVariable|1 - Nhắc nợ được tạo, 2 - Nhắc nợ đã được xóa, 4 - Nhắc nợ đã thanh toán|
+|type|Number|x|PathVariable|1 - Nhắc nợ do bản thân tạo, 2 - Nhắc nợ do người khác gửi|
 
 **Response:**
 
@@ -611,9 +613,10 @@
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
 |data.debts.id|Number|x|L3|Định danh nhắc nợ|
-|data.debts.creditorId|Number|x|L3|Định danh: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1 )|
-|data.debts.creditEmail|String|x|L3|Địa chỉ email: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
-|data.debts.creditPhone|String|x|L3|Số điện thoại: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.partnerId|Number|x|L3|Định danh: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1 )|
+|data.debts.partnerEmail|String|x|L3|Địa chỉ email: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.partnerPhone|String|x|L3|Số điện thoại: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.partnerName|String|x|L3|Tên người bị nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
 |data.debts.amount|Number|x|L3|Số tiền nợ|
 |data.debts.action|Number|x|L3|1 - Nợ được khởi tạo|
 |data.debts.content|String|x|L3|Nội dung nhắc nợ|

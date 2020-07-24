@@ -207,21 +207,18 @@ public class UserService implements IUserService {
     public DebtorResponse getDebts(String logId, long userId, int action, int type) {
         List<Debt> debts = new ArrayList<>();
         List<DebtDTO> debtDTOS;
-        Optional<UserDTO> userDTO = userRepository.findById(userId);
-        if (!userDTO.isPresent()) {
-            logger.warn("{}| User - {} not found", logId, userId);
-            return null;
-        }
 
         int isActive = 1;
         if (type == TYPE_CREDITOR) {
             //danh sach no minh tao
             debtDTOS = debtRepository.findAllByUserIdAndActionAndIsActiveOrderByIdDesc(userId, action, isActive);
-            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber()).getUserId()).get())));
+            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO,
+                    userRepository.findById(accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber()).getUserId()))));
         } else {
             //danh sach bi nhac no
-            debtDTOS = debtRepository.findAllByUserIdAndActionAndIsActiveOrderByIdDesc(userId, action, isActive);
-            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getUserId()).get())));
+            AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByUserId(userId);
+            debtDTOS = debtRepository.findAllByCardNumberAndActionAndIsActiveOrderByIdDesc(accountPaymentDTO.getCardNumber(), action, isActive);
+            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getUserId()))));
         }
         if (type == 1) {
             logger.info("{}| User - {} create: {} debt", logId, userId, debts.size());
