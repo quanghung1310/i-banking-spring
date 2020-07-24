@@ -26,7 +26,7 @@ import java.util.Optional;
 @Service
 public class UserService implements IUserService {
     private static final Logger logger = LogManager.getLogger(UserService.class);
-
+    private static final int TYPE_CREDITOR = 1;
     @Value( "${my.bank.id}" )
     private long myBankId;
 
@@ -36,12 +36,12 @@ public class UserService implements IUserService {
     @Value( "${status.transfer}" )
     private String status;
 
-    IAccountPaymentRepository accountPaymentRepository;
-    IAccountSavingRepository accountSavingRepository;
-    IUserRepository userRepository;
-    IReminderRepository reminderRepository;
-    IDebtRepository debtRepository;
-    ITransactionRepository transactionRepository;
+    private IAccountPaymentRepository accountPaymentRepository;
+    private IAccountSavingRepository accountSavingRepository;
+    private IUserRepository userRepository;
+    private IReminderRepository reminderRepository;
+    private IDebtRepository debtRepository;
+    private ITransactionRepository transactionRepository;
 
     @Autowired
     public UserService(IAccountPaymentRepository accountPaymentRepository,
@@ -184,52 +184,43 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public long createDebtor(String logId, CreateDebtorRequest request) {
-        long debtorId = request.getDebtorId();
+    public DebtorResponse createDebtor(String logId, CreateDebtorRequest request, long userId) {
         long cardNumber = request.getCardNumber();
-        long userId = request.getUserId();
+        List<DebtDTO> debtDTOS;
+        int isActive = 1;
 
         //Step 1: Validate debtor
-        Optional<UserDTO> userDTO = userRepository.findById(userId);
-        Optional<UserDTO> debt = userRepository.findById(debtorId);
-
-        if (!userDTO.isPresent() || !debt.isPresent()) {
-            logger.warn("{}| User - {} or debt - {} not found", logId, userId, debtorId);
-            return -1;
-        }
-
-        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumberAndUserId(cardNumber, debtorId);
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
 
         if (accountPaymentDTO == null) {
             logger.warn("{}| card number - {} not found!", logId, cardNumber);
-            return -1;
+            return null;
         }
 
-        DebtDTO debtDTO = UserProcess.createDebt(logId, ActionConstant.INIT.getValue(), request, new Timestamp(request.getRequestTime()));
+        DebtDTO debtDTO = UserProcess.createDebt(ActionConstant.INIT.getValue(), request, new Timestamp(request.getRequestTime()), userId, accountPaymentDTO.getUserId());
+        debtRepository.save(debtDTO);
 
-        DebtDTO debtor = debtRepository.save(debtDTO);
-
-        return debtor.getId();
+       return getDebts(logId, userId, ActionConstant.INIT.getValue(), TYPE_CREDITOR);
     }
 
     @Override
     public DebtorResponse getDebts(String logId, long userId, int action, int type) {
         List<Debt> debts = new ArrayList<>();
         List<DebtDTO> debtDTOS;
-        UserDTO userDTO = userRepository.findById(userId).get();
-        if (userDTO.getId() <= 0) {
+        Optional<UserDTO> userDTO = userRepository.findById(userId);
+        if (!userDTO.isPresent()) {
             logger.warn("{}| User - {} not found", logId, userId);
             return null;
         }
 
         int isActive = 1;
-        if (type == 1) {
+        if (type == TYPE_CREDITOR) {
             //danh sach no minh tao
-            debtDTOS = debtRepository.findAllByUserIdAndActionAndIsActive(userId, ActionConstant.INIT.getValue(), isActive);
-            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getDebtorId()).get())));
+            debtDTOS = debtRepository.findAllByUserIdAndActionAndIsActiveOrderByIdDesc(userId, action, isActive);
+            debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber()).getUserId()).get())));
         } else {
             //danh sach bi nhac no
-            debtDTOS = debtRepository.findAllByDebtorIdAndActionAndIsActive(userId, ActionConstant.INIT.getValue(), isActive);
+            debtDTOS = debtRepository.findAllByUserIdAndActionAndIsActiveOrderByIdDesc(userId, action, isActive);
             debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getUserId()).get())));
         }
         if (type == 1) {
@@ -336,12 +327,10 @@ public class UserService implements IUserService {
             createDebtorRequest.setAmount(debtDTO.getAmount());
             createDebtorRequest.setCardNumber(debtDTO.getCardNumber());
             createDebtorRequest.setContent(request.getContent());
-            createDebtorRequest.setDebtorId(debtDTO.getDebtorId());
             createDebtorRequest.setRequestId(request.getRequestId());
             createDebtorRequest.setRequestTime(request.getRequestTime());
-            createDebtorRequest.setUserId(userId);
             //4.2 Build DebtDTO
-            DebtDTO debtDelete = UserProcess.createDebt(logId, ActionConstant.DELETE.getValue(), createDebtorRequest, currentTime);
+            DebtDTO debtDelete = UserProcess.createDebt(ActionConstant.DELETE.getValue(), createDebtorRequest, currentTime, userId, debtDTO.getId());
             debtDelete = debtRepository.save(debtDelete);
             
             return debtDelete.getId();

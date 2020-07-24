@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface IDebtRepository extends CrudRepository<DebtDTO, Long> {
 
-    List<DebtDTO> findAllByUserIdAndActionAndIsActive(long userId, int action, int isActive);
+    List<DebtDTO> findAllByUserIdAndActionAndIsActiveOrderByIdDesc(long userId, int action, int isActive);
 
-    List<DebtDTO> findAllByDebtorIdAndActionAndIsActive(long debtorId, int action, int isActive);
+//    List<DebtDTO> findAllByDebtorIdAndActionAndIsActive(long debtorId, int action, int isActive);
 
     DebtDTO findFirstByIdAndActionAndIsActive(long id, int action, int isActive);
 }

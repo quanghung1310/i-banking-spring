@@ -87,15 +87,14 @@ public class UserProcess {
         return accounts;
     }
 
-    public static DebtDTO createDebt(String logId, int action, CreateDebtorRequest request, Timestamp currentTime) {
+    public static DebtDTO createDebt(int action, CreateDebtorRequest request, Timestamp currentTime, long userId, long debtorId) {
         return DebtDTO.builder()
                 .createdAt(currentTime)
                 .action(action)
                 .cardNumber(request.getCardNumber())
                 .content(request.getContent())
-                .debtorId(request.getDebtorId())
                 .isActive(1)
-                .userId(request.getUserId())
+                .userId(userId)
                 .updatedAt(currentTime)
                 .amount(request.getAmount())
                 .build();

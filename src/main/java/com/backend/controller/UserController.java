@@ -271,21 +271,17 @@ public class UserController {
             }
             logger.info("{}| Valid data request create debtor success!", logId);
 
-            long debtId = userService.createDebtor(logId, request);
-            JsonObject reminder = new JsonObject();
-            if (debtId == -2) {
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
+            DebtorResponse debtor = userService.createDebtor(logId, request, user.getId());
+            if (debtor == null) {
                 logger.warn("{}| Create debtor fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), reminder.toString());
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), debtor.toString());
                 return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            if (debtId <= 0) {
-                logger.warn("{}| Create debtor fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), reminder.toString());
-                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-            }
-            reminder.put("debtId", debtId);
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), reminder.toString());
-            response.setData(new JsonObject(reminder.toString()));
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), debtor.toString());
+            response.setData(new JsonObject(debtor.toString()));
             logger.info("{}| Response to client: {}", logId, response.toString());
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {

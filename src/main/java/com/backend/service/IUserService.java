@@ -22,7 +22,7 @@ public interface IUserService {
 
     UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance);
 
-    long createDebtor(String logId, CreateDebtorRequest request);
+    DebtorResponse createDebtor(String logId, CreateDebtorRequest request, long userId);
 
     DebtorResponse getDebts(String logId, long userId, int action, int type);
 

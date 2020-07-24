@@ -100,10 +100,10 @@ public class UserMapper {
                 .amount(debtDTO.getAmount())
                 .content(debtDTO.getContent())
                 .createdAt(DataUtil.convertTimeWithFormat(debtDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
-                .creditEmail(userDTO.getEmail())
-                .creditName(userDTO.getName())
-                .creditorId(userDTO.getId())
-                .creditPhone(userDTO.getPhone())
+                .partnerEmail(userDTO.getEmail())
+                .partnerName(userDTO.getName())
+                .partnerId(userDTO.getId())
+                .partnerPhone(userDTO.getPhone())
                 .updatedAt(DataUtil.convertTimeWithFormat(debtDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .build();
     }

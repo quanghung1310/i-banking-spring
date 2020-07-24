@@ -432,9 +432,9 @@
 |URL | 127.0.0.1:1111/lh-bank/get-account-info/{cardNumber}/{merchantId}| 
 |Method | GET       | 
 |Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
-127.0.0.1:1111/lh-bank/get-account-info/1448127665849225/2
 ## Raw Data
 **HTTP Request:**
+127.0.0.1:1111/lh-bank/get-account-info/1448127665849225/2
 
 **Response:**
 ```json
@@ -494,28 +494,41 @@
 |------- | ---------- |
 |URL | 127.0.0.1:8080/lh-bank/create-debtor       | 
 |Method | POST       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
+
 ## Raw Data
 **HTTP Request:**
 
 ```json
 {
-    "debtorId": 3,
-    "cardNumber": 1575750842294193,
-    "userId": 1,
-    "amount": 1000,
-    "content": "Trả tiền đi má, nợ gì lâu "
+    "cardNumber": 1711158612931699,
+    "amount": 25000,
+    "content": "Đòi tiền debt 001"
 }
 ```
 
 **Response:**
 ```json
 {
-    "requestId": "0291bd9a5df44e25b36f15f372c45264",
+    "requestId": "7ff43f475a1644f49e5641f371c9b5f0",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1593951532323,
+    "responseTime": 1595619256044,
     "data": {
-        "debtId": 11
+        "debts": [
+            {
+                "id": 44,
+                "partnerId": 14,
+                "partnerEmail": "test001@gmail.com",
+                "partnerName": "Test001",
+                "partnerPhone": "0327421137",
+                "amount": 25000,
+                "content": "Đòi tiền debt 001",
+                "action": 1,
+                "createdAt": "25/07/2020 02:34:13",
+                "updatedAt": "25/07/2020 02:34:13"
+            }
+        ]
     }
 }
 ```
@@ -525,8 +538,6 @@
 |Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
 |cardNumber|String|x|L1|Số tài khoản của con nợ|
-|debtorId|Number|x|L1|Định danh con nợ|
-|userId|Number|x|L1|Người nhắc nợ|
 |amount|Number|x|L1|Số tiền cần nhắc nợ|
 |content|String|x|L1|Nội dung nhắc nợ|
 
@@ -538,7 +549,17 @@
 |resultCode|Number|x|L1|Kết quả của request|
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
-|data.debtId|Number|x|L2|Định danh nhắc nợ|
+|data.debts.id|Number|x|L3|Định danh nhắc nợ|
+|data.debts.partnerId|Number|x|L3|Định danh người bị nhắc nợ|
+|data.debts.partnerEmail|String|x|L3|Địa chỉ email người bị nhắc nợ|
+|data.debts.partnerName|String|x|L3|Tên người bị nhắc nợ|
+|data.debts.partnerPhone|String|x|L3|Số điện thoại người bị nhắc nợ|
+|data.debts.amount|Number|x|L3|Số tiền nợ|
+|data.debts.action|Number|x|L3|1 - Nợ được khởi tạo|
+|data.debts.content|String|x|L3|Nội dung nhắc nợ|
+|data.debts.createdAt|String|x|L3|Ngày khởi tạo - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.debts.updatedAt|String|x|L2|Thời gian thay đổi gần nhất - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+
 
 # 9. Get Debts
 |Key | Value       | 
