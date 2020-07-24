@@ -233,7 +233,7 @@ public class UserController {
                     HttpStatus.BAD_REQUEST);
         }
     }
-    @GetMapping("/get-account/{cardNumber}/{merchantId}")
+    @GetMapping("/get-account-info/{cardNumber}/{merchantId}")
     public ResponseEntity<String> queryAccount(@PathVariable long cardNumber,
                                                @PathVariable long merchantId) {
         String logId = DataUtil.createRequestId();

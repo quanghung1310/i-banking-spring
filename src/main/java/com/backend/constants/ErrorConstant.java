@@ -31,6 +31,7 @@ public class ErrorConstant {
         errorMap.put(CANT_MINE, "Người dùng không thể mining");
         errorMap.put(TIME_EXPIRED, "Yêu cầu hết thời hạn");
         errorMap.put(HASH_NOT_VALID, "Mã hóa thất bại. Vui lòng kiểm tra lại");
+        errorMap.put(NOT_EXISTED, "Không tìm thấy dữ liệu. Vui lòng thử lại");
     }
 
     public static String getMessage(int errorCode) {

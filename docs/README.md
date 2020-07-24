@@ -20,6 +20,7 @@
 10. [Account Bank](#10-account-bank)
 11. [Delete Debt](#11-delete-debt)
 12. [Update Reminder](#12-update-reminder)
+13. [Get Banks](#13-get-banks)
 
 
 
@@ -293,6 +294,8 @@
 |------- | ---------- |
 |URL | 127.0.0.1:8080/lh-bank/create-reminder       | 
 |Method | POST       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
+
 ## Raw Data
 **HTTP Request:**
 
@@ -747,6 +750,8 @@
 |------- | ---------- |
 |URL | 127.0.0.1:8080/lh-bank/update-reminder      | 
 |Method | POST       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
+
 ## Raw Data
 **HTTP Request:**
 
@@ -812,3 +817,52 @@
 |data.accounts.reminderId|Number|x|L3|Định danh gợi nhớ|
 |data.accounts.typeReminder|String|x|L3|Loại gợi nhớ đã lưu ("send" = 1: chuyển tiền, "deb" = 2: Nhắc nợ)|
 |data.accounts.merchantId|Number|x|L3|Định danh tài khoản gợi nhớ là liên ngân hàng hay cùng ngân hàng|
+
+
+# 13. Get Banks
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:1111/lh-bank/get-banks/{bankId}| 
+|Method | GET       | 
+## Raw Data
+**HTTP Request:**
+127.0.0.1:1111/lh-bank/get-banks/2
+**Response:**
+```json
+{
+    "requestId": "c2744373718d4adfbd776a3f3a7fc5b5",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1595615234119,
+    "data": {
+        "partners": [
+            {
+                "id": 2,
+                "partnerCode": "MY_BANK",
+                "email": "mybank@gmail.com",
+                "phoneNumber": "0327421138",
+                "name": "mybank"
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|bankId|Number||PathVariable|Mã ngân hàng, Mặc định lấy hết|
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.partners.id|Number|x|L3|Định danh ngân hàng|
+|data.partners.partnerCode|String|x|L3|Mã đối tác|
+|data.partners.email|String|x|L3|Địa chỉ email|
+|data.partners.phoneNumber|String|x|L3|Số điện thoại|
+|data.partners.name|String|x|L3|Tên ngân hàng|
