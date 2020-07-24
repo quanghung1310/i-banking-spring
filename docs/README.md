@@ -618,7 +618,7 @@
 |data.debts.partnerPhone|String|x|L3|Số điện thoại: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
 |data.debts.partnerName|String|x|L3|Tên người bị nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
 |data.debts.amount|Number|x|L3|Số tiền nợ|
-|data.debts.action|Number|x|L3|1 - Nợ được khởi tạo|
+|data.debts.action|Number|x|L3|1 - Nợ được khởi tạo, 2 - nợ đã được xóa, 4 - nợ đã trả|
 |data.debts.content|String|x|L3|Nội dung nhắc nợ|
 |data.debts.createdAt|String|x|L3|Ngày khởi tạo - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
 |data.debts.updatedAt|String|x|L2|Thời gian thay đổi gần nhất - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
@@ -725,22 +725,33 @@
 
 ```json
 {
-    "debtId": 12,
-    "userId": 5,
-    "content": "Xóa lần nợ 8 lần 1"
+    "debtId": 46,
+    "content": "tranthilang xóa đòi nợ của ?"
 }
 ```
 
 **Response:**
 ```json
 {
-    "requestId": "1da69e2f98914b5880bfa3b3efe7615c",
+    "requestId": "00b2e64ff46b4fd38dc64af2c84d5f2b",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1595250464036,
+    "responseTime": 1595623414991,
     "data": {
-        "debtId": 13,
-        "action": "DELETE"
+        "debts": [
+            {
+                "id": 46,
+                "partnerId": 32,
+                "partnerEmail": "test007@gmail.com",
+                "partnerName": "Test 008",
+                "partnerPhone": "0327421137",
+                "amount": 36000,
+                "content": "tranthilang xóa đòi nợ của ?",
+                "action": 2,
+                "createdAt": "25/07/2020 03:05:27",
+                "updatedAt": "25/07/2020 03:43:29"
+            }
+        ]
     }
 }
 ```
@@ -750,8 +761,7 @@
 |Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
 |debtId|Number|x|L1|Định danh nhắc nợ cần xóa |
-|userId|Number|x|L1|Người gửi yêu cầu xóa nợ|
-|content|String|x|L1|Nội dung xáoguiwr xóa nhắc nợ|
+|content|String|x|L1|Nội dung xóa nhắc nợ|
 
 **Response:**
 
@@ -761,8 +771,17 @@
 |resultCode|Number|x|L1|Kết quả của request|
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
-|data.debtId|Number|x|L2|Định danh nhắc nợ|
-|data.action|Number|x|L2|Luôn là "DELETE"|
+|data.debts.id|Number|x|L3|Định danh nhắc nợ|
+|data.debts.partnerId|Number|x|L3|Định danh: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1 )|
+|data.debts.partnerEmail|String|x|L3|Địa chỉ email: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.partnerPhone|String|x|L3|Số điện thoại: người nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.partnerName|String|x|L3|Tên người bị nhắc nợ (type = 2), người bị nhắc nợ(type = 1)|
+|data.debts.amount|Number|x|L3|Số tiền nợ|
+|data.debts.action|Number|x|L3|Luôn luôn là 2 - nợ đã được xóa|
+|data.debts.content|String|x|L3|Nội dung nhắc nợ|
+|data.debts.createdAt|String|x|L3|Ngày khởi tạo - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.debts.updatedAt|String|x|L2|Thời gian thay đổi gần nhất - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+
 
 # 12. Update Reminder
 |Key | Value       | 

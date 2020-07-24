@@ -369,18 +369,14 @@ public class UserController {
             }
             logger.info("{}| Valid data request delete debt success!", logId);
 
-            long result = userService.deleteDebt(logId, request);
-            if (result == -1) {
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            DebtorResponse result = userService.deleteDebt(logId, request, user.getId());
+            if (result == null) {
                 logger.warn("{}| Data delete not found: Fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
-                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-            } else if (result == -2) {
-                logger.warn("{}| Delete database: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
             } else {
-                response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), new JsonObject().put("debtId", result)
-                                                                                                                    .put("action", ActionConstant.DELETE).toString());
+                response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), result.toString());
                 logger.info("{}| Response to client: {}", logId, response.toString());
                 return new ResponseEntity<>(response.toString(), HttpStatus.OK);
             }

@@ -208,16 +208,15 @@ public class UserService implements IUserService {
         List<Debt> debts = new ArrayList<>();
         List<DebtDTO> debtDTOS;
 
-        int isActive = 1;
         if (type == TYPE_CREDITOR) {
             //danh sach no minh tao
-            debtDTOS = debtRepository.findAllByUserIdAndActionAndIsActiveOrderByIdDesc(userId, action, isActive);
+            debtDTOS = debtRepository.findAllByUserIdAndActionOrderByIdDesc(userId, action);
             debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO,
                     userRepository.findById(accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber()).getUserId()))));
         } else {
             //danh sach bi nhac no
             AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByUserId(userId);
-            debtDTOS = debtRepository.findAllByCardNumberAndActionAndIsActiveOrderByIdDesc(accountPaymentDTO.getCardNumber(), action, isActive);
+            debtDTOS = debtRepository.findAllByCardNumberAndActionOrderByIdDesc(accountPaymentDTO.getCardNumber(), action);
             debtDTOS.forEach(debtDTO -> debts.add(UserMapper.toModelDebt(debtDTO, userRepository.findById(debtDTO.getUserId()))));
         }
         if (type == 1) {
@@ -291,51 +290,34 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public long deleteDebt(String logId, DeleteDebtRequest request) {
+    public DebtorResponse deleteDebt(String logId, DeleteDebtRequest request, long userId) {
         try {
-            //Step 1: Validate user
-            long userId = request.getUserId();
             Timestamp currentTime = new Timestamp(request.getRequestTime());
-            
-            Optional<UserDTO> userDTO = userRepository.findById(userId);
-            if (userDTO == null) {
-                logger.warn("{}| User - {} not found", logId, userId);
-                return -1;
-            }
-
-            //Step 2: Validate debt
+            int type = 1; //nợ do bản thân tạo
+            //Step 1: Validate debt
             long debtId = request.getDebtId();
             DebtDTO debtDTO = debtRepository.findFirstByIdAndActionAndIsActive(debtId, ActionConstant.INIT.getValue(), 1);
             if (debtDTO == null) {
                 logger.warn("{}| Debt - {} not found", logId, debtId);
-                return -1;
+                return null;
             }
             logger.info("{}| Debt - {} can delete", logId, debtId);
 
-            //Step 3: Update isActive = 0
+            if (userId != debtDTO.getUserId()) {
+                type = 2;// nợ do người khác tạo
+            }
+            //Step 2: Update isActive = 0
             debtDTO.setAction(ActionConstant.DELETE.getValue());
             debtDTO.setUpdatedAt(currentTime);
-
+            debtDTO.setContent(request.getContent());
             debtRepository.save(debtDTO);
 
-            //Step 4: insert new debt with action = DELETE
-            //4.1. Build CreateDebtorRequest
-            CreateDebtorRequest createDebtorRequest = new CreateDebtorRequest();
-            createDebtorRequest.setAmount(debtDTO.getAmount());
-            createDebtorRequest.setCardNumber(debtDTO.getCardNumber());
-            createDebtorRequest.setContent(request.getContent());
-            createDebtorRequest.setRequestId(request.getRequestId());
-            createDebtorRequest.setRequestTime(request.getRequestTime());
-            //4.2 Build DebtDTO
-            DebtDTO debtDelete = UserProcess.createDebt(ActionConstant.DELETE.getValue(), createDebtorRequest, currentTime, userId, debtDTO.getId());
-            debtDelete = debtRepository.save(debtDelete);
-            
-            return debtDelete.getId();
+            return getDebts(logId, userId, ActionConstant.DELETE.getValue(), type);
             //Step 5: send notify
             //// TODO: 7/20/20 send notify 
         } catch (Exception e) {
             logger.error("{}| Delete debt in db catch exception: ", logId, e);
-            return -2;
+            return null;
         }
     }
 

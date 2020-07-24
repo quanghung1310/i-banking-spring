@@ -30,7 +30,7 @@ public interface IUserService {
 
     long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName);
 
-    long deleteDebt(String logId, DeleteDebtRequest request);
+    DebtorResponse deleteDebt(String logId, DeleteDebtRequest request, long userId);
 
     Optional<ReminderDTO> getReminder(long id);
 
