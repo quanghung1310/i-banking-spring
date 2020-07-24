@@ -16,7 +16,7 @@ public interface IUserService {
 
     UserResponse getUser(String logId, String userName);
 
-    ReminderDTO createReminder(String logId, CreateReminderRequest request);
+    ReminderDTO createReminder(String logId, CreateReminderRequest request, long userId, String name);
 
     UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
 

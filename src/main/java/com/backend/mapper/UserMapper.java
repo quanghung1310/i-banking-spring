@@ -27,14 +27,17 @@ public class UserMapper {
                 .build();
     }
 
-    public static Account toModelReminder(ReminderDTO reminderDTO, AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
-        Account account = toModelAccount(accountSavingDTO, accountPaymentDTO, type, isQueryBalance);
-        if (account == null) {
+    public static Account toModelReminder(ReminderDTO reminderDTO) {
+        if (reminderDTO == null) {
             return null;
         }
-        account.setReminderId(reminderDTO.getId());
-        account.setCardName(reminderDTO.getNameReminisce());
-        return account;
+        return Account.builder()
+                .cardName(reminderDTO.getNameReminisce())
+                .cardNumber(reminderDTO.getCardNumber())
+                .typeReminder(reminderDTO.getType() == 1 ? "send" : "debt")
+                .reminderId(reminderDTO.getId())
+                .merchantId(reminderDTO.getMerchantId())
+                .build();
     }
     public static Account toModelAccount(AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
         Account account = Account.builder().build();

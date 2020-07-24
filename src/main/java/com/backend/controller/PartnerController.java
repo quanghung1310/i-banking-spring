@@ -254,16 +254,7 @@ public class PartnerController {
 
             //Step 4: Query info account
             UserResponse userResponse = userService.queryAccount(logId, request.getCardNumber(), myBankId, paymentBank, false);
-            if (userResponse == null) {
-                logger.warn("{}| query account fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
-                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
-            response.setData(new JsonObject(userResponse.toString()));
-            logger.info("{}| Response to client: {}", logId, userResponse.toString());
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            return DataUtil.getStringResponseEntity(logId, userResponse);
 
         } catch (Exception ex) {
             logger.error("{}| Request query account bank catch exception: ", logId, ex);

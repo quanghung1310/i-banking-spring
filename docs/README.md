@@ -7,7 +7,7 @@
 
 # I. API Document
 # Index
-0. [Authenicate](#0-authenticate)
+0. [Authenticate](#0-authenticate)
 1. [Register](#1-register)
 2. [Deposit](#2-deposit)
 3. [Get Accounts](#3-get-accounts)
@@ -18,6 +18,8 @@
 8. [Create Debt](#8-create-debt) 
 9. [Get Debts](#9-get-debts) 
 10. [Account Bank](#10-account-bank)
+11. [Delete Debt](#11-delete-debt)
+12. [Update Reminder](#12-update-reminder)
 
 
 
@@ -185,7 +187,7 @@
 
 ## Raw Data
 **HTTP Request:**
-
+127.0.0.1:1111/lh-bank/get-accounts/1
 **Response:**
 ```json
 {
@@ -296,23 +298,36 @@
 
 ```json
 {
-    "nameReminisce": "con nợ Trần Thị Lạng",
-    "cardNumber": 1448127665849225,
-    "type": 2,
-    "userId": 1,
-    "merchantId": 0
+    "nameReminisce": "Debtor 005",
+    "cardNumber": 1915954019734406,
+    "type": 1,
+    "merchantId": 2
 }
 ```
 
 **Response:**
 ```json
 {
-    "requestId": "9a71bc7b534d47ef9733f211ae99ff5a",
+    "requestId": "63e6a633c5c14d47a5640038e928d9ce",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1595246694052,
+    "responseTime": 1595607151592,
     "data": {
-        "reminderId": 7
+        "id": 1,
+        "email": "tranthilang.dtnt@gmail.com",
+        "name": "Tran Thi Lang",
+        "phone": "0327421137",
+        "createdAt": "10/07/2020 08:17:37",
+        "account": [
+            {
+                "id": 0,
+                "cardNumber": 1915954019734406,
+                "cardName": "Debtor 005",
+                "reminderId": 42,
+                "typeReminder": "send",
+                "merchantId": 2
+            }
+        ]
     }
 }
 ```
@@ -321,11 +336,10 @@
 
 |Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
-|nameReminisce|String||L1|Tên gợi nhớ, Mặc định tên đăng nhập (username)|
+|nameReminisce|String||L1|Tên gợi nhớ, Mặc định tên user|
 |cardNumber|String|x|L1|Số tài khoản|
 |type|Number|x|L1|Loại tài khoản cần lưu, 1 - chuyển tiền, 2 - Nhắc nợ|
-|userId|Number|x|L1|Người tạo ghi nhớ|
-|merchantId|Number|x|L1|Định danh ngân hàng của các tài khoản liên ngân hàng (Mặc định 0 nếu cùng ngân hàng)|
+|merchantId|Number||L1|Định danh ngân hàng, Mặc định là myBank|
 
 **Response:**
 
@@ -335,46 +349,48 @@
 |resultCode|Number|x|L1|Kết quả của request|
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
-|data.reminderId|Number|x|L2|Định danh người ghi nhớ vừa được tạo|
+|data.id|Number|x|L2|Định danh user|
+|data.createdAt|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.email|String|x|L2|Địa chỉ email|
+|data.name|String|x|L2|Tên khách hàng|
+|data.phone|String|x|L2|Số điện thoại (Đầu số mới)|
+|data.accounts.cardNumber|Number|x|L3|Số tài khoản đã lưu gợi nhớ|
+|data.accounts.cardName|String|x|L3|Tên gợi nhớ|
+|data.accounts.reminderId|Number|x|L3|Định danh gợi nhớ|
+|data.accounts.typeReminder|String|x|L3|Loại gợi nhớ đã lưu ("send" = 1: chuyển tiền, "deb" = 2: Nhắc nợ)|
+|data.accounts.merchantId|Number|x|L3|Định danh tài khoản gợi nhớ là liên ngân hàng hay cùng ngân hàng|
+
 
 # 6. Get Reminders
 |Key | Value       | 
 |------- | ---------- |
-|URL | 127.0.0.1:8080/lh-bank/get-reminders/{userId}/{type}/{cardNumber}        | 
+|URL | 127.0.0.1:8080/lh-bank/get-reminders/{type}/{cardNumber}        | 
 |Method | POST       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
+
 ## Raw Data
 **HTTP Request:**
-
-```json
-```
-
+127.0.0.1:1111/lh-bank/get-reminders/2/1113797607879108
 **Response:**
 ```json
 {
-    "requestId": "1b7ac1af8a4e4295a62cbb54ea81946b",
+    "requestId": "0ec08be20c4341459e488e0355ebefe6",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1593944513086,
+    "responseTime": 1595606338346,
     "data": {
         "id": 1,
-        "userName": "tranlang",
-        "password": "agtwtmktsvziojh",
-        "email": "tranlang.dtnt@gmail.com",
-        "name": "Tran Lang",
+        "email": "tranthilang.dtnt@gmail.com",
+        "name": "Tran Thi Lang",
         "phone": "0327421137",
-        "createdAt": "05/07/2020 15:38:30",
+        "createdAt": "10/07/2020 08:17:37",
         "account": [
             {
-                "id": 4,
-                "cardNumber": 1575750842294193,
-                "cardName": "Tran Thi Lang",
-                "closeDate": "04/07/2024 15:40:20",
-                "createdAt": "05/07/2020 15:40:20",
-                "updatedAt": "05/07/2020 15:40:20",
-                "description": null,
-                "type": 1,
-                "balance": null,
-                "userId": 3
+                "cardNumber": 1113797607879108,
+                "cardName": "Debtor 002",
+                "reminderId": 39,
+                "typeReminder": "debt",
+                "merchantId": 1
             }
         ]
     }
@@ -386,7 +402,6 @@
 |Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
 |type|Number|x|PathVariable|Loại tài khoản ghi nhớ, 1 - chuyển tiền, 2 - Nhắc nợ|
-|userId|Number|x|PathVariable|Người tạo ghi nhớ|
 |cardNumber|Number||PathVariable|Số tài khoản, Mặc định lấy hết các tài khoản đã lưu theo type|
 
 **Response:**
@@ -398,20 +413,15 @@
 |message|String|x|L1|Mô tả chi tiết kết quả request|
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
 |data.id|Number|x|L2|Định danh user|
-|data.userName|String|x|L2|Tên đăng nhập|
-|data.password|String|x|L2|Mật khẩu|
 |data.createdAt|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
 |data.email|String|x|L2|Địa chỉ email|
 |data.name|String|x|L2|Tên khách hàng|
 |data.phone|String|x|L2|Số điện thoại (Đầu số mới)
-|data.accounts.id|Number|x|L3|Định danh tài khoản|
-|data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
-|data.accounts.cardNnumber|Number|x|L3|Số tài khoản|
-|data.accounts.cardName|String|x|L3|Tên tài khoản|
-|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
-|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
-|data.accounts.description|String||L3|Thông tin thêm |
-|data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
+|data.accounts.cardNumber|Number|x|L3|Số tài khoản đã lưu gợi nhớ|
+|data.accounts.cardName|String|x|L3|Tên gợi nhớ|
+|data.accounts.reminderId|Number|x|L3|Định danh gợi nhớ|
+|data.accounts.typeReminder|String|x|L3|Loại gợi nhớ đã lưu ("send" = 1: chuyển tiền, "deb" = 2: Nhắc nợ)|
+|data.accounts.merchantId|Number|x|L3|Định danh tài khoản gợi nhớ là liên ngân hàng hay cùng ngân hàng|
 
 # 7. Query Account
 |Key | Value       | 
@@ -731,3 +741,74 @@
 |responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
 |data.debtId|Number|x|L2|Định danh nhắc nợ|
 |data.action|Number|x|L2|Luôn là "DELETE"|
+
+# 12. Update Reminder
+|Key | Value       | 
+|------- | ---------- |
+|URL | 127.0.0.1:8080/lh-bank/update-reminder      | 
+|Method | POST       | 
+## Raw Data
+**HTTP Request:**
+
+```json
+{
+    "nameReminisce": "Debtor 002 UPDATE 1",
+    "cardNumber": 1448127665849225,
+    "reminderId": 39,
+    "action": "UPDATE"
+}
+```
+
+**Response:**
+```json
+{
+    "requestId": "63e6a633c5c14d47a5640038e928d9ce",
+    "resultCode": 0,
+    "message": "Thành công",
+    "responseTime": 1595607151592,
+    "data": {
+        "email": "tranthilang.dtnt@gmail.com",
+        "name": "Tran Thi Lang",
+        "phone": "0327421137",
+        "createdAt": "10/07/2020 08:17:37",
+        "account": [
+            {
+                "id": 0,
+                "cardNumber": 1448127665849225,
+                "cardName": "Debtor 002 UPDATE 1",
+                "reminderId": 39,
+                "typeReminder": "debt",
+                "merchantId": 1
+            }
+        ]
+    }
+}
+```
+
+**Request:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|nameReminisce|String||L1|Tên gợi nhớ cần update|
+|cardNumber|String||L1|Số tài khoản cần update|
+|reminderId|Number|x|L1|Định danh gợi nhớ cần update/delete|
+|action|String||L1|"UPDATE" hoặc "DELETE"|
+
+**Response:**
+
+|Name|Type|Required|Level|Description|
+|----|----|:------:|:---:|-----------|
+|requestId|String|x|L1|Định danh request phía trên|
+|resultCode|Number|x|L1|Kết quả của request|
+|message|String|x|L1|Mô tả chi tiết kết quả request|
+|responseTime|long|x|L1|Thời gian trả kết quả cho request (tính theo millisecond) Múi giờ: GMT +7|
+|data.id|Number|x|L2|Định danh user|
+|data.createdAt|String|x|L2|Thời gian tạo tài khoản - dd/MM/yyyy HH:mm:ss (định dạng 24h) Múi giờ: GMT +7|
+|data.email|String|x|L2|Địa chỉ email|
+|data.name|String|x|L2|Tên khách hàng|
+|data.phone|String|x|L2|Số điện thoại (Đầu số mới)|
+|data.accounts.cardNumber|Number|x|L3|Số tài khoản đã lưu gợi nhớ|
+|data.accounts.cardName|String|x|L3|Tên gợi nhớ|
+|data.accounts.reminderId|Number|x|L3|Định danh gợi nhớ|
+|data.accounts.typeReminder|String|x|L3|Loại gợi nhớ đã lưu ("send" = 1: chuyển tiền, "deb" = 2: Nhắc nợ)|
+|data.accounts.merchantId|Number|x|L3|Định danh tài khoản gợi nhớ là liên ngân hàng hay cùng ngân hàng|

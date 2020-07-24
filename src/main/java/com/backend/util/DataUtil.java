@@ -3,10 +3,13 @@ package com.backend.util;
 
 import com.backend.constants.ErrorConstant;
 import com.backend.model.response.BaseResponse;
+import com.backend.model.response.UserResponse;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import sun.misc.BASE64Encoder;
 
 import javax.crypto.Mac;
@@ -25,7 +28,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import static com.backend.cryption.SHA256.HMAC_SHA256;
-import static com.backend.cryption.SHA256.signHmacSHA256;
 
 public class DataUtil {
     private static final Logger logger = LogManager.getLogger(DataUtil.class);
@@ -142,6 +144,20 @@ public class DataUtil {
         Mac mac = Mac.getInstance(type);
         mac.init(secretKeySpec);
         return mac.doFinal(data);
+    }
+
+    public static ResponseEntity<String> getStringResponseEntity(String logId, UserResponse userResponse) {
+        BaseResponse response;
+        if (userResponse == null) {
+            logger.warn("{}| query account fail!", logId);
+            response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+            return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
+        response.setData(new JsonObject(userResponse.toString()));
+        logger.info("{}| Response to client: {}", logId, userResponse.toString());
+        return new ResponseEntity<>(response.toString(), HttpStatus.OK);
     }
 
 

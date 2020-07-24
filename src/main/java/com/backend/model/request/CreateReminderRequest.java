@@ -10,17 +10,15 @@ import org.apache.commons.lang3.StringUtils;
 public class CreateReminderRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private String nameReminisce;
-    private Long cardNumber;
-    private Integer type; //1: send, 2: debt
-    private long userId;
-    private Integer merchantId;
+    private String nameReminisce; //init
+    private Long cardNumber;    //init
+    private Integer type; //init 1: send, 2: debt
+    private Integer merchantId;//init
     private Long reminderId;
     private String action; //UPDATE, DELETE
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
-                    || this.userId <= 0
                     || this.requestTime <= 0);
         }
         catch (Exception ex) {

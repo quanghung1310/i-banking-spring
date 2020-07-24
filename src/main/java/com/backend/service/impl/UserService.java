@@ -1,7 +1,6 @@
 package com.backend.service.impl;
 
 import com.backend.constants.ActionConstant;
-import com.backend.constants.ErrorConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
@@ -13,7 +12,6 @@ import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,48 +90,43 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public ReminderDTO createReminder(String logId, CreateReminderRequest request) {
-        ReminderDTO reminderDTO;
-        String userName = request.getNameReminisce();
+    public ReminderDTO createReminder(String logId, CreateReminderRequest request, long userId, String nameReminisce) {
         long cardNumber = request.getCardNumber();
         long merchantId = request.getMerchantId();
+        Timestamp currentTime =  new Timestamp(request.getRequestTime());
 
         //Step 1: Validate reminder
-        ReminderDTO reminder = reminderRepository.findFirstByCardNumberAndMerchantIdAndTypeAndUserIdAndIsActive(
+        ReminderDTO reminder = reminderRepository.findFirstByCardNumberAndMerchantIdAndTypeAndUserId(
                 cardNumber,
                 merchantId,
                 request.getType(),
-                request.getUserId(),
-                1
+                userId
         );
+
         if (reminder != null) {
-            logger.warn("{}| Card number - {} was existed with id: {}", logId, cardNumber, reminder.getId());
-            return null;
-        }
-        //Step 2: Validate account
-        if (merchantId == myBankId) { //Tài khoản cùng ngân hàng
-            AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
-            if (accountPaymentDTO == null) {
-                logger.warn("{}| Card number - {} not existed!", logId, cardNumber);
+            if (reminder.getIsActive() == 0) { //reminder was deleted
+                logger.warn("{}| Card number - {} can add reminders", logId, cardNumber);
+                reminder.setIsActive(1);
+                reminder.setUpdatedAt(currentTime);
+            } else {
+                logger.warn("{}| Card number - {} was existed with id: {}", logId, cardNumber, reminder.getId());
                 return null;
             }
-            logger.info("{}| Card number - {} is existed!", logId, cardNumber);
-
-            long userId = accountPaymentDTO.getUserId();
-            if (StringUtils.isBlank(userName)) {
-                userName = userRepository.findById(userId).get().getUserName();
-                request.setNameReminisce(userName);
-            }
-
-            reminderDTO = UserProcess.createReminder(logId, request, new Timestamp(request.getRequestTime()));
-        } else { //Tài khoản liên ngân hàng
-            //todo Query account diff bank
-            logger.warn("{}| Chưa làm tới, gọi sau đi bạn êi !", logId);
-            return null;
+        } else {
+            reminder = new ReminderDTO();
+            reminder.setUserId(userId);
+            reminder.setMerchantId(merchantId);
+            reminder.setCardNumber(cardNumber);
+            reminder.setIsActive(1);
+            reminder.setUpdatedAt(currentTime);
+            reminder.setCreatedAt(currentTime);
+            reminder.setType(request.getType());
         }
+        reminder.setNameReminisce(nameReminisce);
 
-        ReminderDTO reminderRes = reminderRepository.save(reminderDTO);
-        if (reminderRes == null) {
+        ReminderDTO reminderDTO = reminderRepository.save(reminder);
+
+        if (reminderDTO == null) {
             logger.warn("{}| Save card number - {} fail!", logId, cardNumber);
             return null;
         } else {
@@ -148,10 +141,9 @@ public class UserService implements IUserService {
         if (cardNumber != null) {
             reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndCardNumberAndIsActive(userId, type, cardNumber, 1);
         } else {
-            reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndIsActive(userId, type, 1);
+            reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndIsActiveOrderByIdDesc(userId, type, 1);
         }
         //Step 1: validate reminders
-//        ReminderDTO reminderDTO = reminderRepository.findById(userId).get();
         UserDTO userDTO = userRepository.findById(userId).get();
         if (reminderDTOS.size() <= 0) {
             logger.warn("{}| user - {} haven't reminder!", logId, userId);
@@ -160,22 +152,8 @@ public class UserService implements IUserService {
         logger.info("{}| user - {} have {} reminder!", logId, userId, reminderDTOS.size());
 
         for (ReminderDTO reminder : reminderDTOS) {
-            AccountPaymentDTO accountPaymentDTO;
-            if (reminder.getMerchantId() == myBankId) {
-                //1.1 reminder same bank
-                accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(reminder.getCardNumber());
-                accounts.add(UserMapper.toModelReminder(
-                        reminder,
-                        AccountSavingDTO.builder().build(),
-                        accountPaymentDTO,
-                        1,
-                        false));
-
-            } else {
-                //1.2: reminder diff bank
-                //todo
-                logger.info("{}| Đã làm đâu mà gọi! (reminderId - {})", logId, reminder.getId());
-            }
+            accounts.add(UserMapper.toModelReminder(
+                    reminder));
         }
         //Step 2: Build response
         return UserMapper.toModelUser(userDTO, accounts);

@@ -64,18 +64,6 @@ public class UserProcess {
                 .build();
     }
 
-    public static ReminderDTO createReminder(String logId, CreateReminderRequest request, Timestamp currentTime) {
-        return ReminderDTO.builder()
-                .createdAt(currentTime)
-                .isActive(1)
-                .nameReminisce(request.getNameReminisce())
-                .userId(request.getUserId())
-                .cardNumber(request.getCardNumber())
-                .merchantId(request.getMerchantId())
-                .updatedAt(currentTime)
-                .type(request.getType())
-                .build();
-    }
 
     public static List<Account> formatToAccounts(String logId, List<AccountPaymentDTO> accountPaymentDTOS, List<AccountSavingDTO> accountSavingDTOS, boolean isQueryBalance) {
         List<Account> accounts = new ArrayList<>();

@@ -20,6 +20,8 @@ public class Account {
     public Long balance;
     public Long userId;
     public long reminderId;
+    public String typeReminder;
+    public long merchantId;
 
     @Override
     public String toString() {
