@@ -6,10 +6,8 @@ import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
-import com.backend.model.Transaction;
 import com.backend.model.request.*;
 import com.backend.model.response.DebtorResponse;
-import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
@@ -272,64 +270,18 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public TransactionResponse transaction(String logId, TransactionRequest request) {
-        Timestamp currentTime = new Timestamp(request.getRequestTime());
-        Long cardNumber = request.getCardNumber();
-        List<AccountPaymentDTO> accounts = (List<AccountPaymentDTO>) accountPaymentRepository.findAll();
-        String cardName = null;
-        for (AccountPaymentDTO account : accounts) {
-            if (account.getCardNumber() == cardNumber) {
-                cardName = account.getCardName();
-            }
-        }
-
-        if (cardName == null) {
-            logger.warn("{}| Card number is not exist!", logId);
-            return null;
-        }
-
-        TransactionDTO transactionDTO = transactionRepository.save(UserProcess.createTransaction(logId, currentTime, request, cardName));
-        Long transactionId = transactionDTO.getId();
-        logger.info("{}| Save transaction - {}:{}", logId, transactionId, transactionId == null ? "false" : "success");
-
-        return TransactionResponse.builder()
-                .transId(transactionDTO.getTransId())
-                .cardName(transactionDTO.getCardName())
-                .cardNumber(transactionDTO.getCardNumber())
-                .amount(transactionDTO.getAmount())
-                .typeFee(transactionDTO.getTypeFee())
-                .fee(transactionDTO.getFee())
-                .content(transactionDTO.getContent())
-                .createDate(transactionDTO.getCreatedAt())
-                .merchantId(transactionDTO.getMerchantId())
-                .status(transactionDTO.getStatus())
-                .build();
-    }
-
-    @Override
-    public long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName) {
-        //Build TransactionRequest
-        TransactionRequest transactionRequest = new TransactionRequest();
-        transactionRequest.setRequestId(request.getRequestId());
-        transactionRequest.setRequestTime(request.getRequestTime());
-        transactionRequest.setAmount(request.getValue());
-        transactionRequest.setCardNumber(request.getFrom());
-        transactionRequest.setContent(request.getDescription());
-        transactionRequest.setMerchantId(merchantId);
-        transactionRequest.setTypeFee(request.getTypeFee());
-        transactionRequest.setTypeTrans(request.getIsTransfer() ? 1 : 2);
-        transactionRequest.setUserId(userId);
+    public long insertTransaction(String logId, TransactionRequest request) {
         //Build transactionDTO
-        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), transactionRequest, cardName, status, fee);
+        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
         TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
-        Long transactionId = transactionDTO.getId();
+        Long transactionId = transactionDTO.getTransId();
 
         if (transactionId == null) {
             logger.warn("{}| Save transaction - {} fail!", logId, firstTrans.getTransId());
             return -1;
         } else {
             logger.info("{}| Save transaction success with id: {}", logId, transactionId);
-            return transactionDTO.getTransId();
+            return transactionId;
         }
     }
 
@@ -383,4 +335,6 @@ public class UserService implements IUserService {
             return -2;
         }
     }
+
+
 }

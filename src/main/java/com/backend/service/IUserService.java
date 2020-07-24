@@ -1,10 +1,8 @@
 package com.backend.service;
 
 import com.backend.model.Account;
-import com.backend.model.Transaction;
 import com.backend.model.request.*;
 import com.backend.model.response.DebtorResponse;
-import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 
 import java.util.List;
@@ -24,9 +22,7 @@ public interface IUserService {
 
     DebtorResponse getDebts(String logId, long userId, int action, int type);
 
-    TransactionResponse transaction(String logId, TransactionRequest transactionRequest);
-
-    long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName);
+    long insertTransaction(String logId, TransactionRequest request);
 
     long deleteDebt(String logId, DeleteDebtRequest request);
 }
