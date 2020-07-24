@@ -179,33 +179,35 @@
 # 3. Get Accounts
 |Key | Value       | 
 |------- | ---------- |
-|URL | 127.0.0.1:8080/lh-bank/get-accounts/{userId}/{type}       | 
+|URL | 127.0.0.1:8080/lh-bank/get-accounts/{type}      | 
 |Method | GET       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
+
 ## Raw Data
 **HTTP Request:**
 
 **Response:**
 ```json
 {
-    "requestId": "1867e7a504c24ac082b3645f67bb791c",
+    "requestId": "5c50bdb1ed2f4363a9f7c3d3aeae4c8f",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1593768407676,
+    "responseTime": 1595588261056,
     "data": {
-    "accounts": [
+        "accounts": [
             {
-                "id": 4,
-                "cardNumber": 11,
-                "cardName": "Lang Lang",
-                "closeDate": "02/07/2024 15:59:08",
-                "createdAt": "03/07/2020 15:59:08",
-                "updatedAt": "03/07/2020 15:59:08",
+                "id": 2,
+                "cardNumber": 1006530338737501,
+                "cardName": "Tran Thi Lang",
+                "closeDate": "09/07/2024 08:17:37",
+                "createdAt": "10/07/2020 08:17:37",
+                "updatedAt": "21/07/2020 09:30:30",
                 "description": null,
-                "type": 1,
-                "balance": 0,
-                "userId": 3
+                "type": "payment",
+                "balance": 3094000,
+                "userId": 1
             }
-     ]
+        ]
     }
 }
 ```
@@ -215,10 +217,8 @@
 |Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
 |userId|Number|x|PathVariable|Định danh chủ tài khoản|
-|type|Number|x|PathVariable|1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm, 0 - get all|
-**Response:**
-
-|Name|Type|Required|Level|Description|
+|type|String||PathVariable|"payment" - Tài khoản thanh toán, "saving" - Tài khoản tiết kiệm, không truyền - lấy hết|
+**Response:*|Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
 |requestId|String|x|L1|Định danh request phía trên|
 |resultCode|Number|x|L1|Kết quả của request|

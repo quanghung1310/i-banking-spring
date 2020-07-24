@@ -46,6 +46,12 @@ public class UserController {
     @Value( "${type.account.payment}" )
     private int paymentBank;
 
+    @Value("${account.payment}")
+    private String accountPayment;
+
+    @Value("${account.saving}")
+    private String accountSaving;
+
     IUserService userService;
     IReminderRepository reminderRepository;
     UserDetailsService userDetailsService;
@@ -77,39 +83,6 @@ public class UserController {
         return new ResponseEntity<>(new JsonObject().put("bearerToken", jwtUtil.generateToken(authRequest.getUserName())).toString(), HttpStatus.OK);
     }
 
-    @GetMapping("/get-accounts/{userId}/{type}")
-    public ResponseEntity<String> getCustomers(@PathVariable int userId,
-            @PathVariable int type) {
-        String logId = DataUtil.createRequestId();
-        logger.info("{}| Request data: userId - {}, type - {}", logId, userId, type);
-        BaseResponse response;
-        try {
-            if (type < 0 || type > 2 || userId < 0) {
-                logger.warn("{}| Validate request get users data: Fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
-                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-            }
-
-            List<Account> accounts = userService.getUsers(logId, type, userId);
-            if (accounts == null) {
-                logger.warn("{}| Get users fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, accounts.toString());
-                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            JsonObject responseData = new JsonObject().put("accounts", accounts);
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, responseData.toString());
-            response.setData(new JsonObject(responseData.toString()));
-            logger.info("{}| Response to client: {}", logId, responseData.toString());
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("{}| Request get users catch exception: ", logId, ex);
-            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            return new ResponseEntity<>(
-                    response.toString(),
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
-
     @PostMapping(value = "/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest request) {
         String logId = request.getRequestId();
@@ -133,7 +106,7 @@ public class UserController {
                 return new ResponseEntity<>(DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null).toString(), HttpStatus.UNAUTHORIZED);
             }
 
-            UserResponse userResponse = userService.login(logId, username);
+            UserResponse userResponse = userService.getUser(logId, username);
             if (userResponse == null || userResponse.getId() <= 0) {
                 logger.warn("{}| Login fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
@@ -152,6 +125,50 @@ public class UserController {
                     HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping({"/get-accounts/{type}", "/get-accounts"})
+    public ResponseEntity<String> getCustomers(@PathVariable(value = "type", required = false) String type) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: type - {}", logId, type);
+        BaseResponse response;
+        try {
+            int typeAccount = 0;
+
+            if (StringUtils.isNotBlank(type)) {
+                if (type.equals(accountPayment)) {
+                    typeAccount = 1;
+                } else if (type.equals(accountSaving)) {
+                    typeAccount = 2;
+                } else {
+                    logger.warn("{}| type not empty!", logId);
+                    response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                    return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+                }
+            }
+
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            UserResponse user = userService.getUser(logId, ((UserDetails)principal).getUsername());
+
+            List<Account> accounts = userService.getUsers(logId, typeAccount, user.getId());
+            if (accounts == null) {
+                logger.warn("{}| Get users fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            JsonObject responseData = new JsonObject().put("accounts", accounts);
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, responseData.toString());
+            response.setData(new JsonObject(responseData.toString()));
+            logger.info("{}| Response to client: {}", logId, responseData.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request get users catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
     @PostMapping("/create-reminder")
     public ResponseEntity<String> createReminder(@RequestBody CreateReminderRequest request) {

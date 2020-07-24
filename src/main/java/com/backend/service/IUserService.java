@@ -1,6 +1,7 @@
 package com.backend.service;
 
 import com.backend.dto.ReminderDTO;
+import com.backend.dto.UserDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.DebtorResponse;
@@ -13,7 +14,7 @@ import java.util.Optional;
 public interface IUserService {
     List<Account> getUsers(String logId, int type, long userId);
 
-    UserResponse login(String logId, String userName);
+    UserResponse getUser(String logId, String userName);
 
     ReminderDTO createReminder(String logId, CreateReminderRequest request);
 

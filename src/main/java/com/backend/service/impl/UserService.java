@@ -87,7 +87,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse login(String logId, String userName) {
+    public UserResponse getUser(String logId, String userName) {
         return UserMapper.toModelUser(userRepository.findFirstByUserName(userName), new ArrayList<>());
     }
 
