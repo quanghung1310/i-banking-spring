@@ -127,7 +127,7 @@ public class UserController {
     }
 
     @GetMapping({"/get-accounts/{type}", "/get-accounts"})
-    public ResponseEntity<String> getCustomers(@PathVariable(value = "type", required = false) String type) {
+    public ResponseEntity<String> getCustomers(@PathVariable(required = false) String type) {
         String logId = DataUtil.createRequestId();
         logger.info("{}| Request data: type - {}", logId, type);
         BaseResponse response;
