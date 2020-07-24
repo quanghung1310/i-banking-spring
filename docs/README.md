@@ -426,38 +426,36 @@
 |data.accounts.typeReminder|String|x|L3|Loại gợi nhớ đã lưu ("send" = 1: chuyển tiền, "deb" = 2: Nhắc nợ)|
 |data.accounts.merchantId|Number|x|L3|Định danh tài khoản gợi nhớ là liên ngân hàng hay cùng ngân hàng|
 
-# 7. Query Account
+# 7. Get Account Info
 |Key | Value       | 
 |------- | ---------- |
-|URL | 127.0.0.1:8080/lh-bank/query-account/{cardNumber}/{merchantId}| 
+|URL | 127.0.0.1:1111/lh-bank/get-account-info/{cardNumber}/{merchantId}| 
 |Method | GET       | 
+|Authorization| Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFudGhpbGFuZyIsImV4cCI6MTU5NTU5NzI3NiwiaWF0IjoxNTk1NTYxMjc2fQ.cyWnQadmHjSPqowU-dBkB5CX1YWE-TU3_4ru5QGUFM8|
+127.0.0.1:1111/lh-bank/get-account-info/1448127665849225/2
 ## Raw Data
 **HTTP Request:**
 
 **Response:**
 ```json
 {
-    "requestId": "1c16c8c232ad4c07844455b7e6f23a4f",
+    "requestId": "e9c5aa1f2f024c68b0477c81e8e11e84",
     "resultCode": 0,
     "message": "Thành công",
-    "responseTime": 1593947006613,
+    "responseTime": 1595616406834,
     "data": {
-        "id": 3,
+        "id": 5,
         "email": "tranthilang.dtnt@gmail.com",
-        "name": "Tran Thi Lang",
-        "phone": "0327421137",
-        "createdAt": "05/07/2020 15:40:20",
+        "name": "Lang Debtor",
+        "phone": "0327421111",
+        "createdAt": "20/07/2020 18:33:10",
         "account": [
             {
-                "id": 4,
-                "cardNumber": 1575750842294193,
-                "cardName": "Tran Thi Lang",
-                "closeDate": "04/07/2024 15:40:20",
-                "createdAt": "05/07/2020 15:40:20",
-                "updatedAt": "05/07/2020 15:40:20",
-                "description": null,
-                "type": 1,
-                "userId": 3
+                "id": 6,
+                "cardNumber": 1448127665849225,
+                "cardName": "Tran Lang Debtor",
+                "type": "payment",
+                "userId": 5
             }
         ]
     }
@@ -469,7 +467,7 @@
 |Name|Type|Required|Level|Description|
 |----|----|:------:|:---:|-----------|
 |cardNumber|Number|x|PathVariable|Số tài khoản|
-|merchantId|Number|x|PathVariable|Định danh ngân hàng, Mặc định là O nếu cùng ngân hàng|
+|merchantId|Number|x|PathVariable|Định danh ngân hàng|
 **Response:**
 
 |Name|Type|Required|Level|Description|
@@ -489,9 +487,6 @@
 |data.accounts.userId|Number|x|L3|Định danh chủ tài khoản|
 |data.accounts.cardNnumber|Number|x|L3|Số tài khoản|
 |data.accounts.cardName|String|x|L3|Tên tài khoản|
-|data.accounts.closeDate|String|x|L3|Hạn sử dụng tài khoản|
-|data.accounts.createdAt|String|x|L3|Ngày tạo tài khoản|
-|data.accounts.description|String||L3|Thông tin thêm |
 |data.accounts.type|Number|x|L3|Loại tài khoản: 1 - Tài khoản thanh toán, 2 - Tài khoản tiết kiệm|
 
 # 8. Create Debt

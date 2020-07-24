@@ -47,15 +47,15 @@ public class UserMapper {
             }
             if (isQueryBalance) {
                 account.setBalance(accountPaymentDTO.getBalance());
+                account.setCloseDate(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCloseDate().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+                account.setCreatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+                account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             }
             account.setCardNumber(accountPaymentDTO.getCardNumber());
             account.setCardName(accountPaymentDTO.getCardName());
-            account.setCloseDate(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCloseDate().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
-            account.setCreatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setDescription(accountPaymentDTO.getDescription());
             account.setId(accountPaymentDTO.getId());
             account.setType("payment");
-            account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountPaymentDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setUserId(accountPaymentDTO.getUserId());
         } else {
             if (accountSavingDTO == null) {
@@ -63,16 +63,16 @@ public class UserMapper {
             }
             if (isQueryBalance) {
                 account.setBalance(accountPaymentDTO.getBalance());
+                account.setCloseDate(DataUtil.convertTimeWithFormat(accountSavingDTO.getCloseDate().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+                account.setCreatedAt(DataUtil.convertTimeWithFormat(accountSavingDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+                account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountSavingDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             }
 
             account.setCardName(accountSavingDTO.getCardName());
             account.setCardNumber(accountSavingDTO.getCardNumber());
-            account.setCloseDate(DataUtil.convertTimeWithFormat(accountSavingDTO.getCloseDate().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
-            account.setCreatedAt(DataUtil.convertTimeWithFormat(accountSavingDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setDescription(accountSavingDTO.getDescription());
             account.setId(accountSavingDTO.getId());
             account.setType("saving");
-            account.setUpdatedAt(DataUtil.convertTimeWithFormat(accountSavingDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
             account.setUserId(accountSavingDTO.getUserId());
         }
         return account;
