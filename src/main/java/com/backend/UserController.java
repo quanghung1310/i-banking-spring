@@ -3,6 +3,7 @@ package com.backend;
 import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.ReminderDTO;
+import com.backend.dto.UserDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.BaseResponse;
@@ -12,21 +13,28 @@ import com.backend.model.response.UserResponse;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
+import com.backend.util.JwtUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.print.attribute.standard.Media;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,11 +49,42 @@ public class UserController {
     @Value( "${type.account.payment}" )
     private int paymentBank;
 
-    @Autowired
     IUserService userService;
+    IReminderRepository reminderRepository;
+    UserDetailsService userDetailsService;
+    AuthenticationManager authenticationManager;
+    JwtUtil jwtUtil;
 
     @Autowired
-    IReminderRepository reminderRepository;
+    public UserController(IUserService userService,
+                          IReminderRepository reminderRepository,
+                          @Qualifier("USER_DETAIL") UserDetailsService userDetailsService,
+                          AuthenticationManager authenticationManager,
+                          JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.reminderRepository = reminderRepository;
+        this.userDetailsService = userDetailsService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+    }
+
+    //login
+    @GetMapping(value = "/")
+    public ResponseEntity<String> welcome() {
+       return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+    @PostMapping("/authenticate")
+    public ResponseEntity<String> generateToken(@RequestBody AuthRequest authRequest) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword())
+            );
+        } catch (Exception ex) {
+            return new ResponseEntity<>("BAD REQUEST DATA", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(jwtUtil.generateToken(authRequest.getUserName()), HttpStatus.OK);
+    }
 
     @GetMapping("/get-accounts/{userId}/{type}")
     public ResponseEntity<String> getCustomers(@PathVariable int userId,
@@ -74,24 +113,14 @@ public class UserController {
         } catch (Exception ex) {
             logger.error("{}| Request get users catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            ResponseEntity<String> responseEntity = new ResponseEntity<>(
+            return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
-            return responseEntity;
         }
     }
 
-    //todo
-//    @RequestMapping(value={"/login"})
-//    public String loginSecurity(Principal principal) {
-//        if (principal != null && ((Authentication) principal).isAuthenticated()) {
-//            return "redirect:/";
-//        }
-//        return "login";
-//    }
-
     //todo login tam thoi!!!!
-    @PostMapping(value = "/login")
+    @PostMapping(value = "/login-v1")
     public ResponseEntity<String> loginTemp(@RequestBody LoginRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
