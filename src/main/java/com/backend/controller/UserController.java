@@ -4,15 +4,15 @@ import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.ReminderDTO;
-import com.backend.dto.UserDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
+import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
-import com.backend.service.IAccountPaymentService;
 import com.backend.repository.IReminderRepository;
+import com.backend.service.IAccountPaymentService;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
 import com.backend.util.JwtUtil;
@@ -63,16 +63,19 @@ public class UserController {
     private IReminderRepository reminderRepository;
     private AuthenticationManager authenticationManager;
     private JwtUtil jwtUtil;
+    private IAccountPaymentService accountPaymentService;
 
     @Autowired
     public UserController(IUserService userService,
                           IReminderRepository reminderRepository,
                           AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          IAccountPaymentService accountPaymentService) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.accountPaymentService = accountPaymentService;
     }
 
     @PostMapping("/authenticate")
@@ -520,7 +523,7 @@ public class UserController {
         return userService.getUser(logId, ((UserDetails)principal).getUsername());
     }
 
-    @PostMapping(value = "/pay/debt")
+    @PostMapping(value = "/pay-debt")
     public ResponseEntity<String> payDebt(@RequestBody PayDebtRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request pay debt data: {}", logId, PARSER.toJson(request));
@@ -533,13 +536,14 @@ public class UserController {
             }
             logger.info("{}| Valid data request pay debt success!", logId);
 
-//            TransactionResponse transactionResponse = userService.transaction(logId, request);
-            long result = userService.payDebt(logId, request);
-            //// TODO: 7/20/20 validate result -> response
-            JsonObject dateResponse = new JsonObject()
-                    .put("transId", result);
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), dateResponse.toString());
-            response.setData(new JsonObject(dateResponse.toString()));
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            TransactionResponse result = userService.payDebt(logId, request, user.getId());
+            if (result == null) {
+                logger.warn("{}| Pay debt - {}: fail!", logId, request.getDebtId());
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), result.toString());
             logger.info("{}| Response to client: {}", logId, response.toString());
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {

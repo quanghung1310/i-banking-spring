@@ -41,4 +41,6 @@ public class TransactionDTO {
     private Timestamp createdAt;
 
     private Timestamp updatedAt;
+
+    private long fee;
 }

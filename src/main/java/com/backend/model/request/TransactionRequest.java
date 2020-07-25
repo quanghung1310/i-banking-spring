@@ -14,7 +14,7 @@ public class TransactionRequest {
     private long senderCard; //from
     private long receiverCard; //to
     private Integer typeFee; //1: người nhận trả, 2. người chuyển trả
-    private Integer typeTrans; //1: Chuyển tiền (update balance = userId.accountPayment.balance + amount), 2. Nhận tiền (update balance = userId.accountPayment.balance - amount)
+    private Integer typeTrans; //1: transfer, 2.debt
     private String content;
     private long amount;
     private Long merchantId; //merchant của from

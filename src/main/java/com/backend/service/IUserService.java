@@ -1,10 +1,10 @@
 package com.backend.service;
 
 import com.backend.dto.ReminderDTO;
-import com.backend.dto.UserDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.DebtorResponse;
+import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 
 import java.util.List;
@@ -33,5 +33,5 @@ public interface IUserService {
 
     ReminderDTO saveReminder(ReminderDTO reminderDTO);
 
-    long payDebt(String logId, PayDebtRequest request);
+    TransactionResponse payDebt(String logId, PayDebtRequest request, long userId);
 }
