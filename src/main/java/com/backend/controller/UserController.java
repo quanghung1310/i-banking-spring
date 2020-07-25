@@ -80,6 +80,7 @@ public class UserController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<String> generateToken(@RequestBody AuthRequest authRequest) {
+        String logId = DataUtil.createRequestId();
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword())
@@ -87,7 +88,12 @@ public class UserController {
         } catch (Exception ex) {
             return new ResponseEntity<>("BAD REQUEST DATA", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(new JsonObject().put("bearerToken", jwtUtil.generateToken(authRequest.getUserName())).toString(), HttpStatus.OK);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserResponse user = userService.getUser(logId, ((UserDetails)principal).getUsername());
+        return new ResponseEntity<>(new JsonObject()
+                .put("bearerToken", jwtUtil.generateToken(authRequest.getUserName()))
+                .put("role", user.getRole())
+                .toString(), HttpStatus.OK);
     }
 
     @GetMapping(value = "/get-profile")

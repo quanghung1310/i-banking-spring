@@ -91,7 +91,7 @@ public class UserMapper {
         userResponse.setId(userDTO.getId());
         userResponse.setName(userDTO.getName());
         userResponse.setPhone(userDTO.getPhone());
-
+        userResponse.setRole(userDTO.getRole());
         return userResponse;
     }
 
