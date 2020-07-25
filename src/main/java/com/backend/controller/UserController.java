@@ -7,10 +7,10 @@ import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.OtpDTO;
 import com.backend.dto.ReminderDTO;
 import com.backend.model.Account;
-import com.backend.model.request.*;
 import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.debt.DeleteDebtRequest;
 import com.backend.model.request.debt.PayDebtRequest;
+import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.request.reminder.CreateReminderRequest;
 import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.BaseResponse;
@@ -34,8 +34,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -90,8 +88,6 @@ public class UserController {
     @Autowired
     public UserController(IUserService userService,
                           IReminderRepository reminderRepository,
-                          AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil,
                           IAccountPaymentService accountPaymentService,
                           JavaMailSender javaMailSender,
                           IOtpService otpService) {
