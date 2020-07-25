@@ -90,42 +90,21 @@ public class UserController {
         return new ResponseEntity<>(new JsonObject().put("bearerToken", jwtUtil.generateToken(authRequest.getUserName())).toString(), HttpStatus.OK);
     }
 
-    @PostMapping(value = "/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        String logId = request.getRequestId();
-        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+    @GetMapping(value = "/get-profile")
+    public ResponseEntity<String> getProfile() {
+        String logId = DataUtil.createRequestId();
         BaseResponse response;
         try {
-            String password = request.getPassword();
-            String userName = request.getUserName();
-            if (StringUtils.isBlank(password) || StringUtils.isBlank(userName)) {
-                logger.warn("{}| Validate request login data: Fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
-                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-            }
 
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             String username = ((UserDetails)principal).getUsername();
-            String pass     = ((UserDetails)principal).getPassword();
-
-            if (!userName.equals(username) || !password.equals(pass)) {
-                logger.warn("{}| userName or password wrong!", logId);
-                return new ResponseEntity<>(DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null).toString(), HttpStatus.UNAUTHORIZED);
-            }
-
             UserResponse userResponse = userService.getUser(logId, username);
-            if (userResponse == null || userResponse.getId() <= 0) {
-                logger.warn("{}| Login fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
-                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
             response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
             response.setData(new JsonObject(userResponse.toString()));
             logger.info("{}| Response to client: {}", logId, userResponse.toString());
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("{}| Request login catch exception: ", logId, ex);
+            logger.error("{}| Request get profile catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
             return new ResponseEntity<>(
                     response.toString(),
