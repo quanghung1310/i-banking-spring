@@ -1,4 +1,4 @@
-package com.backend.model.request;
+package com.backend.model.request.employee;
 
 import com.backend.util.DataUtil;
 import lombok.Getter;
@@ -7,20 +7,24 @@ import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
-public class DepositRequest {
+public class RegisterRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private String userName;
-    private Long cardNumber;
-    private long balance;
+    private String email;
+    private String name;
+    private String phone;
+    private String cardName;
+    private long adminId;
 
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
-                    || balance <= 1000
-                    || balance > 20000000
+                    || StringUtils.isBlank(this.email)
+                    || StringUtils.isBlank(this.name)
+                    || StringUtils.isBlank(this.phone)
+                    || StringUtils.isBlank(this.cardName)
                     || requestTime <= 0
-                    || (StringUtils.isBlank(this.userName) && cardNumber == null));
+                    || adminId < 0);
 
         }
         catch (Exception ex) {

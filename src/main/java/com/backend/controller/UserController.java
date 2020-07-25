@@ -8,6 +8,11 @@ import com.backend.dto.OtpDTO;
 import com.backend.dto.ReminderDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
+import com.backend.model.request.debt.CreateDebtorRequest;
+import com.backend.model.request.debt.DeleteDebtRequest;
+import com.backend.model.request.debt.PayDebtRequest;
+import com.backend.model.request.reminder.CreateReminderRequest;
+import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
@@ -40,9 +45,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -76,6 +78,9 @@ public class UserController {
 
     @Value("${otp.debt}")
     private String otpDebt;
+
+    @Value( "${session.request}" )
+    private int session;
 
     private IUserService userService;
     private IReminderRepository reminderRepository;
@@ -561,6 +566,7 @@ public class UserController {
     @GetMapping("/send-otp/{action}")
     public ResponseEntity<String> sendOtp(@PathVariable String action) {
         String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: action - {}", logId, action);
         int otp = new Random().nextInt(900000);
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
         BaseResponse response;
@@ -597,6 +603,42 @@ public class UserController {
             JsonObject result = new JsonObject().put("otp", otp)
                     .put("id", otpDto.getId())
                     .put("createDate", DataUtil.convertTimeWithFormat(otpDto.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/validate-otp")
+    public ResponseEntity<String> validateOtp(@RequestBody String requestBody) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request validate otp data: {}", logId, requestBody);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        BaseResponse response;
+        try {
+            JsonObject request = new JsonObject(requestBody);
+            String action = request.getString("action", "");
+            int otp = request.getInteger("otp", 0);
+            if ((!action.equals(otpPayment) && !action.equals(otpDebt) && otp == 0) || StringUtils.isBlank(action)) {
+                logger.warn("{}| Validate base request data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            boolean validateOtp = otpService.validateOtp(logId, user.getId(), otp, action, session, currentTime);
+            JsonObject result = new JsonObject().put("result", validateOtp);
+            if (!validateOtp) {
+                logger.warn("{}| Validate otp - {} fail!", logId, otp);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, result.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            }
 
             response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
             logger.info("{}| Response to client: {}", logId, response.toString());

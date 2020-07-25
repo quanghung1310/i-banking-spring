@@ -4,9 +4,9 @@ import com.backend.constants.StatusConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
-import com.backend.model.request.CreateDebtorRequest;
-import com.backend.model.request.RegisterRequest;
-import com.backend.model.request.TransactionRequest;
+import com.backend.model.request.debt.CreateDebtorRequest;
+import com.backend.model.request.employee.RegisterRequest;
+import com.backend.model.request.transaction.TransactionRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

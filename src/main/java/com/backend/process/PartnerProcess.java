@@ -1,8 +1,8 @@
 package com.backend.process;
 
 import com.backend.model.Partner;
-import com.backend.model.request.QueryAccountRequest;
-import com.backend.model.request.TransferRequest;
+import com.backend.model.request.bank.QueryAccountRequest;
+import com.backend.model.request.transaction.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
 import io.vertx.core.json.JsonObject;
