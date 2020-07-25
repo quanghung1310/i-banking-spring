@@ -88,8 +88,7 @@ public class UserController {
         } catch (Exception ex) {
             return new ResponseEntity<>("BAD REQUEST DATA", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UserResponse user = userService.getUser(logId, ((UserDetails)principal).getUsername());
+        UserResponse user = userService.getUser(logId, authRequest.getUserName());
         return new ResponseEntity<>(new JsonObject()
                 .put("bearerToken", jwtUtil.generateToken(authRequest.getUserName()))
                 .put("role", user.getRole())
