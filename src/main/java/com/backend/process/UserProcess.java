@@ -1,6 +1,7 @@
 package com.backend.process;
 
 import com.backend.constants.ActionConstant;
+import com.backend.constants.StatusConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
@@ -100,36 +101,30 @@ public class UserProcess {
                 .build();
     }
 
-    public static TransactionDTO createTransaction(String logId, Timestamp currentTime, TransactionRequest request, String cardName) {
-        return buildTransaction(currentTime, request, cardName, "pending", 500L);
-    }
-
-    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, String cardName, String status, long fee) {
+    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, long fee) {
         Long tranId = 1000000000L + (long)(new Random().nextDouble() * 999999999L);
 
         return TransactionDTO.builder()
                 .transId(tranId)
+                .senderCard(request.getSenderCard())
+                .receiverCard(request.getReceiverCard())
                 .amount(request.getAmount())
-                .fee(fee)
                 .typeFee(request.getTypeFee())
-                .cardName(cardName)
-                .cardNumber(request.getCardNumber())
                 .typeTrans(request.getTypeTrans())
                 .merchantId(request.getMerchantId())
                 .content(request.getContent())
-                .status(status) //TODO ĐỊnh nghĩa các loại status trong 1 class nào đó để t xài chung nữa
+                .status(StatusConstant.PENDING.toString())
                 .createdAt(currentTime)
                 .updatedAt(currentTime)
-                .userId(request.getUserId())
                 .build();
     }
 
     public static long newBalance(boolean isTransfer, int typeFee, long fee, long amount, long currentBalance) {
         long balance = 0L;
-        if(isTransfer) { //lh-bank nhận tiền
-            balance = currentBalance + amount;
-        } else { //lh-bank bị trừ tiền
+        if(isTransfer) { //chuyển tiền
             balance = currentBalance - amount;
+        } else { //nhận tiền
+            balance = currentBalance + amount;
         }
         if (typeFee == 2) {
             balance -= fee;
