@@ -5,6 +5,7 @@ import com.backend.dto.AccountPaymentDTO;
 import com.backend.model.Account;
 import com.backend.model.Partner;
 import com.backend.model.request.QueryAccountRequest;
+import com.backend.model.request.TransactionRequest;
 import com.backend.model.request.TransferRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.UserResponse;
@@ -184,7 +185,10 @@ public class PartnerController {
             newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
 
             //5.2: Insert transaction
-            long transId = userService.insertTransaction(logId, request, partner.getId(), toUser.getId(), request.getCardName());
+            //Build transaction request (chưa làm)
+            TransactionRequest transactionRequest = new TransactionRequest();
+
+            long transId = userService.insertTransaction(logId, transactionRequest);
             if (transId <= 0) {
                 logger.warn("{}| Insert new transaction fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(),null);

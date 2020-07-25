@@ -121,15 +121,15 @@ public class UserMapper {
         return Transaction.builder()
                 .id(transactionDTO.getId())
                 .transId(transactionDTO.getTransId())
-                .userId(transactionDTO.getUserId())
+                .senderCard(transactionDTO.getSenderCard())
                 .amount(transactionDTO.getAmount())
-                .fee(transactionDTO.getFee())
                 .typeFee(transactionDTO.getTypeFee())
-                .cardName(transactionDTO.getCardName())
-                .cardNumber(transactionDTO.getCardNumber())
+                .receiverCard(transactionDTO.getReceiverCard())
                 .typeTrans(transactionDTO.getTypeTrans())
                 .content(transactionDTO.getContent())
+                .status(transactionDTO.getStatus())
                 .createdAt(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .updateAt(DataUtil.convertTimeWithFormat(transactionDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .build();
     }
 }

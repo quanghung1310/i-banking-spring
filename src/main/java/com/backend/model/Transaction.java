@@ -10,15 +10,14 @@ import lombok.Setter;
 public class Transaction {
     public long id;
     public long transId;
-    public long userId;
-    public long amount;
-    public long fee;
+    public long senderCard;
+    public Long amount;
     public Integer typeFee;
-    public String cardName;
-    public long cardNumber;
+    public long receiverCard;
     public Integer typeTrans;
-    public long merchantId;
+    public Long merchantId;
     public String content;
+    public String status;
     public String createdAt;
-    public long cardRoot;
+    public String updateAt;
 }
