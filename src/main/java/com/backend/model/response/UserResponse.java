@@ -17,6 +17,7 @@ public class UserResponse {
     private String name;
     private String phone;
     private String createdAt;
+    private String role;
     private List<Account> account;
 
     @Override
