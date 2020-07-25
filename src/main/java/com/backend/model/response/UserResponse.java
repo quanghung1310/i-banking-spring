@@ -13,8 +13,6 @@ import java.util.List;
 @Builder
 public class UserResponse {
     private long id;
-    private String userName;
-    private String password;
     private String email;
     private String name;
     private String phone;

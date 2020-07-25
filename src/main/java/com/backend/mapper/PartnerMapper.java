@@ -4,18 +4,22 @@ import com.backend.dto.PartnerDTO;
 import com.backend.model.Partner;
 
 public class PartnerMapper {
-    public static Partner toModel(PartnerDTO partnerDTO) {
+    public static Partner toModel(PartnerDTO partnerDTO, boolean isSig) {
         if (partnerDTO == null) {
             return null;
         }
-        return Partner.builder()
+        Partner partner = Partner.builder()
                 .id(partnerDTO.getId())
                 .email(partnerDTO.getEmail())
                 .partnerCode(partnerDTO.getPartnerCode())
                 .phoneNumber(partnerDTO.getPhoneNumber())
-                .publicKey(partnerDTO.getPublicKey())
-                .secretKey(partnerDTO.getPrivateKey())
-                .password(partnerDTO.getPassword())
+                .name(partnerDTO.getName())
                 .build();
+        if (isSig) {
+            partner.setPublicKey(partnerDTO.getPublicKey());
+            partner.setSecretKey(partnerDTO.getPrivateKey());
+            partner.setPassword(partnerDTO.getPassword());
+        }
+        return partner;
     }
 }
