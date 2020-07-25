@@ -55,21 +55,26 @@ public class UserController {
 
     @Value("${my.bank.id}")
     private int myBankId;
+    @Value("${fee.transfer}")
+    private int feeTransfer;
 
     private IUserService userService;
     private IReminderRepository reminderRepository;
     private AuthenticationManager authenticationManager;
     private JwtUtil jwtUtil;
+    private IAccountPaymentService accountPaymentService;
 
     @Autowired
     public UserController(IUserService userService,
                           IReminderRepository reminderRepository,
                           AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          IAccountPaymentService accountPaymentService) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.accountPaymentService = accountPaymentService;
     }
 
     @PostMapping("/authenticate")
