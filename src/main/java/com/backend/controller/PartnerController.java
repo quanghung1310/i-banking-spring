@@ -172,19 +172,17 @@ public class PartnerController {
             long accountId = account.id;
             long balanceTransfer = request.getValue();
 
-            if (request.getIsTransfer()) {
-                newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
-            } else {
+            if (!request.getIsTransfer()) {
                 //5.1: Check balance
                 if (newBalance > currentBalance) {
                     logger.warn("{}| Current balance account - {} can't transfer!", logId, accountId);
-                    response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(),null);
+                    response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), null);
                     return new ResponseEntity<>(
                             response.toString(),
                             HttpStatus.BAD_REQUEST);
                 }
-                newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
             }
+            newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
 
             //5.2: Insert transaction
             //Build transaction request (chưa làm)

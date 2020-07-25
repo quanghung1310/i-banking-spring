@@ -1,11 +1,12 @@
 package com.backend.process;
 
-import com.backend.constants.ActionConstant;
 import com.backend.constants.StatusConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
-import com.backend.model.request.*;
+import com.backend.model.request.CreateDebtorRequest;
+import com.backend.model.request.RegisterRequest;
+import com.backend.model.request.TransactionRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,21 +103,17 @@ public class UserProcess {
     }
 
     public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, long fee) {
-        Long tranId = 1000000000L + (long)(new Random().nextDouble() * 999999999L);
-
-        return TransactionDTO.builder()
-                .transId(tranId)
-                .senderCard(request.getSenderCard())
-                .receiverCard(request.getReceiverCard())
-                .amount(request.getAmount())
-                .typeFee(request.getTypeFee())
-                .typeTrans(request.getTypeTrans())
-                .merchantId(request.getMerchantId())
-                .content(request.getContent())
-                .status(StatusConstant.PENDING.toString())
-                .createdAt(currentTime)
-                .updatedAt(currentTime)
-                .build();
+        return createTrans(request.getSenderCard(),
+                request.getReceiverCard(),
+                request.getAmount(),
+                request.getTypeFee(),
+                request.getTypeTrans(),
+                request.getMerchantId(),
+                request.getContent(),
+                StatusConstant.PENDING.toString(),
+                currentTime,
+                currentTime,
+                fee);
     }
 
     public static long newBalance(boolean isTransfer, int typeFee, long fee, long amount, long currentBalance) {
@@ -131,4 +128,23 @@ public class UserProcess {
         }
         return balance;
     }
+
+    public static TransactionDTO createTrans(long senderCard, long receiverCard, long amount, int typeFee, int typeTrans, long merchantId,
+                                             String content, String status, Timestamp create, Timestamp update, long fee) {
+        return TransactionDTO.builder()
+                .transId(1000000000L + (long)(new Random().nextDouble() * 999999999L))
+                .senderCard(senderCard)
+                .receiverCard(receiverCard)
+                .amount(amount)
+                .typeFee(typeFee)
+                .typeTrans(typeTrans)
+                .merchantId(merchantId)
+                .content(content)
+                .status(status)
+                .createdAt(create)
+                .updatedAt(update)
+                .fee(fee)
+                .build();
+    }
+
 }

@@ -5,6 +5,7 @@ import com.backend.dto.*;
 import com.backend.model.Account;
 import com.backend.model.Debt;
 import com.backend.model.Transaction;
+import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.util.DataUtil;
 
@@ -130,6 +131,24 @@ public class UserMapper {
                 .status(transactionDTO.getStatus())
                 .createdAt(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .updateAt(DataUtil.convertTimeWithFormat(transactionDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .build();
+    }
+
+    public static TransactionResponse toModelTransResponse(TransactionDTO transactionDTO, String cardName) {
+        if (transactionDTO == null) {
+            return null;
+        }
+        return TransactionResponse.builder()
+                .amount(transactionDTO.getAmount())
+                .cardName(cardName)
+                .content(transactionDTO.getContent())
+                .createDate(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .fee(transactionDTO.getFee())
+                .merchantId(transactionDTO.getMerchantId())
+                .receiverCard(transactionDTO.getReceiverCard())
+                .status(transactionDTO.getStatus())
+                .transId(transactionDTO.getTransId())
+                .typeFee(transactionDTO.getTypeFee())
                 .build();
     }
 }

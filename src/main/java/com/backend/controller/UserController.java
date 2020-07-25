@@ -2,16 +2,16 @@ package com.backend.controller;
 
 import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
-import com.backend.dto.ReminderDTO;
-import com.backend.dto.UserDTO;
 import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.ReminderDTO;
 import com.backend.model.Account;
 import com.backend.model.request.*;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
+import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
-import com.backend.repository.IReminderRepository;
 import com.backend.process.UserProcess;
+import com.backend.repository.IReminderRepository;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
@@ -47,29 +47,35 @@ public class UserController {
     @Value( "${type.account.payment}" )
     private int paymentBank;
 
+    @Value( "${my.bank.id}" )
+    private long myBankId;
+
+    @Value( "${fee.transfer}" )
+    private int feeTransfer;
+
     @Value("${account.payment}")
     private String accountPayment;
 
     @Value("${account.saving}")
     private String accountSaving;
 
-    @Value("${my.bank.id}")
-    private int myBankId;
-
     private IUserService userService;
     private IReminderRepository reminderRepository;
     private AuthenticationManager authenticationManager;
     private JwtUtil jwtUtil;
+    private IAccountPaymentService accountPaymentService;
 
     @Autowired
     public UserController(IUserService userService,
                           IReminderRepository reminderRepository,
                           AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          IAccountPaymentService accountPaymentService) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.accountPaymentService = accountPaymentService;
     }
 
     @PostMapping("/authenticate")
@@ -515,5 +521,37 @@ public class UserController {
 
     private UserResponse getUser(String logId, Object principal) {
         return userService.getUser(logId, ((UserDetails)principal).getUsername());
+    }
+
+    @PostMapping(value = "/pay-debt")
+    public ResponseEntity<String> payDebt(@RequestBody PayDebtRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request pay debt data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request pay debt data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request pay debt success!", logId);
+
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            TransactionResponse result = userService.payDebt(logId, request, user.getId());
+            if (result == null) {
+                logger.warn("{}| Pay debt - {}: fail!", logId, request.getDebtId());
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), result.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 }

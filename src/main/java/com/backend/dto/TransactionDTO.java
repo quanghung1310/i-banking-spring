@@ -28,7 +28,7 @@ public class TransactionDTO {
     @Column(length = 20)
     private long receiverCard;
 
-    private Integer typeTrans;
+    private Integer typeTrans; //1. deposit, 2.debt
 
     private Long merchantId;
 
@@ -41,4 +41,6 @@ public class TransactionDTO {
     private Timestamp createdAt;
 
     private Timestamp updatedAt;
+
+    private long fee;
 }
