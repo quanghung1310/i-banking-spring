@@ -41,4 +41,6 @@ public class UserDTO {
     @Column(length = 100)
     private String description;
 
+    @Column(length = 20)
+    private String role;
 }
