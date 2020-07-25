@@ -49,11 +49,15 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public TransactionsResponse getTransactions(String logId, long cardNumber, String typeTrans) {
+        int typeTransfer = 1;
+        int typeDebt = 2;
+
         List<TransactionDTO> transactionDTOS;
         List<Transaction> transactions = new ArrayList<>();
         if (typeTrans.equals(send)) {
-            transactionDTOS = transactionRepository.findAllBySenderCard(cardNumber);
-            if (transactionDTOS.size()  <= 0) {
+            transactionDTOS = transactionRepository.findAllBySenderCardAndTypeTransOrderByCreatedAtDesc(cardNumber, typeTransfer);
+            if (transactionDTOS.size() <= 0) {
+                logger.warn("{}| card number - {} not found transaction!", logId, cardNumber);
                 return TransactionsResponse.builder().build();
             }
             transactionDTOS.forEach(transactionDTO -> transactions.add(TransactionMapper.toModelTransaction(
@@ -62,9 +66,32 @@ public class TransactionService implements ITransactionService {
                     accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard()).getCardName()
             )));
         } else if (typeTrans.equals(receiver)) {
-
+            transactionDTOS = transactionRepository.findAllByReceiverCardAndTypeTransOrderByCreatedAtDesc(cardNumber, typeTransfer);
+            if (transactionDTOS.size() <= 0) {
+                logger.warn("{}| card number - {} not found transaction!", logId, cardNumber);
+                return TransactionsResponse.builder().build();
+            }
+            transactionDTOS.forEach(transactionDTO -> transactions.add(TransactionMapper.toModelTransaction(
+                    transactionDTO,
+                    transactionDTO.getSenderCard(),
+                    accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard()).getCardName()
+            )));
         } else if (typeTrans.equals(debt)){
-
+            transactionDTOS = transactionRepository.findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(cardNumber, cardNumber, typeDebt);
+            transactionDTOS.forEach(transactionDTO -> {
+                int result = 1;
+                long card = transactionDTO.getSenderCard();
+                if (cardNumber == transactionDTO.getSenderCard()) {
+                    result = -1;
+                    card = transactionDTO.getReceiverCard();
+                }
+                transactions.add(TransactionMapper.toModelTransactionDebt(
+                    transactionDTO,
+                        card,
+                    accountPaymentRepository.findFirstByCardNumber(card).getCardName(),
+                    result
+            ));
+            });
         } else if (typeTrans.equals(all)) {
 
         } else {

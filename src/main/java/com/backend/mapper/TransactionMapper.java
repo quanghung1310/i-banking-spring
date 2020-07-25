@@ -43,4 +43,22 @@ public class TransactionMapper {
                 .fee(transactionDTO.getFee())
                 .build();
     }
+
+    public static Transaction toModelTransactionDebt(TransactionDTO transactionDTO, long cardNumber, String cardName, int result) {
+        if (transactionDTO == null) {
+            return null;
+        }
+        return Transaction.builder()
+                .amount(transactionDTO.getAmount()*result)
+                .content(transactionDTO.getContent())
+                .cardNumber(cardNumber)
+                .cardName(cardName)
+                .status(transactionDTO.getStatus())
+                .transId(transactionDTO.getTransId())
+                .typeFee(transactionDTO.getTypeFee())
+                .merchantId(transactionDTO.getMerchantId())
+                .createDate(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .fee(transactionDTO.getFee())
+                .build();
+    }
 }

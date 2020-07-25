@@ -8,9 +8,11 @@ import java.util.List;
 public interface ITransactionRepository extends CrudRepository<TransactionDTO, Long> {
     TransactionDTO findFirstByTransId(long transId);
 
-    List<TransactionDTO> findAllBySenderCard(long senderCard);
+    List<TransactionDTO> findAllBySenderCardAndTypeTransOrderByCreatedAtDesc(long senderCard, int typeTrans);
 
-    List<TransactionDTO> findAllByReceiverCard(long receiverCard);
+    List<TransactionDTO> findAllByReceiverCardAndTypeTransOrderByCreatedAtDesc(long receiverCard, int typeTrans);
 
     TransactionDTO findFirstBySenderCardAndReceiverCard(long senderCard, long receiverCard);
+
+    List<TransactionDTO> findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(long senderCard, long receiverCard, int typeTrans);
 }

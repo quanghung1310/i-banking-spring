@@ -306,7 +306,7 @@ public class UserService implements IUserService {
         logger.info("{}| Validate debt - {} success!", logId, debtId);
 
         //Step 1: validate FROM
-        AccountPaymentDTO accountFrom = accountPaymentRepository.findFirstByUserId(userId);
+        AccountPaymentDTO accountFrom = accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber());
         if (accountFrom == null) {
             logger.warn("{}| User - {} not fount!", logId, userId);
             return null;
@@ -314,7 +314,7 @@ public class UserService implements IUserService {
         logger.info("{}| User - {} is existed!", logId, accountFrom.getId());
 
         //Step 2: validate TO
-        AccountPaymentDTO accountTo = accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber());
+        AccountPaymentDTO accountTo = accountPaymentRepository.findFirstByUserId(debtDTO.getUserId());
         if (accountTo == null) {
             logger.warn("{}| Debtor - {} not fount!", logId, debtDTO.getUserId());
             return null;
@@ -375,7 +375,8 @@ public class UserService implements IUserService {
         debtRepository.save(debtDTO);
 
         //Step 8: insert transaction
-        TransactionDTO transactionDTO = UserProcess.createTrans(accountFrom.getCardNumber(),
+        TransactionDTO transactionDTO = UserProcess.createTrans
+                (accountFrom.getCardNumber(),
                 accountTo.getCardNumber(),
                 amountPay,
                 request.getTypeFee(),
