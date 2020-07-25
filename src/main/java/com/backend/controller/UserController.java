@@ -21,6 +21,7 @@ import com.backend.process.UserProcess;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IOtpService;
+import com.backend.service.ITransactionService;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
@@ -84,18 +85,21 @@ public class UserController {
     private IAccountPaymentService accountPaymentService;
     private JavaMailSender javaMailSender;
     private IOtpService otpService;
+    private ITransactionService transactionService;
 
     @Autowired
     public UserController(IUserService userService,
                           IReminderRepository reminderRepository,
                           IAccountPaymentService accountPaymentService,
                           JavaMailSender javaMailSender,
-                          IOtpService otpService) {
+                          IOtpService otpService,
+                          ITransactionService transactionService) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
         this.accountPaymentService = accountPaymentService;
         this.javaMailSender = javaMailSender;
         this.otpService = otpService;
+        this.transactionService = transactionService;
     }
 
     @GetMapping(value = {"/get-accounts", "/get-accounts/{type}"})
@@ -351,7 +355,7 @@ public class UserController {
             }
 
             //insert transaction
-            long transId = userService.insertTransaction(logId, request);
+            long transId = transactionService.insertTransaction(logId, request);
             if (transId == -1) {
                 logger.warn("{}| Create transaction: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);

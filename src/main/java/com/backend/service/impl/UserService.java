@@ -10,7 +10,6 @@ import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.debt.DeleteDebtRequest;
 import com.backend.model.request.debt.PayDebtRequest;
 import com.backend.model.request.reminder.CreateReminderRequest;
-import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
@@ -236,22 +235,6 @@ public class UserService implements IUserService {
             logger.info("{}| User - {} have: {} debt", logId, userId, debts.size());
         }
         return DebtorResponse.builder().debts(debts).build();
-    }
-
-    @Override
-    public long insertTransaction(String logId, TransactionRequest request) {
-        //Build transactionDTO
-        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
-        TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
-        long transactionId = transactionDTO.getTransId();
-
-        if (transactionId <= 0) {
-            logger.warn("{}| Save transaction - {} fail!", logId, firstTrans.getTransId());
-            return -1;
-        } else {
-            logger.info("{}| Save transaction success with id: {}", logId, transactionId);
-            return transactionId;
-        }
     }
 
     @Override

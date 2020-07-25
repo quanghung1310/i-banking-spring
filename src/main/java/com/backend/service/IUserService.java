@@ -29,8 +29,6 @@ public interface IUserService {
 
     DebtorResponse getDebts(String logId, long userId, int action, int type);
 
-    long insertTransaction(String logId, TransactionRequest request);
-
     DebtorResponse deleteDebt(String logId, DeleteDebtRequest request, long userId);
 
     Optional<ReminderDTO> getReminder(long id);

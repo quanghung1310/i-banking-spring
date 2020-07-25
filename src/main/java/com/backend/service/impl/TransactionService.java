@@ -3,8 +3,11 @@ package com.backend.service.impl;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.TransactionDTO;
 import com.backend.mapper.TransactionMapper;
+import com.backend.mapper.UserMapper;
 import com.backend.model.Transaction;
+import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.TransactionsResponse;
+import com.backend.process.UserProcess;
 import com.backend.repository.IAccountPaymentRepository;
 import com.backend.repository.ITransactionRepository;
 import com.backend.repository.IUserRepository;
@@ -15,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +37,9 @@ public class TransactionService implements ITransactionService {
 
     @Value( "${trans.all}" )
     private String all;
+
+    @Value( "${fee.transfer}" )
+    private long fee;
 
     private IUserRepository userRepository;
     private IAccountPaymentRepository accountPaymentRepository;
@@ -153,5 +160,29 @@ public class TransactionService implements ITransactionService {
                 .cardName(paymentDTO.getCardName())
                 .transactions(transactions)
                 .build();
+    }
+
+
+    @Override
+    public long insertTransaction(String logId, TransactionRequest request) {
+        //Build transactionDTO
+        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
+        TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
+        long transactionId = transactionDTO.getTransId();
+
+        if (transactionId <= 0) {
+            logger.warn("{}| Save transaction - {} fail!", logId, firstTrans.getTransId());
+            return -1;
+        } else {
+            logger.info("{}| Save transaction success with id: {}", logId, transactionId);
+            return transactionId;
+        }
+    }
+
+    @Override
+    public Transaction saveTransaction(TransactionDTO transactionDTO) {
+        TransactionDTO transactionDTO1 = transactionRepository.save(transactionDTO);
+
+        return TransactionMapper.toModelTransaction(transactionDTO1, transactionDTO1.getSenderCard(), "");
     }
 }
