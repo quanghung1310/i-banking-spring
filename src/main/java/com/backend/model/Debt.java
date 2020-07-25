@@ -9,10 +9,11 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Debt {
-    private long creditorId;
-    private String creditEmail;
-    private String creditName;
-    private String creditPhone;
+    private long id;
+    private long partnerId;
+    private String partnerEmail;
+    private String partnerName;
+    private String partnerPhone;
     private long amount;
     private String content;
     private int action;

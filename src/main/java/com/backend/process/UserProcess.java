@@ -1,10 +1,12 @@
 package com.backend.process;
 
-import com.backend.constants.ActionConstant;
+import com.backend.constants.StatusConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
-import com.backend.model.request.*;
+import com.backend.model.request.CreateDebtorRequest;
+import com.backend.model.request.RegisterRequest;
+import com.backend.model.request.TransactionRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -64,18 +66,6 @@ public class UserProcess {
                 .build();
     }
 
-    public static ReminderDTO createReminder(String logId, CreateReminderRequest request, Timestamp currentTime) {
-        return ReminderDTO.builder()
-                .createdAt(currentTime)
-                .isActive(1)
-                .nameReminisce(request.getNameReminisce())
-                .userId(request.getUserId())
-                .cardNumber(request.getCardNumber())
-                .merchantId(request.getMerchantId())
-                .updatedAt(currentTime)
-                .type(request.getType())
-                .build();
-    }
 
     public static List<Account> formatToAccounts(String logId, List<AccountPaymentDTO> accountPaymentDTOS, List<AccountSavingDTO> accountSavingDTOS, boolean isQueryBalance) {
         List<Account> accounts = new ArrayList<>();
@@ -99,54 +89,62 @@ public class UserProcess {
         return accounts;
     }
 
-    public static DebtDTO createDebt(String logId, CreateDebtorRequest request, Timestamp currentTime) {
+    public static DebtDTO createDebt(int action, CreateDebtorRequest request, Timestamp currentTime, long userId, long debtorId) {
         return DebtDTO.builder()
                 .createdAt(currentTime)
-                .action(ActionConstant.INIT.getValue())
+                .action(action)
                 .cardNumber(request.getCardNumber())
                 .content(request.getContent())
-                .debtorId(request.getDebtorId())
                 .isActive(1)
-                .userId(request.getUserId())
+                .userId(userId)
                 .updatedAt(currentTime)
                 .amount(request.getAmount())
                 .build();
     }
 
-    public static TransactionDTO createTransaction(String logId, Timestamp currentTime, TransactionRequest request, String cardName) {
-        return buildTransaction(currentTime, request, cardName, "pending", 500L);
-    }
-
-    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, String cardName, String status, long fee) {
-        Long tranId = 1000000000L + (long)(new Random().nextDouble() * 999999999L);
-
-        return TransactionDTO.builder()
-                .transId(tranId)
-                .amount(request.getAmount())
-                .fee(fee)
-                .typeFee(request.getTypeFee())
-                .cardName(cardName)
-                .cardNumber(request.getCardNumber())
-                .typeTrans(request.getTypeTrans())
-                .merchantId(request.getMerchantId())
-                .content(request.getContent())
-                .status(status) //TODO ĐỊnh nghĩa các loại status trong 1 class nào đó để t xài chung nữa
-                .createdAt(currentTime)
-                .updatedAt(currentTime)
-                .userId(request.getUserId())
-                .build();
+    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, long fee) {
+        return createTrans(request.getSenderCard(),
+                request.getReceiverCard(),
+                request.getAmount(),
+                request.getTypeFee(),
+                request.getTypeTrans(),
+                request.getMerchantId(),
+                request.getContent(),
+                StatusConstant.PENDING.toString(),
+                currentTime,
+                currentTime,
+                fee);
     }
 
     public static long newBalance(boolean isTransfer, int typeFee, long fee, long amount, long currentBalance) {
         long balance = 0L;
-        if(isTransfer) { //lh-bank nhận tiền
-            balance = currentBalance + amount;
-        } else { //lh-bank bị trừ tiền
+        if(isTransfer) { //chuyển tiền
             balance = currentBalance - amount;
+        } else { //nhận tiền
+            balance = currentBalance + amount;
         }
         if (typeFee == 2) {
             balance -= fee;
         }
         return balance;
     }
+
+    public static TransactionDTO createTrans(long senderCard, long receiverCard, long amount, int typeFee, int typeTrans, long merchantId,
+                                             String content, String status, Timestamp create, Timestamp update, long fee) {
+        return TransactionDTO.builder()
+                .transId(1000000000L + (long)(new Random().nextDouble() * 999999999L))
+                .senderCard(senderCard)
+                .receiverCard(receiverCard)
+                .amount(amount)
+                .typeFee(typeFee)
+                .typeTrans(typeTrans)
+                .merchantId(merchantId)
+                .content(content)
+                .status(status)
+                .createdAt(create)
+                .updatedAt(update)
+                .fee(fee)
+                .build();
+    }
+
 }

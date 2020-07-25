@@ -7,19 +7,19 @@ import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
-public class CreateReminderRequest {
+public class PayDebtRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private String nameReminisce; //init
-    private Long cardNumber;    //init
-    private Integer type; //init 1: send, 2: debt
-    private Integer merchantId;//init
-    private Long reminderId;
-    private String action; //UPDATE, DELETE
+    private long debtId;
+    private int typeFee; //1. from trả, 2. to trả
+    private String content;
+
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
-                    || this.requestTime <= 0);
+                    || requestTime <= 0
+                    || debtId < 0
+                    || typeFee <= 0);
         }
         catch (Exception ex) {
             return false;

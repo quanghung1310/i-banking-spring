@@ -1,33 +1,37 @@
 package com.backend.service;
 
+import com.backend.dto.ReminderDTO;
 import com.backend.model.Account;
-import com.backend.model.Transaction;
-import com.backend.model.request.CreateDebtorRequest;
-import com.backend.model.request.CreateReminderRequest;
-import com.backend.model.request.TransferRequest;
+import com.backend.model.request.*;
 import com.backend.model.response.DebtorResponse;
-import com.backend.model.request.TransactionRequest;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IUserService {
     List<Account> getUsers(String logId, int type, long userId);
 
-    UserResponse login(String logId, String userName, String password);
+    UserResponse getUser(String logId, String userName);
 
-    long createReminder(String logId, CreateReminderRequest request);
+    ReminderDTO createReminder(String logId, CreateReminderRequest request, long userId, String name);
 
     UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
 
     UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance);
 
-    long createDebtor(String logId, CreateDebtorRequest request);
+    DebtorResponse createDebtor(String logId, CreateDebtorRequest request, long userId);
 
     DebtorResponse getDebts(String logId, long userId, int action, int type);
 
-    TransactionResponse transaction(String logId, TransactionRequest transactionRequest);
+    long insertTransaction(String logId, TransactionRequest request);
 
-    long insertTransaction(String logId, TransferRequest request, long merchantId, long userId, String cardName);
+    DebtorResponse deleteDebt(String logId, DeleteDebtRequest request, long userId);
+
+    Optional<ReminderDTO> getReminder(long id);
+
+    ReminderDTO saveReminder(ReminderDTO reminderDTO);
+
+    TransactionResponse payDebt(String logId, PayDebtRequest request, long userId);
 }

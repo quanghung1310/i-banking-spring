@@ -11,16 +11,16 @@ import java.sql.Timestamp;
 @Setter
 @Builder
 public class TransactionResponse {
-    private Long transId;
+    private long transId;
+    private long receiverCard;
     private String cardName;
-    private Long cardNumber;
     private Long amount;
     private Integer typeFee;
     private Long fee;
     private String content;
-    private Timestamp createDate;
-    private Long merchantId;
     private String status;
+    private Long merchantId;
+    private String createDate;
 
     @Override
     public String toString() {
