@@ -11,7 +11,6 @@ public class DeleteDebtRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
     private long debtId;
-    private long userId;
     private String content;
 
     public boolean isValidData() {
@@ -19,7 +18,6 @@ public class DeleteDebtRequest {
             return !(StringUtils.isBlank(this.requestId)
                     || this.debtId <= 0
                     || this.requestTime <= 0
-                    || this.userId <= 0
                     || StringUtils.isBlank(this.content));
         }
         catch (Exception ex) {

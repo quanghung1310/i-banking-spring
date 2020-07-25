@@ -14,28 +14,23 @@ import java.sql.Timestamp;
 public class TransactionDTO {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long id;
+    private long id;
 
     @Column(length = 20)
-    private Long transId;
+    private long transId;
 
-    private Long userId; //from
+    private long senderCard;
 
-    private long amount; //value
-
-    private long fee;
+    private Long amount;
 
     private Integer typeFee;
 
-    @Column(length = 50)
-    private String cardName;
-
     @Column(length = 20)
-    private Long cardNumber; //to
+    private long receiverCard;
 
     private Integer typeTrans; //1. deposit, 2.debt
 
-    private long merchantId;
+    private Long merchantId;
 
     @Column(length = 100)
     private String content;
@@ -46,4 +41,6 @@ public class TransactionDTO {
     private Timestamp createdAt;
 
     private Timestamp updatedAt;
+
+    private long fee;
 }

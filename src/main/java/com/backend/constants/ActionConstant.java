@@ -4,7 +4,9 @@ package com.backend.constants;
 public enum ActionConstant {
     INIT (1),
     DELETE(2),
-    COMPLETED(3);
+    UPDATE(3),
+    COMPLETED(4);
+
     private int value;
 
     public int getValue() {

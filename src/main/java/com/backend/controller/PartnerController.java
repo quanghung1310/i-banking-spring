@@ -1,10 +1,11 @@
-package com.backend;
+package com.backend.controller;
 
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.model.Account;
 import com.backend.model.Partner;
 import com.backend.model.request.QueryAccountRequest;
+import com.backend.model.request.TransactionRequest;
 import com.backend.model.request.TransferRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.UserResponse;
@@ -13,20 +14,24 @@ import com.backend.process.UserProcess;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IPartnerService;
 import com.backend.service.IUserService;
+import com.backend.service.impl.PartnerService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Controller
@@ -52,14 +57,20 @@ public class PartnerController {
     @Value( "${fee.transfer}" )
     private int feeTransfer;
 
-    @Autowired
-    IPartnerService partnerService;
+    private IPartnerService partnerService;
+    private IUserService userService;
+    private IAccountPaymentService accountPaymentService;
 
     @Autowired
-    IUserService userService;
+    public PartnerController(IPartnerService partnerService,
+                             IUserService userService,
+                             IAccountPaymentService accountPaymentService) {
+        this.partnerService = partnerService;
+        this.userService = userService;
+        this.accountPaymentService = accountPaymentService;
+    }
 
-    @Autowired
-    IAccountPaymentService accountPaymentService;
+
     //todo api create merchant
 
     @PostMapping(value = "/transfer/bank")
@@ -174,7 +185,10 @@ public class PartnerController {
             newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
 
             //5.2: Insert transaction
-            long transId = userService.insertTransaction(logId, request, partner.getId(), toUser.getId(), request.getCardName());
+            //Build transaction request (chưa làm)
+            TransactionRequest transactionRequest = new TransactionRequest();
+
+            long transId = userService.insertTransaction(logId, transactionRequest);
             if (transId <= 0) {
                 logger.warn("{}| Insert new transaction fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(),null);
@@ -254,20 +268,45 @@ public class PartnerController {
 
             //Step 4: Query info account
             UserResponse userResponse = userService.queryAccount(logId, request.getCardNumber(), myBankId, paymentBank, false);
-            if (userResponse == null) {
-                logger.warn("{}| query account fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
-                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
-            response.setData(new JsonObject(userResponse.toString()));
-            logger.info("{}| Response to client: {}", logId, userResponse.toString());
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            return DataUtil.getStringResponseEntity(logId, userResponse);
 
         } catch (Exception ex) {
             logger.error("{}| Request query account bank catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(),null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping(value = {"/get-banks", "/get-banks/{bankId}"})
+    public ResponseEntity<String> getBanks(@PathVariable(required = false) Integer bankId) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: bankId - {}", logId, bankId);
+        BaseResponse response;
+        try {
+            List<Partner> partners = new ArrayList<>();
+            if (bankId == null) {
+                 partners = partnerService.getAll();
+            } else {
+                Partner partner = partnerService.findById(bankId);
+                if (partner != null) {
+                    partners.add(partner);
+
+                }
+            }
+            logger.warn("{}| Response to client with size: {}", logId, partners.size());
+
+            if (partners.size() <= 0) {
+                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            } else {
+                response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, new JsonObject().put("partners", partners).toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            }
+        } catch (Exception ex) {
+            logger.error("{}| Request query account bank catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
             return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
