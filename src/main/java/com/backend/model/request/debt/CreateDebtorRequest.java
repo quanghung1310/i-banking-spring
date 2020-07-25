@@ -1,4 +1,4 @@
-package com.backend.model.request;
+package com.backend.model.request.debt;
 
 import com.backend.util.DataUtil;
 import lombok.Getter;
@@ -7,22 +7,20 @@ import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
-public class RegisterRequest {
+public class CreateDebtorRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private String email;
-    private String name;
-    private String phone;
-    private String cardName;
+    private long cardNumber;
+    private long amount;
+    private String content;
 
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
-                    || StringUtils.isBlank(this.email)
-                    || StringUtils.isBlank(this.name)
-                    || StringUtils.isBlank(this.phone)
-                    || StringUtils.isBlank(this.cardName)
-                    || requestTime <= 0);
+                    || this.amount <= 0
+                    || this.requestTime <= 0
+                    || this.cardNumber <= 0
+                    || StringUtils.isBlank(this.content));
 
         }
         catch (Exception ex) {

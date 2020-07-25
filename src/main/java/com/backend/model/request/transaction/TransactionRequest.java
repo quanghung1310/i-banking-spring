@@ -1,4 +1,4 @@
-package com.backend.model.request;
+package com.backend.model.request.transaction;
 
 import com.backend.util.DataUtil;
 import lombok.Getter;

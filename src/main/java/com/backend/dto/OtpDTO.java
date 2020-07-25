@@ -25,7 +25,7 @@ public class OtpDTO {
 
     private Timestamp updatedAt;
 
-//    private int action; //1: otp payment, 2: otp pay debt
+    private String action; //payment: otp payment, debt: otp pay debt
 
     private int status; //1. INIT, 2.DELETE
 

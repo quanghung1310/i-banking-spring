@@ -1,4 +1,4 @@
-package com.backend.model.request;
+package com.backend.model.request.employee;
 
 import com.backend.util.DataUtil;
 import lombok.Getter;
@@ -7,19 +7,23 @@ import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
-public class CreateReminderRequest {
+public class RegisterRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private String nameReminisce; //init
-    private Long cardNumber;    //init
-    private Integer type; //init 1: send, 2: debt
-    private Integer merchantId;//init
-    private Long reminderId;
-    private String action; //UPDATE, DELETE
+    private String email;
+    private String name;
+    private String phone;
+    private String cardName;
+
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
-                    || this.requestTime <= 0);
+                    || StringUtils.isBlank(this.email)
+                    || StringUtils.isBlank(this.name)
+                    || StringUtils.isBlank(this.phone)
+                    || StringUtils.isBlank(this.cardName)
+                    || requestTime <= 0);
+
         }
         catch (Exception ex) {
             return false;

@@ -1,8 +1,8 @@
 package com.backend.controller;
 
 import com.backend.constants.ErrorConstant;
-import com.backend.model.request.DepositRequest;
-import com.backend.model.request.RegisterRequest;
+import com.backend.model.request.bank.DepositRequest;
+import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DepositResponse;
 import com.backend.model.response.RegisterResponse;

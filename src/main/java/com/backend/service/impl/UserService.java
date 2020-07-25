@@ -6,7 +6,11 @@ import com.backend.mapper.TransactionMapper;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
-import com.backend.model.request.*;
+import com.backend.model.request.debt.CreateDebtorRequest;
+import com.backend.model.request.debt.DeleteDebtRequest;
+import com.backend.model.request.debt.PayDebtRequest;
+import com.backend.model.request.reminder.CreateReminderRequest;
+import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
@@ -320,23 +324,6 @@ public class UserService implements IUserService {
             return null;
         }
         logger.info("{}| Debtor  -{} is existed!", logId, debtDTO.getUserId());
-
-        //todo new api validate otp
-        //Step 3: validate otp
-//        OtpDTO otpDTO = otpRepository.findFirstByUserIdAndOtpAndStatus(userId, otp, ActionConstant.INIT.getValue());
-//
-//        //3.1. Sai OTP
-//        if (otpDTO == null) {
-//            logger.warn("{}| Otp - {} not fount!", logId, userId);
-//            return -1;
-//        }
-//
-//        //3.2. OTP het han
-//        if (currentTime.getTime() - otpDTO.getCreatedAt().getTime() > session ) {
-//            logger.warn("{}|OTP - {} out of session with - {} milliseconds!", logId, otp, session);
-//            return -1;
-//        }
-//        logger.info("{}| Validate otp - {} success!", logId, otp);
 
         //Step 3: validate balance FROM
         long amountPay          = debtDTO.getAmount();
