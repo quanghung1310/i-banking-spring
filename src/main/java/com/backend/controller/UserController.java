@@ -490,4 +490,9 @@ public class UserController {
                     HttpStatus.BAD_REQUEST);
         }
     }
+
+    @PostMapping("/create-account-saving")
+    public ResponseEntity<String> createAccountSaving(@RequestBody RegisterRequest request) {
+        return  null;
+    }
 }

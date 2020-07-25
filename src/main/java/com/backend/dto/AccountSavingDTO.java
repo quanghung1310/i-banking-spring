@@ -36,4 +36,5 @@ public class AccountSavingDTO {
 
     private long userId;
 
+    private double interest;
 }

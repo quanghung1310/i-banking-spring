@@ -14,7 +14,6 @@ public class RegisterRequest {
     private String name;
     private String phone;
     private String cardName;
-    private long adminId;
 
     public boolean isValidData() {
         try {
@@ -23,8 +22,7 @@ public class RegisterRequest {
                     || StringUtils.isBlank(this.name)
                     || StringUtils.isBlank(this.phone)
                     || StringUtils.isBlank(this.cardName)
-                    || requestTime <= 0
-                    || adminId < 0);
+                    || requestTime <= 0);
 
         }
         catch (Exception ex) {
