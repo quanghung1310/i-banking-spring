@@ -46,6 +46,7 @@ public class UserService implements IUserService {
     private IReminderRepository reminderRepository;
     private IDebtRepository debtRepository;
     private ITransactionRepository transactionRepository;
+    private IOtpRepository otpRepository;
 
     @Autowired
     public UserService(IAccountPaymentRepository accountPaymentRepository,
@@ -53,17 +54,16 @@ public class UserService implements IUserService {
             IUserRepository userRepository,
             IReminderRepository reminderRepository,
             IDebtRepository debtRepository,
-            ITransactionRepository transactionRepository) {
+            ITransactionRepository transactionRepository,
+            IOtpRepository otpRepository) {
         this.accountPaymentRepository   = accountPaymentRepository;
         this.accountSavingRepository    = accountSavingRepository;
         this.userRepository             = userRepository;
         this.reminderRepository         = reminderRepository;
         this.debtRepository             = debtRepository;
         this.transactionRepository      = transactionRepository;
+        this.otpRepository              = otpRepository;
     }
-
-    @Autowired
-    IOtpRepository otpRepository;
 
     @Override
     public List<Account> getUsers(String logId, int type, long userId) {

@@ -12,7 +12,7 @@ public interface ITransactionRepository extends CrudRepository<TransactionDTO, L
 
     List<TransactionDTO> findAllByReceiverCardAndTypeTransOrderByCreatedAtDesc(long receiverCard, int typeTrans);
 
-    TransactionDTO findFirstBySenderCardAndReceiverCard(long senderCard, long receiverCard);
+    List<TransactionDTO> findAllBySenderCardOrReceiverCardOrderByCreatedAtDesc(long senderCard, long receiverCard);
 
     List<TransactionDTO> findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(long senderCard, long receiverCard, int typeTrans);
 }

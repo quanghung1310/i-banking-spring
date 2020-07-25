@@ -15,6 +15,9 @@ public class TransactionsResponse {
     private long userId;
     private long cardNumber;
     private String cardName;
+    private List<Transaction> senders;
+    private List<Transaction> receivers;
+    private List<Transaction> debts;
     private List<Transaction> transactions;
 
     @Override
