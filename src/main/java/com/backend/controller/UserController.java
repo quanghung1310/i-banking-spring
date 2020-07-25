@@ -15,7 +15,6 @@ import com.backend.repository.IReminderRepository;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
-import com.backend.util.JwtUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
@@ -25,8 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -61,60 +58,15 @@ public class UserController {
 
     private IUserService userService;
     private IReminderRepository reminderRepository;
-    private AuthenticationManager authenticationManager;
-    private JwtUtil jwtUtil;
     private IAccountPaymentService accountPaymentService;
 
     @Autowired
     public UserController(IUserService userService,
                           IReminderRepository reminderRepository,
-                          AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil,
                           IAccountPaymentService accountPaymentService) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
         this.accountPaymentService = accountPaymentService;
-    }
-
-    @PostMapping("/authenticate")
-    public ResponseEntity<String> generateToken(@RequestBody AuthRequest authRequest) {
-        String logId = DataUtil.createRequestId();
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword())
-            );
-        } catch (Exception ex) {
-            return new ResponseEntity<>("BAD REQUEST DATA", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        UserResponse user = userService.getUser(logId, authRequest.getUserName());
-        return new ResponseEntity<>(new JsonObject()
-                .put("bearerToken", jwtUtil.generateToken(authRequest.getUserName()))
-                .put("role", user.getRole())
-                .toString(), HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/get-profile")
-    public ResponseEntity<String> getProfile() {
-        String logId = DataUtil.createRequestId();
-        BaseResponse response;
-        try {
-
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            String username = ((UserDetails)principal).getUsername();
-            UserResponse userResponse = userService.getUser(logId, username);
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
-            response.setData(new JsonObject(userResponse.toString()));
-            logger.info("{}| Response to client: {}", logId, userResponse.toString());
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("{}| Request get profile catch exception: ", logId, ex);
-            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            return new ResponseEntity<>(
-                    response.toString(),
-                    HttpStatus.BAD_REQUEST);
-        }
     }
 
     @GetMapping(value = {"/get-accounts", "/get-accounts/{type}"})

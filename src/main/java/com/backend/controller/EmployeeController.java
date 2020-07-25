@@ -1,4 +1,4 @@
-package com.backend;
+package com.backend.controller;
 
 import com.backend.constants.ErrorConstant;
 import com.backend.model.request.DepositRequest;

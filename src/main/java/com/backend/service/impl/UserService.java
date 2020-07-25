@@ -2,6 +2,7 @@ package com.backend.service.impl;
 
 import com.backend.constants.ActionConstant;
 import com.backend.dto.*;
+import com.backend.mapper.TransactionMapper;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
@@ -385,7 +386,7 @@ public class UserService implements IUserService {
                 currentTime,
                 currentTime,
                 fee);
-        return UserMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
+        return TransactionMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
     }
 
 }

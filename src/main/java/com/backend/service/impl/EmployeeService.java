@@ -2,15 +2,20 @@ package com.backend.service.impl;
 
 import com.backend.constants.StringConstant;
 import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.TransactionDTO;
 import com.backend.dto.UserDTO;
+import com.backend.mapper.TransactionMapper;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
+import com.backend.model.Transaction;
 import com.backend.model.request.DepositRequest;
 import com.backend.model.request.RegisterRequest;
 import com.backend.model.response.DepositResponse;
 import com.backend.model.response.RegisterResponse;
+import com.backend.model.response.TransactionsResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.IAccountPaymentRepository;
+import com.backend.repository.ITransactionRepository;
 import com.backend.repository.IUserRepository;
 import com.backend.service.IEmployeeService;
 import com.backend.util.DataUtil;
@@ -18,20 +23,29 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class EmployeeService implements IEmployeeService {
     private static final Logger logger = LogManager.getLogger(EmployeeService.class);
 
-    @Autowired
-    IUserRepository userRepository;
+    private IUserRepository userRepository;
+    private IAccountPaymentRepository accountPaymentRepository;
+    private ITransactionRepository transactionRepository;
 
     @Autowired
-    IAccountPaymentRepository accountPaymentRepository;
+    public EmployeeService(IUserRepository userRepository,
+                           IAccountPaymentRepository accountPaymentRepository,
+                           ITransactionRepository transactionRepository) {
+        this.userRepository = userRepository;
+        this.accountPaymentRepository = accountPaymentRepository;
+        this.transactionRepository = transactionRepository;
+    }
 
     @Override
     public RegisterResponse register(String logId, RegisterRequest request) {

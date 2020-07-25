@@ -114,41 +114,4 @@ public class UserMapper {
                     .build();
         }
     }
-
-    public static Transaction toModelTransaction(TransactionDTO transactionDTO) {
-        if (transactionDTO == null) {
-            return null;
-        }
-        return Transaction.builder()
-                .id(transactionDTO.getId())
-                .transId(transactionDTO.getTransId())
-                .senderCard(transactionDTO.getSenderCard())
-                .amount(transactionDTO.getAmount())
-                .typeFee(transactionDTO.getTypeFee())
-                .receiverCard(transactionDTO.getReceiverCard())
-                .typeTrans(transactionDTO.getTypeTrans())
-                .content(transactionDTO.getContent())
-                .status(transactionDTO.getStatus())
-                .createdAt(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
-                .updateAt(DataUtil.convertTimeWithFormat(transactionDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
-                .build();
-    }
-
-    public static TransactionResponse toModelTransResponse(TransactionDTO transactionDTO, String cardName) {
-        if (transactionDTO == null) {
-            return null;
-        }
-        return TransactionResponse.builder()
-                .amount(transactionDTO.getAmount())
-                .cardName(cardName)
-                .content(transactionDTO.getContent())
-                .createDate(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
-                .fee(transactionDTO.getFee())
-                .merchantId(transactionDTO.getMerchantId())
-                .receiverCard(transactionDTO.getReceiverCard())
-                .status(transactionDTO.getStatus())
-                .transId(transactionDTO.getTransId())
-                .typeFee(transactionDTO.getTypeFee())
-                .build();
-    }
 }
