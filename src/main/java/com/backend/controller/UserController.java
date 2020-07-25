@@ -25,25 +25,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.mail.*;
-import javax.mail.internet.*;
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 //import org.springframework.security.core.Authentication;
 
@@ -80,12 +78,14 @@ public class UserController {
                           IReminderRepository reminderRepository,
                           AuthenticationManager authenticationManager,
                           JwtUtil jwtUtil,
-                          IAccountPaymentService accountPaymentService) {
+                          IAccountPaymentService accountPaymentService,
+                          JavaMailSender javaMailSender) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.accountPaymentService = accountPaymentService;
+        this.javaMailSender = javaMailSender;
     }
 
     @PostMapping("/authenticate")
@@ -518,11 +518,11 @@ public class UserController {
         logger.info("{}| Request pay debt data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
         try {
-           /* if (!request.isValidData()) {
+            if (!request.isValidData()) {
                 logger.warn("{}| Validate request pay debt data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-            }*/
+            }
             logger.info("{}| Valid data request pay debt success!", logId);
 
             UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
@@ -543,13 +543,19 @@ public class UserController {
                     HttpStatus.BAD_REQUEST);
         }
     }
-    private void sendmail() throws AddressException, MessagingException, IOException {
+
+    @GetMapping("/send-otp")
+    public ResponseEntity<String> sendOtp() {
+        String logId = DataUtil.createRequestId();
         SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo("tranlang.dtnt@gmail.com", "lang.tran@mservice.com.vn");
+        UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
+        msg.setTo(user.getEmail());
 
         msg.setSubject("Testing from Spring Boot");
         msg.setText("Hello World \n Spring Boot Email");
 
         javaMailSender.send(msg);
+        return null;
     }
 }
