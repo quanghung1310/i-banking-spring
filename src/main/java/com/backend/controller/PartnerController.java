@@ -167,7 +167,7 @@ public class PartnerController {
 //            String genSig = PartnerProcess.signaturePgp(dataSig, pgpSecretKey, partner.getPassword().toCharArray());
             boolean isVerify = PartnerProcess.verifySignaturePgp(logId, request.getSignature().getBytes(), partner.getPublicKey());
             if (!isVerify) {
-                logger.warn("{}| Signature - {} wrong!", logId, request.getHash());
+                logger.warn("{}| Signature - {} wrong!", logId, request.getSignature());
                 response = DataUtil.buildResponse(ErrorConstant.CHECK_SIGNATURE_FAIL, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
@@ -325,7 +325,7 @@ public class PartnerController {
             }
         } catch (Exception ex) {
             logger.error("{}| Request query account bank catch exception: ", logId, ex);
-            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
             return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
