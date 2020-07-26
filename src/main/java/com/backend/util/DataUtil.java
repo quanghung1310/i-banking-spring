@@ -28,10 +28,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import static com.backend.cryption.SHA256.HMAC_SHA256;
-
 public class DataUtil {
     private static final Logger logger = LogManager.getLogger(DataUtil.class);
+
+    public static final String HMAC_SHA256 = "HmacSHA256";
 
     public static String createRequestId() {
         return UUID.randomUUID().toString().replace("-", "");

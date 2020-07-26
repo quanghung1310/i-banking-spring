@@ -39,4 +39,11 @@ public class PartnerConfig {
     public static String getUrlTransfer(String id) {
         return getMerchantConfig(id).getString("url_transfer", "");
     }
+    public static String getPartnerCode(String id) {
+        return getMerchantConfig(id).getString("partner_code", "");
+    }
+    public static String getPartnerPubKey(String id) {
+        return getMerchantConfig(id).getString("partner_public_key", "");
+    }
+
 }
