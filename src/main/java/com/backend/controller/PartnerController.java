@@ -164,10 +164,10 @@ public class PartnerController {
                     .toString();
             PGPSecretKey pgpSecretKey = PartnerProcess.readSecretKey(partner.getSecretKey(),
                     PartnerProcess.readPublicKey(partner.getPublicKey()).getKeyID());
-            String genSig = PartnerProcess.signaturePgp(dataSig, pgpSecretKey, partner.getPassword().toCharArray());
-            boolean isVerify = PartnerProcess.verifySignaturePgp(logId, genSig.getBytes(), partner.getPublicKey());
+//            String genSig = PartnerProcess.signaturePgp(dataSig, pgpSecretKey, partner.getPassword().toCharArray());
+            boolean isVerify = PartnerProcess.verifySignaturePgp(logId, request.getSignature().getBytes(), partner.getPublicKey());
             if (!isVerify) {
-                logger.warn("{}| Signature - {} wrong!", logId, request.getHash());
+                logger.warn("{}| Signature - {} wrong!", logId, request.getSignature());
                 response = DataUtil.buildResponse(ErrorConstant.CHECK_SIGNATURE_FAIL, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
@@ -266,13 +266,13 @@ public class PartnerController {
             logger.info("{}| Valid data partner success!", logId);
 
             //Step 2: A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn
-//            if (System.currentTimeMillis() - request.getRequestTime() > session) {
-//                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
-//                response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
-//                return new ResponseEntity<>(
-//                        response.toString(),
-//                        HttpStatus.BAD_REQUEST);
-//            }
+            if (System.currentTimeMillis() - request.getRequestTime() > session) {
+                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
+                response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
+                return new ResponseEntity<>(
+                        response.toString(),
+                        HttpStatus.BAD_REQUEST);
+            }
             logger.info("{}| Valid data session success!", logId);
 
             //Step 3: A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa
@@ -325,7 +325,7 @@ public class PartnerController {
             }
         } catch (Exception ex) {
             logger.error("{}| Request query account bank catch exception: ", logId, ex);
-            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
             return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
