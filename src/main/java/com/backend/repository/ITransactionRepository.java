@@ -6,11 +6,13 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.List;
 
 public interface ITransactionRepository extends CrudRepository<TransactionDTO, Long> {
-    TransactionDTO findFirstByTransId(Long transId);
+    TransactionDTO findFirstByTransId(long transId);
 
-    List<TransactionDTO> findAllBySenderCard(Long senderCard);
+    List<TransactionDTO> findAllBySenderCardAndTypeTransOrderByCreatedAtDesc(long senderCard, int typeTrans);
 
-    List<TransactionDTO> findAllByReceiverCard(Long receiverCard);
+    List<TransactionDTO> findAllByReceiverCardAndTypeTransOrderByCreatedAtDesc(long receiverCard, int typeTrans);
 
-    TransactionDTO findFirstBySenderCardAndReceiverCard(Long senderCard, Long receiverCard);
+    List<TransactionDTO> findAllBySenderCardOrReceiverCardOrderByCreatedAtDesc(long senderCard, long receiverCard);
+
+    List<TransactionDTO> findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(long senderCard, long receiverCard, int typeTrans);
 }

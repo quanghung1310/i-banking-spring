@@ -1,25 +1,24 @@
-package com.backend.model;
+package com.backend.model.response;
 
+import com.backend.model.Transaction;
 import io.vertx.core.json.jackson.DatabindCodec;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
-public class Transaction {
-    private long id;
-    private long transId;
+public class TransactionsResponse {
+    private long userId;
     private long cardNumber;
     private String cardName;
-    private Long amount;
-    private Integer typeFee;
-    private Long fee;
-    private String content;
-    private String status;
-    private Long merchantId;
-    private String createDate;
+    private List<Transaction> senders;
+    private List<Transaction> receivers;
+    private List<Transaction> debts;
+    private List<Transaction> transactions;
 
     @Override
     public String toString() {

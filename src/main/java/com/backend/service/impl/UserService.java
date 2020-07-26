@@ -2,10 +2,14 @@ package com.backend.service.impl;
 
 import com.backend.constants.ActionConstant;
 import com.backend.dto.*;
+import com.backend.mapper.TransactionMapper;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.Debt;
-import com.backend.model.request.*;
+import com.backend.model.request.debt.CreateDebtorRequest;
+import com.backend.model.request.debt.DeleteDebtRequest;
+import com.backend.model.request.debt.PayDebtRequest;
+import com.backend.model.request.reminder.CreateReminderRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
@@ -45,6 +49,7 @@ public class UserService implements IUserService {
     private IReminderRepository reminderRepository;
     private IDebtRepository debtRepository;
     private ITransactionRepository transactionRepository;
+    private IOtpRepository otpRepository;
 
     @Autowired
     public UserService(IAccountPaymentRepository accountPaymentRepository,
@@ -52,17 +57,16 @@ public class UserService implements IUserService {
             IUserRepository userRepository,
             IReminderRepository reminderRepository,
             IDebtRepository debtRepository,
-            ITransactionRepository transactionRepository) {
+            ITransactionRepository transactionRepository,
+            IOtpRepository otpRepository) {
         this.accountPaymentRepository   = accountPaymentRepository;
         this.accountSavingRepository    = accountSavingRepository;
         this.userRepository             = userRepository;
         this.reminderRepository         = reminderRepository;
         this.debtRepository             = debtRepository;
         this.transactionRepository      = transactionRepository;
+        this.otpRepository              = otpRepository;
     }
-
-    @Autowired
-    IOtpRepository otpRepository;
 
     @Override
     public List<Account> getUsers(String logId, int type, long userId) {
@@ -234,22 +238,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public long insertTransaction(String logId, TransactionRequest request) {
-        //Build transactionDTO
-        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
-        TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
-        long transactionId = transactionDTO.getTransId();
-
-        if (transactionId <= 0) {
-            logger.warn("{}| Save transaction - {} fail!", logId, firstTrans.getTransId());
-            return -1;
-        } else {
-            logger.info("{}| Save transaction success with id: {}", logId, transactionId);
-            return transactionId;
-        }
-    }
-
-    @Override
     public DebtorResponse deleteDebt(String logId, DeleteDebtRequest request, long userId) {
         try {
             Timestamp currentTime = new Timestamp(request.getRequestTime());
@@ -305,7 +293,7 @@ public class UserService implements IUserService {
         logger.info("{}| Validate debt - {} success!", logId, debtId);
 
         //Step 1: validate FROM
-        AccountPaymentDTO accountFrom = accountPaymentRepository.findFirstByUserId(userId);
+        AccountPaymentDTO accountFrom = accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber());
         if (accountFrom == null) {
             logger.warn("{}| User - {} not fount!", logId, userId);
             return null;
@@ -313,29 +301,12 @@ public class UserService implements IUserService {
         logger.info("{}| User - {} is existed!", logId, accountFrom.getId());
 
         //Step 2: validate TO
-        AccountPaymentDTO accountTo = accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber());
+        AccountPaymentDTO accountTo = accountPaymentRepository.findFirstByUserId(debtDTO.getUserId());
         if (accountTo == null) {
             logger.warn("{}| Debtor - {} not fount!", logId, debtDTO.getUserId());
             return null;
         }
         logger.info("{}| Debtor  -{} is existed!", logId, debtDTO.getUserId());
-
-        //todo new api validate otp
-        //Step 3: validate otp
-//        OtpDTO otpDTO = otpRepository.findFirstByUserIdAndOtpAndStatus(userId, otp, ActionConstant.INIT.getValue());
-//
-//        //3.1. Sai OTP
-//        if (otpDTO == null) {
-//            logger.warn("{}| Otp - {} not fount!", logId, userId);
-//            return -1;
-//        }
-//
-//        //3.2. OTP het han
-//        if (currentTime.getTime() - otpDTO.getCreatedAt().getTime() > session ) {
-//            logger.warn("{}|OTP - {} out of session with - {} milliseconds!", logId, otp, session);
-//            return -1;
-//        }
-//        logger.info("{}| Validate otp - {} success!", logId, otp);
 
         //Step 3: validate balance FROM
         long amountPay          = debtDTO.getAmount();
@@ -374,7 +345,8 @@ public class UserService implements IUserService {
         debtRepository.save(debtDTO);
 
         //Step 8: insert transaction
-        TransactionDTO transactionDTO = UserProcess.createTrans(accountFrom.getCardNumber(),
+        TransactionDTO transactionDTO = UserProcess.createTrans
+                (accountFrom.getCardNumber(),
                 accountTo.getCardNumber(),
                 amountPay,
                 request.getTypeFee(),
@@ -385,7 +357,7 @@ public class UserService implements IUserService {
                 currentTime,
                 currentTime,
                 fee);
-        return UserMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
+        return TransactionMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
     }
 
 }

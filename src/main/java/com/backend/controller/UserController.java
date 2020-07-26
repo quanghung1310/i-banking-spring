@@ -2,10 +2,17 @@ package com.backend.controller;
 
 import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
+import com.backend.constants.StringConstant;
 import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.OtpDTO;
 import com.backend.dto.ReminderDTO;
 import com.backend.model.Account;
-import com.backend.model.request.*;
+import com.backend.model.request.debt.CreateDebtorRequest;
+import com.backend.model.request.debt.DeleteDebtRequest;
+import com.backend.model.request.debt.PayDebtRequest;
+import com.backend.model.request.employee.RegisterRequest;
+import com.backend.model.request.reminder.CreateReminderRequest;
+import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
@@ -13,9 +20,10 @@ import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.IAccountPaymentService;
+import com.backend.service.IOtpService;
+import com.backend.service.ITransactionService;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
-import com.backend.util.JwtUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
@@ -25,8 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -35,8 +43,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+
+//import org.springframework.security.core.Authentication;
 
 @Controller
 public class UserController {
@@ -59,62 +71,35 @@ public class UserController {
     @Value("${account.saving}")
     private String accountSaving;
 
+    @Value("${otp.payment}")
+    private String otpPayment;
+
+    @Value("${otp.debt}")
+    private String otpDebt;
+
+    @Value( "${session.request}" )
+    private int session;
+
     private IUserService userService;
     private IReminderRepository reminderRepository;
-    private AuthenticationManager authenticationManager;
-    private JwtUtil jwtUtil;
     private IAccountPaymentService accountPaymentService;
+    private JavaMailSender javaMailSender;
+    private IOtpService otpService;
+    private ITransactionService transactionService;
 
     @Autowired
     public UserController(IUserService userService,
                           IReminderRepository reminderRepository,
-                          AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil,
-                          IAccountPaymentService accountPaymentService) {
+                          IAccountPaymentService accountPaymentService,
+                          JavaMailSender javaMailSender,
+                          IOtpService otpService,
+                          ITransactionService transactionService) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
         this.accountPaymentService = accountPaymentService;
-    }
-
-    @PostMapping("/authenticate")
-    public ResponseEntity<String> generateToken(@RequestBody AuthRequest authRequest) {
-        String logId = DataUtil.createRequestId();
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword())
-            );
-        } catch (Exception ex) {
-            return new ResponseEntity<>("BAD REQUEST DATA", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        UserResponse user = userService.getUser(logId, authRequest.getUserName());
-        return new ResponseEntity<>(new JsonObject()
-                .put("bearerToken", jwtUtil.generateToken(authRequest.getUserName()))
-                .put("role", user.getRole())
-                .toString(), HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/get-profile")
-    public ResponseEntity<String> getProfile() {
-        String logId = DataUtil.createRequestId();
-        BaseResponse response;
-        try {
-
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            String username = ((UserDetails)principal).getUsername();
-            UserResponse userResponse = userService.getUser(logId, username);
-            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, userResponse.toString());
-            response.setData(new JsonObject(userResponse.toString()));
-            logger.info("{}| Response to client: {}", logId, userResponse.toString());
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("{}| Request get profile catch exception: ", logId, ex);
-            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
-            return new ResponseEntity<>(
-                    response.toString(),
-                    HttpStatus.BAD_REQUEST);
-        }
+        this.javaMailSender = javaMailSender;
+        this.otpService = otpService;
+        this.transactionService = transactionService;
     }
 
     @GetMapping(value = {"/get-accounts", "/get-accounts/{type}"})
@@ -370,7 +355,7 @@ public class UserController {
             }
 
             //insert transaction
-            long transId = userService.insertTransaction(logId, request);
+            long transId = transactionService.insertTransaction(logId, request);
             if (transId == -1) {
                 logger.warn("{}| Create transaction: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
@@ -537,5 +522,99 @@ public class UserController {
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @GetMapping("/send-otp/{action}")
+    public ResponseEntity<String> sendOtp(@PathVariable String action) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: action - {}", logId, action);
+        int otp = new Random().nextInt(900000);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        BaseResponse response;
+        try {
+            if (!action.equals(otpPayment) && !action.equals(otpDebt)) {
+                logger.warn("{}| Action - {} not existed!", logId, action);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            msg.setTo(user.getEmail());
+            msg.setSubject("Your one-time passcode to view the message");
+            msg.setText("Here is your one-time passcode\n" + otp);
+
+            OtpDTO otpDTO = new OtpDTO();
+            otpDTO.setCreatedAt(currentTime);
+            otpDTO.setOtp(otp);
+            otpDTO.setStatus(ActionConstant.INIT.getValue());
+            otpDTO.setUpdatedAt(currentTime);
+            otpDTO.setAction(action);
+            otpDTO.setUserId(user.getId());
+            javaMailSender.send(msg);
+
+            OtpDTO otpDto = otpService.saveOtp(otpDTO);
+
+            if (otpDto == null) {
+                logger.warn("{}| Save otp - {} fail!", logId, otp);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            JsonObject result = new JsonObject().put("otp", otp)
+                    .put("id", otpDto.getId())
+                    .put("createDate", DataUtil.convertTimeWithFormat(otpDto.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/validate-otp")
+    public ResponseEntity<String> validateOtp(@RequestBody String requestBody) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request validate otp data: {}", logId, requestBody);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        BaseResponse response;
+        try {
+            JsonObject request = new JsonObject(requestBody);
+            String action = request.getString("action", "");
+            int otp = request.getInteger("otp", 0);
+            if ((!action.equals(otpPayment) && !action.equals(otpDebt) && otp == 0) || StringUtils.isBlank(action)) {
+                logger.warn("{}| Validate base request data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            boolean validateOtp = otpService.validateOtp(logId, user.getId(), otp, action, session, currentTime);
+            JsonObject result = new JsonObject().put("result", validateOtp);
+            if (!validateOtp) {
+                logger.warn("{}| Validate otp - {} fail!", logId, otp);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, result.toString());
+                return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            }
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/create-account-saving")
+    public ResponseEntity<String> createAccountSaving(@RequestBody RegisterRequest request) {
+        return  null;
     }
 }

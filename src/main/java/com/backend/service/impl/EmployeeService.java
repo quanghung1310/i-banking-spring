@@ -5,12 +5,13 @@ import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.UserDTO;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
-import com.backend.model.request.DepositRequest;
-import com.backend.model.request.RegisterRequest;
+import com.backend.model.request.bank.DepositRequest;
+import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.response.DepositResponse;
 import com.backend.model.response.RegisterResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.IAccountPaymentRepository;
+import com.backend.repository.ITransactionRepository;
 import com.backend.repository.IUserRepository;
 import com.backend.service.IEmployeeService;
 import com.backend.util.DataUtil;
@@ -27,14 +28,21 @@ import java.util.List;
 public class EmployeeService implements IEmployeeService {
     private static final Logger logger = LogManager.getLogger(EmployeeService.class);
 
-    @Autowired
-    IUserRepository userRepository;
+    private IUserRepository userRepository;
+    private IAccountPaymentRepository accountPaymentRepository;
+    private ITransactionRepository transactionRepository;
 
     @Autowired
-    IAccountPaymentRepository accountPaymentRepository;
+    public EmployeeService(IUserRepository userRepository,
+                           IAccountPaymentRepository accountPaymentRepository,
+                           ITransactionRepository transactionRepository) {
+        this.userRepository = userRepository;
+        this.accountPaymentRepository = accountPaymentRepository;
+        this.transactionRepository = transactionRepository;
+    }
 
     @Override
-    public RegisterResponse register(String logId, RegisterRequest request) {
+    public RegisterResponse register(String logId, RegisterRequest request, long employeeId) {
         Timestamp currentTime = new Timestamp(request.getRequestTime());
         String userName = request.getName().toLowerCase().replaceAll("\\s+","");
         List<UserDTO> users = (List<UserDTO>) userRepository.findAll();
@@ -55,7 +63,7 @@ public class EmployeeService implements IEmployeeService {
         logger.info("{}| Save user - {}: success!", logId, userId);
 
         List<AccountPaymentDTO> accounts = (List<AccountPaymentDTO>) accountPaymentRepository.findAll();
-        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.save(UserProcess.createAccountPayment(logId, accounts, userId, request.getAdminId(), request.getCardName(), currentTime, request.getRequestTime()));
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.save(UserProcess.createAccountPayment(logId, accounts, userId, employeeId, request.getCardName(), currentTime, request.getRequestTime()));
         Long accountId = accountPaymentDTO.getId();
         logger.info("{}| Save account payment - {}:{}", logId, accountId, accountId == null ? "false" : "success");
         Account account = UserMapper.toModelRegister(accountPaymentDTO);

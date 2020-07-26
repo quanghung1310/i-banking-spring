@@ -28,4 +28,9 @@ public class AccountPaymentService implements IAccountPaymentService {
             return accountPaymentRepository.save(accountPaymentDTO);
         }
     }
+
+    @Override
+    public AccountPaymentDTO getAccountByUserId(long userId) {
+        return accountPaymentRepository.findFirstByUserId(userId);
+    }
 }
