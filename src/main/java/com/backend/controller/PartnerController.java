@@ -207,7 +207,7 @@ public class PartnerController {
                     currentTime,
                     currentTime,
                     feeTransfer);
-
+            transactionDTO.setCardName(request.getCardName());
             Transaction transaction = transactionService.saveTransaction(transactionDTO);
             if (transaction == null) {
                 logger.warn("{}| Insert new transaction fail!", logId);
