@@ -11,13 +11,15 @@ import org.apache.logging.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-//import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import sun.misc.BASE64Encoder;
 
 import java.io.*;
-import java.security.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
+import java.security.SignatureException;
 import java.util.Date;
 import java.util.Iterator;
 
