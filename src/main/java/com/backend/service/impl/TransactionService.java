@@ -68,22 +68,27 @@ public class TransactionService implements ITransactionService {
                 logger.warn("{}| card number - {} not found transaction!", logId, cardNumber);
                 return TransactionsResponse.builder().build();
             }
-            transactionDTOS.forEach(transactionDTO -> transactions.add(TransactionMapper.toModelTransaction(
-                    transactionDTO,
-                    transactionDTO.getReceiverCard(),
-                    accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard()).getCardName()
-            )));
+            transactionDTOS.forEach(transactionDTO -> {
+                AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard());
+                transactions.add(TransactionMapper.toModelTransaction(
+                        transactionDTO,
+                        transactionDTO.getReceiverCard(),
+                        accountPaymentDTO == null ? transactionDTO.getCardName() : accountPaymentDTO.getCardName()));
+            });
         } else if (typeTrans.equals(receiver)) {
             transactionDTOS = transactionRepository.findAllByReceiverCardAndTypeTransOrderByCreatedAtDesc(cardNumber, typeTransfer);
             if (transactionDTOS.size() <= 0) {
                 logger.warn("{}| card number - {} not found transaction!", logId, cardNumber);
                 return TransactionsResponse.builder().build();
             }
-            transactionDTOS.forEach(transactionDTO -> transactions.add(TransactionMapper.toModelTransaction(
-                    transactionDTO,
-                    transactionDTO.getSenderCard(),
-                    accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard()).getCardName()
-            )));
+
+            transactionDTOS.forEach(transactionDTO -> {
+                AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard());
+                transactions.add(TransactionMapper.toModelTransaction(
+                        transactionDTO,
+                        transactionDTO.getSenderCard(),
+                        accountPaymentDTO == null ? transactionDTO.getCardName() : accountPaymentDTO.getCardName()));
+            });
         } else if (typeTrans.equals(debt)){
             transactionDTOS = transactionRepository.findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(cardNumber, cardNumber, typeDebt);
             if (transactionDTOS.size() <= 0) {
@@ -119,17 +124,19 @@ public class TransactionService implements ITransactionService {
                 if (transactionDTO.getTypeTrans() == typeTransfer) { //giao dich binh thuong
                     if (cardNumber == transactionDTO.getSenderCard()) { //chuyen tien
                         List<Transaction> transactionArrayList = new ArrayList<>();
+                        AccountPaymentDTO accountPaymentDTO=  accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard());
                         transactionArrayList.add(TransactionMapper.toModelTransaction(
                                 transactionDTO,
                                 transactionDTO.getReceiverCard(),
-                                accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard()).getCardName()));
+                                accountPaymentDTO == null ? transactionDTO.getCardName() : accountPaymentDTO.getCardName()));
                         transaction.setSenders(transactionArrayList);
                     } else { //nhan tien
                         List<Transaction> transactionArrayList = new ArrayList<>();
+                        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard());
                         transactionArrayList.add(TransactionMapper.toModelTransaction(
                                 transactionDTO,
                                 transactionDTO.getSenderCard(),
-                                accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard()).getCardName()
+                                accountPaymentDTO == null ? transaction.getCardName() : accountPaymentDTO.getCardName()
                         ));
                         transaction.setReceivers(transactionArrayList);
                     }
@@ -182,7 +189,7 @@ public class TransactionService implements ITransactionService {
     @Override
     public Transaction saveTransaction(TransactionDTO transactionDTO) {
         TransactionDTO transactionDTO1 = transactionRepository.save(transactionDTO);
-
-        return TransactionMapper.toModelTransaction(transactionDTO1, transactionDTO1.getSenderCard(), "");
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO1.getReceiverCard());
+        return TransactionMapper.toModelTransaction(transactionDTO1, accountPaymentDTO.getCardNumber(), accountPaymentDTO.getCardName());
     }
 }

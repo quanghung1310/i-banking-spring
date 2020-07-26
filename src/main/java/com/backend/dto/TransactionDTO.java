@@ -43,4 +43,6 @@ public class TransactionDTO {
     private Timestamp updatedAt;
 
     private long fee;
+
+    private String cardName; //card of partner
 }
