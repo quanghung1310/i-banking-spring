@@ -21,7 +21,7 @@ public class RegisterRequest {
                     || StringUtils.isBlank(this.email)
                     || StringUtils.isBlank(this.name)
                     || StringUtils.isBlank(this.phone)
-                    || StringUtils.isBlank(this.cardName)
+                    //|| StringUtils.isBlank(this.cardName)
                     || requestTime <= 0);
 
         }

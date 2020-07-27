@@ -42,7 +42,7 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
-    public RegisterResponse register(String logId, RegisterRequest request, long employeeId) {
+    public RegisterResponse register(String logId, RegisterRequest request, long employeeId, String role) {
         Timestamp currentTime = new Timestamp(request.getRequestTime());
         String userName = request.getName().toLowerCase().replaceAll("\\s+","");
         List<UserDTO> users = (List<UserDTO>) userRepository.findAll();
@@ -53,7 +53,7 @@ public class EmployeeService implements IEmployeeService {
             }
         }
         logger.warn("{}| Username - {} is not exist!", logId, userName);
-        UserDTO userDTO = userRepository.save(UserProcess.createUser(logId, request, userName));
+        UserDTO userDTO = userRepository.save(UserProcess.createUser(request, userName, role));
         Long userId = userDTO.getId();
 
         if (userId == null) {
