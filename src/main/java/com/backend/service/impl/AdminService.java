@@ -2,7 +2,9 @@ package com.backend.service.impl;
 
 import com.backend.constants.StringConstant;
 import com.backend.dto.UserDTO;
+import com.backend.mapper.UserMapper;
 import com.backend.model.request.employee.RegisterRequest;
+import com.backend.model.response.EmployeeResponse;
 import com.backend.model.response.RegisterResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.IUserRepository;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -56,6 +59,24 @@ public class AdminService implements IAdminService {
                 .password(userDTO.getPassword())
                 .createDate(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .build();
+    }
+
+    @Override
+    public List<EmployeeResponse> getEmployee(String logId, Long employerId, String role) {
+        List<EmployeeResponse> employeeResponses = new ArrayList<>();
+        if (employerId == null) {
+            List<UserDTO> userDTOS = userRepository.findAllByRole(role);
+            userDTOS.forEach(userDTO -> employeeResponses.add(UserMapper.toModelEmployee(userDTO)));
+
+        } else {
+            List<UserDTO> userDTOS = userRepository.findAllByRoleAndId(role, employerId);
+            if (userDTOS.size() <= 0) {
+                logger.warn("{}| Employee - {} not found!", logId, employerId);
+                return null;
+            }
+            userDTOS.forEach(userDTO -> employeeResponses.add(UserMapper.toModelEmployee(userDTO)));
+        }
+        return employeeResponses;
     }
 
 

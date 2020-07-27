@@ -11,4 +11,7 @@ public interface IUserRepository extends CrudRepository<UserDTO, Long> {
     UserDTO findFirstByUserNameAndPassword(String userName, String password);
 
     List<UserDTO> findAllByRole(String role);
+
+    List<UserDTO> findAllByRoleAndId(String role, long id);
+
 }
