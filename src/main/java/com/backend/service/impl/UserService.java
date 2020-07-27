@@ -151,7 +151,11 @@ public class UserService implements IUserService {
         if (cardNumber != null) {
             reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndCardNumberAndIsActive(userId, type, cardNumber, 1);
         } else {
-            reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndIsActiveOrderByIdDesc(userId, type, 1);
+            if (type == 0) {
+                reminderDTOS = reminderRepository.findAllByUserIdAndIsActiveOrderByIdDesc(userId, 1);
+            } else {
+                reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndIsActiveOrderByIdDesc(userId, type, 1);
+            }
         }
         //Step 1: validate reminders
         UserDTO userDTO = userRepository.findById(userId).get();
