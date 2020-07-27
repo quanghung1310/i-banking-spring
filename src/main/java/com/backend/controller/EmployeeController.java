@@ -12,6 +12,7 @@ import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ public class EmployeeController {
     @Value("${role.employer}")
     private String EMPLOYER;
 
+    @Value("${role.customer}")
+    private String CUSTOMER;
+
     @Autowired
     public EmployeeController(IEmployeeService employeeService,
                             IUserService userService) {
@@ -54,7 +58,7 @@ public class EmployeeController {
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
         try {
-            if (!request.isValidData()) {
+            if (!request.isValidData() || StringUtils.isBlank(request.getCardName())) {
                 logger.warn("{}| Validate request register data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
@@ -67,11 +71,11 @@ public class EmployeeController {
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.UNAUTHORIZED);
             }
-            RegisterResponse registerResponse = employeeService.register(logId, request, user.getId());
+            RegisterResponse registerResponse = employeeService.register(logId, request, user.getId(), CUSTOMER);
 
             if (registerResponse == null || registerResponse.getAccount() == null) {
                 logger.warn("{}| Register fail!", logId);
-                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), registerResponse.toString());
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
