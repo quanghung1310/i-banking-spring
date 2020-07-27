@@ -21,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -29,6 +31,9 @@ public class EmployeeController {
     private static final Logger logger = LogManager.getLogger(EmployeeController.class);
 
     private static final Gson PARSER = new Gson();
+
+    @Value( "${type.account.payment}" )
+    private int paymentBank;
 
     private IUserService userService;
     private IEmployeeService employeeService;
@@ -119,5 +124,29 @@ public class EmployeeController {
 
     private UserResponse getUser(String logId, Object principal) {
         return userService.getUser(logId, ((UserDetails)principal).getUsername());
+    }
+
+    @GetMapping("/get-account-info/{cardNumber}/{merchantId}")
+    public ResponseEntity<String> queryAccount(@PathVariable long cardNumber,
+                                               @PathVariable long merchantId) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: cardNumber - {}, merchantId - {}", logId, cardNumber, merchantId);
+        BaseResponse response;
+        try {
+            if (cardNumber <= 0 || merchantId < 0) {
+                logger.warn("{}| Validate request query account data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId, paymentBank, false);
+            return DataUtil.getStringResponseEntity(logId, userResponse);
+        } catch (Exception ex) {
+            logger.error("{}| Request query account catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 }

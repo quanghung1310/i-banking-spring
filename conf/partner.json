@@ -1,13 +1,13 @@
 {
   "3": {
-    "partner_code": "6ae118690c0f241b1d5a98b4449d8a67",
-    "partner_public_key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDF9PFzaqogWK6urJi5825h2o6dk4wuH6VV37k1oxnZA7cm23ynoQUK8Y9XpvfBKheCQLw30MwQBtQXXHUuNZva1dxd66tYERJwURIsldzZtwGPQD6azyh0gkaebadTzrz2LH/iWrxshWBPHhyU47Mink6EUhmVRO9Qh/dddovCGQIDAQAB",
+    "partner_code": "TttwVLKHvXRujyllDq",
+    "partner_public_key": "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCTrlHb3adQstaRWJlqtsrIeFo57lSpE5FemvbIiBn0gGVMl+SveVm8Zj1JnpLfJngkfnsUgyJp1fLodhgtN581o7AdYGUQlx70kWw75WhSMbDAzH5qjpFNSlNNjC8rT5XyCE/YFJ6DuEloJgXoJvRnNXPxPWj4IelLJ84ZfAWI5QIDAQAB-----END PUBLIC KEY-----",
+    "partner_secret_key": "hPZno63KBfZeIcvYLDwx",
     "alg": "RSA",
-    "private_key": "MIICWwIBAAKBgQCCcIbvMIymqZh6EqDQarV/lKf9vBWR6qD02NIfvwDcI2jtJ7b+qKbra2DZHu/VAaCgoi9+Z1JWigECs7PItHjhrQ+EG2zH8NTJJuY/DHzgjtvLLppr6jCNAZrWgD8f/0PdIZ36cmnR6+j/q5W80zAyhNMroFLcye9ZUGQmJdkjHwIDAQABAoGAIkuRvqvGHz+x/k6Nh562z693J8he53mIDjg/rucaQ8bvnIL3oycWlAkscommxxthbzqVQCfMR0KLl3lGCLwil9qlRhEvCCwNwXe/Vea8w+JFtOVsJy6/Bh0HHKI2QJi5PcZFVVQD5+X9QXnEpILRCCQv9ImtpX4Cz1NmRTjlEQkCQQDMbSR0rrbZnmLTlZ79Q3jA3Ut1m6bMoPfa6m6pL4Y2ymNW9j9QwYZEVoTA+h5T7yaEszMZjU87naYjS5B2okJtAkEAo1j0c6ISLIiFad7miiuftfYw/mf2h/pkKsGspxMf6XWXNzLMRW3wUM4rHpNiXT0NDVTOYfuwaliS2/QSa76kOwJAPCbRV1QhkZ89TSz1f2hfG8EB9zU5u3SR+eSJc1b8kxqyaGBE+So4q9sZbP8r9V6lYt6n5pjh+5TD0hbmB0JvcQJAPSWulJ7F+N++OYyUdoKwDbi0THf0hKCJ4KuRixWQq582VRZx+0eVX1peL9ryRn71JNlrTKigOJ8hkq8COk0qQwJAIwRAdOiyOMn5AznS7P8B2oVosZDErHdq3xTAFVLsW529ppO7WviyCxxoerJ7xwBvuqaakHXPdrWQnSGOOy671Q==",
-    "public_key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCCcIbvMIymqZh6EqDQarV/lKf9vBWR6qD02NIfvwDcI2jtJ7b+qKbra2DZHu/VAaCgoi9+Z1JWigECs7PItHjhrQ+EG2zH8NTJJuY/DHzgjtvLLppr6jCNAZrWgD8f/0PdIZ36cmnR6+j/q5W80zAyhNMroFLcye9ZUGQmJdkjHwIDAQAB",
-    "secret_key": "JaNdRgUjXn2r5u8x/A?D(G+KbPeShVmYp3s6v9y$B&E)H@McQfTjWnZr4t7w!z%C",
+    "private_key": "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKOOfozoUnbzsgwu\nrRYPaivP0khENR7MuALwv9lOcHA9bPSDuN0wNCMMhxl8gkLZeULQFHIf/GRNVjWQ\nLo5rmqDna+PZCNOSSdxqyoIkHL2axxkXK+7qec0F5Vx5WCX+pKUmdx8JqrpuBnGh\nYl6lXNDgFnThMBao67XrRkCQRW7VAgMBAAECgYBgYGUd7wA469zs5MxFhYvQiUOm\nJdsPbR65TNgf2uLSoL+FTeEvJWpzhLxPPlkbvz5/KlIB9espx5CXO4DTl4Cjfy3I\nSz/kbpJ9MCwwNpGr0zCyamrjL0G3aEcRjk0MSjqQE33D9csEuk1Fm7blqaQLJ4fd\nw6JnnA0yA535tnM1gQJBAPNwdgH5hcg7+RZ13J0E5pnH2AW7PFNxwEJYaWG+Xx6i\nSfN8ngeiFuFk2puhRAOo7pDv7QeXy6Pw4j/jkgkXeSUCQQCr/uExEUtwhDRfIHk6\nPKRCct37s50cZtBpxu2e6/kTKpsQGPzk7QFvKJWLVthCGce+KrLIbLE5DVkRFpJW\nrOfxAkB0/EhZbpWxwdBT0NPxyRcgM39GUdINr45a063gwOFpEUhEcFBpDqW8LwE2\n5OqQb7Aliob3rSS5Zdr0JOJa6CLZAkBG3I75AVAcfkt5ec6YYM2oFt1AS2MKhY2O\nVwgldsE61U3nlvPyeXcizgy2yMP2j9qMjdj03Fszzz0H3k3SahBxAkEAwaUq4kyd\ndIjYnX2r5VWXttPImieYj7nkl4NJt/L9T4qCfnwiZJx3O9+N26VhcIEAbhROKuFI\n8RaJSO51o/mWhg==",
+    "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCjjn6M6FJ287IMLq0WD2orz9JI\nRDUezLgC8L/ZTnBwPWz0g7jdMDQjDIcZfIJC2XlC0BRyH/xkTVY1kC6Oa5qg52vj\n2QjTkkncasqCJBy9mscZFyvu6nnNBeVceVgl/qSlJncfCaq6bgZxoWJepVzQ4BZ0\n4TAWqOu160ZAkEVu1QIDAQAB\n-----END PUBLIC KEY-----",
     "url_query_account": "https://api.monca.me/v1/rsa/info",
-    "url_transfer": ""
+    "url_transfer": "https://api.monca.me/v1/rsa/transfers"
 
   },
 

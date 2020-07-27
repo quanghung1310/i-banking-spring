@@ -27,8 +27,8 @@ public class PartnerConfig {
     public static String getPublicKey(String id) {
         return getMerchantConfig(id).getString("public_key", "");
     }
-    public static String getSecretKey(String id) {
-        return getMerchantConfig(id).getString("secret_key", "");
+    public static String getPartnerSecretKey(String id) {
+        return getMerchantConfig(id).getString("partner_secret_key", "");
     }
     public static String getAlg(String id) {
         return getMerchantConfig(id).getString("alg", "");

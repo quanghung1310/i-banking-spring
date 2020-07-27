@@ -2,6 +2,7 @@ package com.backend.process;
 
 import com.backend.model.Partner;
 import com.backend.model.request.bank.QueryAccountRequest;
+import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.request.transaction.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
@@ -229,5 +230,10 @@ public class PartnerProcess {
         }
         logger.info("{}| Validate hash: Success!", logId);
         return true;
+    }
+
+    public static String callPartnerTransfer(int bankId, TransactionRequest request) {
+
+        return null;
     }
 }

@@ -11,6 +11,16 @@ import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +33,7 @@ public interface IUserService {
 
     UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
 
-    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance);
+    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidParameterSpecException;
 
     DebtorResponse createDebtor(String logId, CreateDebtorRequest request, long userId);
 
