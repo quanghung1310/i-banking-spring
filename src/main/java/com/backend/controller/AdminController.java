@@ -1,6 +1,8 @@
 package com.backend.controller;
 
 import com.backend.constants.ErrorConstant;
+import com.backend.dto.UserDTO;
+import com.backend.model.request.employee.EmployeeRequest;
 import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.EmployeeResponse;
@@ -11,6 +13,7 @@ import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,12 @@ public class AdminController {
 
     @Value("${role.employer}")
     private String EMPLOYER;
+
+    @Value("${action.delete}")
+    private String DELETE;
+
+    @Value("${action.update}")
+    private String UPDATE;
 
     private IUserService userService;
     private IAdminService adminService;
@@ -106,7 +115,6 @@ public class AdminController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.UNAUTHORIZED);
             }
 
-//            RegisterResponse registerResponse = adminService.getEmployee(logId, employerId, EMPLOYER);
             List<EmployeeResponse> employeeResponses = adminService.getEmployee(logId, employerId, EMPLOYER);
             if (employeeResponses == null) {
                 logger.warn("{}| Employee not found!", logId);
@@ -120,6 +128,75 @@ public class AdminController {
         } catch (Exception ex) {
             logger.error("{}| Request register catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping(value = {"/update-employee"})
+    public ResponseEntity<String> updateEmployee(@RequestBody EmployeeRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request update employee data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request update employee success!", logId);
+
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
+            if (!user.getRole().equals(ADMIN)) {
+                logger.warn("{}| User - {} not authenticate!", logId, user.getId());
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.UNAUTHORIZED);
+            }
+
+            String action = request.getAction();
+            UserDTO employee = adminService.findById(request.getId());
+            if (employee == null) {
+                logger.warn("{}| Employee - {} not existed!", logId, request.getId());
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            if (action.equals(DELETE)) {
+                employee.setRole(EMPLOYER + "DEL");
+            } else if (action.equals(UPDATE)) {
+                if (StringUtils.isNotBlank(request.getEmail())) {
+                    employee.setEmail(request.getEmail());
+                }
+                if (StringUtils.isNotBlank(request.getPassword())) {
+                    employee.setPassword(request.getPassword());
+                }
+                if (StringUtils.isNotBlank(request.getName())) {
+                    employee.setName(request.getName());
+                }
+                if (StringUtils.isNotBlank(request.getPhone())) {
+                    employee.setPhone(request.getPhone());
+                }
+            } else {
+                logger.warn("{}| Action - {} not existed!", logId, action);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            EmployeeResponse employeeResponse = adminService.saveEmployee(employee);
+            if (employeeResponse == null) {
+                logger.warn("{}| Update employee - {} fail!", logId, employee.getId());
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), employeeResponse.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request register catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(),null);
             return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);

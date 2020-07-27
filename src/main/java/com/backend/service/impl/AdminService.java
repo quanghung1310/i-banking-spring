@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AdminService implements IAdminService {
@@ -79,5 +80,15 @@ public class AdminService implements IAdminService {
         return employeeResponses;
     }
 
+    @Override
+    public UserDTO findById(long id) {
+        Optional<UserDTO> userDTO = userRepository.findById(id);
+        return userDTO.orElse(null);
+    }
 
+    @Override
+    public EmployeeResponse saveEmployee(UserDTO userDTO) {
+        UserDTO userDTO1 = userRepository.save(userDTO);
+        return UserMapper.toModelEmployee(userDTO1);
+    }
 }
