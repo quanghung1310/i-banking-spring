@@ -1,5 +1,6 @@
 package com.backend.service.impl;
 
+import com.backend.config.PartnerConfig;
 import com.backend.constants.ActionConstant;
 import com.backend.dto.*;
 import com.backend.mapper.TransactionMapper;
@@ -16,14 +17,33 @@ import com.backend.model.response.UserResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
+import com.backend.util.RSAUtils;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +70,7 @@ public class UserService implements IUserService {
     private IDebtRepository debtRepository;
     private ITransactionRepository transactionRepository;
     private IOtpRepository otpRepository;
+    private IPartnerRepository partnerRepository;
 
     @Autowired
     public UserService(IAccountPaymentRepository accountPaymentRepository,
@@ -58,7 +79,8 @@ public class UserService implements IUserService {
             IReminderRepository reminderRepository,
             IDebtRepository debtRepository,
             ITransactionRepository transactionRepository,
-            IOtpRepository otpRepository) {
+            IOtpRepository otpRepository,
+            IPartnerRepository partnerRepository) {
         this.accountPaymentRepository   = accountPaymentRepository;
         this.accountSavingRepository    = accountSavingRepository;
         this.userRepository             = userRepository;
@@ -66,6 +88,7 @@ public class UserService implements IUserService {
         this.debtRepository             = debtRepository;
         this.transactionRepository      = transactionRepository;
         this.otpRepository              = otpRepository;
+        this.partnerRepository          = partnerRepository;
     }
 
     @Override
@@ -151,7 +174,11 @@ public class UserService implements IUserService {
         if (cardNumber != null) {
             reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndCardNumberAndIsActive(userId, type, cardNumber, 1);
         } else {
-            reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndIsActiveOrderByIdDesc(userId, type, 1);
+            if (type == 0) {
+                reminderDTOS = reminderRepository.findAllByUserIdAndIsActiveOrderByIdDesc(userId, 1);
+            } else {
+                reminderDTOS = reminderRepository.findAllByUserIdAndTypeAndIsActiveOrderByIdDesc(userId, type, 1);
+            }
         }
         //Step 1: validate reminders
         UserDTO userDTO = userRepository.findById(userId).get();
@@ -170,7 +197,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) {
+    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidParameterSpecException {
         List<Account> accounts = new ArrayList<>();
         long userId = 0;
         if (merchantId == myBankId) {
@@ -183,21 +210,77 @@ public class UserService implements IUserService {
                     typeAccount,
                     isBalance));
             userId = accountPaymentDTO.getUserId();
+            Optional<UserDTO> userDTO = userRepository.findById(userId);
+            return userDTO.map(dto -> UserMapper.toModelUser(dto, accounts)).orElse(null);
         } else {
             //Lien ngan hang
-            /// TODO: 7/5/2020
-            return null;
-        }
+            Optional<PartnerDTO> partner = partnerRepository.findById((int) merchantId);
+            if (!partner.isPresent()) {
+                logger.warn("{}| Partner with bank id - {} not found!", logId, merchantId);
+                return null;
+            }
+            //Step 2: Encrypt
+            String mid = String.valueOf(merchantId);
+            String alg = PartnerConfig.getAlg(mid);
+            String cardPartner = String.valueOf(cardNumber);
 
-        UserDTO userDTO = userRepository.findById(userId).get();
-        return UserMapper.toModelUser(userDTO, accounts);
+            if (alg.equals("RSA")) {
+                //RSA
+                //2.1: Build json body
+                String secretKey = PartnerConfig.getPartnerSecretKey(mid);
+                String partnerPub = PartnerConfig.getPartnerPubKey(mid);
+                long currentTime = 1595770284249L;//System.currentTimeMillis();
+                String partnerCode = PartnerConfig.getPartnerCode(mid);
+                String url = PartnerConfig.getUrlQueryAccount(mid);
+
+                //(JSON.stringify(req.body)+ secretKey + time + partnerCode, 'base64')
+                JsonObject requestBody = new JsonObject()
+                        .put("stk", cardPartner);
+
+                String dataCrypto = requestBody
+                        + secretKey
+                        + currentTime
+                        + partnerCode
+                        + "base64";
+                String encrypt = RSAUtils.encrypt(dataCrypto, PartnerConfig.getPublicKey(mid));
+                String decrypt = RSAUtils.decrypt(encrypt, PartnerConfig.getPrivateKey(mid));
+
+
+                if (StringUtils.isBlank(encrypt)) {
+                    logger.warn("{}| Hash data fail!", logId);
+                    return null;
+                }
+
+                RestTemplate restTemplate = new RestTemplate();
+
+                // HttpHeaders
+                HttpHeaders headers = new HttpHeaders();
+
+                headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+                // Request to return JSON format
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("x-partner-code", partnerCode);
+                headers.set("x-timestamp", String.valueOf(currentTime));
+                headers.set("x-data-encrypted", encrypt);
+
+                HttpEntity<JsonObject> request = new HttpEntity<>(requestBody, headers);
+                ResponseEntity<JsonObject> resp = restTemplate.postForEntity(url, request, JsonObject.class);
+                /// TODO: 7/26/2020
+                return UserResponse.builder().build();
+            } else if (alg.equals("PGP")) {
+                //PGP
+                //todo
+                return UserResponse.builder().build();
+            } else {
+                logger.warn("{}| alg - {} of merchant id - {} not existed!", logId, alg, merchantId);
+                return null;
+            }
+        }
     }
 
     @Override
     public DebtorResponse createDebtor(String logId, CreateDebtorRequest request, long userId) {
         long cardNumber = request.getCardNumber();
-        List<DebtDTO> debtDTOS;
-        int isActive = 1;
 
         //Step 1: Validate debtor
         AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
@@ -360,4 +443,26 @@ public class UserService implements IUserService {
         return TransactionMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
     }
 
+    public static void main(String[] args) throws InvalidKeySpecException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidParameterSpecException {
+        String PATH_TO_CONFIG_FOLDER = "conf\\";
+        PartnerConfig.init(PATH_TO_CONFIG_FOLDER + "partner.json");
+
+        String mid = "3";
+        String cardPartner = "9001454953559";
+        String secretKey = PartnerConfig.getPartnerSecretKey(mid);
+        String partnerPub = PartnerConfig.getPartnerPubKey(mid);
+        long currentTime = System.currentTimeMillis();
+        String partnerCode = PartnerConfig.getPartnerCode(mid);
+        String url = PartnerConfig.getUrlQueryAccount(mid);
+
+        JsonObject requestBody = new JsonObject()
+                .put("stk", cardPartner);
+
+        String dataCrypto = requestBody
+                + secretKey
+                + currentTime
+                + partnerCode;
+        String encrypt = RSAUtils.encrypt(dataCrypto, PartnerConfig.getPublicKey(mid));
+        String decrypt = RSAUtils.decrypt(encrypt, PartnerConfig.getPrivateKey(mid));
+    }
 }

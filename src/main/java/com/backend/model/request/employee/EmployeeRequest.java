@@ -7,22 +7,21 @@ import org.apache.commons.lang3.StringUtils;
 
 @Getter
 @Setter
-public class RegisterRequest {
+public class EmployeeRequest {
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
     private String email;
     private String name;
     private String phone;
-    private String cardName;
-
+    private String password;
+    private long id;
+    private String action;
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
-                    || StringUtils.isBlank(this.email)
-                    || StringUtils.isBlank(this.name)
-                    || StringUtils.isBlank(this.phone)
-                    //|| StringUtils.isBlank(this.cardName)
-                    || requestTime <= 0);
+                    || this.id <= 0
+                    || this.requestTime <= 0
+                    || (StringUtils.isBlank(this.requestId)));
 
         }
         catch (Exception ex) {

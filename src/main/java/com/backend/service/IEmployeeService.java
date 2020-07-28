@@ -6,7 +6,7 @@ import com.backend.model.response.DepositResponse;
 import com.backend.model.response.RegisterResponse;
 
 public interface IEmployeeService {
-    RegisterResponse register(String logId, RegisterRequest request, long employeeId);
+    RegisterResponse register(String logId, RegisterRequest request, long employeeId, String role);
 
     DepositResponse deposit(String logId, DepositRequest request);
 }

@@ -41,7 +41,6 @@ public class TransactionService implements ITransactionService {
     @Value( "${fee.transfer}" )
     private long fee;
 
-    private IUserRepository userRepository;
     private IAccountPaymentRepository accountPaymentRepository;
     private ITransactionRepository transactionRepository;
 
@@ -49,7 +48,6 @@ public class TransactionService implements ITransactionService {
     public TransactionService(IUserRepository userRepository,
                            IAccountPaymentRepository accountPaymentRepository,
                            ITransactionRepository transactionRepository) {
-        this.userRepository = userRepository;
         this.accountPaymentRepository = accountPaymentRepository;
         this.transactionRepository = transactionRepository;
     }

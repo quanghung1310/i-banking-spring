@@ -1,13 +1,15 @@
 package com.backend;
 
-import org.springframework.boot.*;
-import org.springframework.boot.autoconfigure.*;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import com.backend.config.PartnerConfig;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class Application {
+	private static final String PATH_TO_CONFIG_FOLDER = "conf\\";
+
 	public static void main(String[] args) {
+		PartnerConfig.init(PATH_TO_CONFIG_FOLDER + "partner.json");
 		SpringApplication.run(Application.class, args);
 	}
 }

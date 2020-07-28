@@ -9,6 +9,7 @@ import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.request.transaction.TransactionRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.Random;
 public class UserProcess {
     private static final Logger logger = LogManager.getLogger(UserProcess.class);
 
-    public static UserDTO createUser(String logId, RegisterRequest request, String userName) {
+    public static UserDTO createUser(RegisterRequest request, String userName, String role) {
         int leftLimit = 97; // letter 'a'
         int rightLimit = 122; // letter 'z'
         int targetStringLength = 15;
@@ -39,6 +40,7 @@ public class UserProcess {
                 .lastPassword(password)
                 .createdAt(new Timestamp(request.getRequestTime()))
                 .updatedAt(new Timestamp(request.getRequestTime()))
+                .role(role)
                 .build();
     }
     public static AccountPaymentDTO createAccountPayment(String logId, List<AccountPaymentDTO> accounts, long userId, long adminId, String cardName, Timestamp currentTime, long milliseconds) {

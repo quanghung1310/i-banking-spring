@@ -2,6 +2,7 @@ package com.backend.process;
 
 import com.backend.model.Partner;
 import com.backend.model.request.bank.QueryAccountRequest;
+import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.request.transaction.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
@@ -11,13 +12,15 @@ import org.apache.logging.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-//import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import sun.misc.BASE64Encoder;
 
 import java.io.*;
-import java.security.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
+import java.security.SignatureException;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -227,5 +230,10 @@ public class PartnerProcess {
         }
         logger.info("{}| Validate hash: Success!", logId);
         return true;
+    }
+
+    public static String callPartnerTransfer(int bankId, TransactionRequest request) {
+
+        return null;
     }
 }

@@ -5,6 +5,7 @@ import com.backend.dto.*;
 import com.backend.model.Account;
 import com.backend.model.Debt;
 import com.backend.model.Transaction;
+import com.backend.model.response.EmployeeResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.util.DataUtil;
@@ -113,5 +114,20 @@ public class UserMapper {
                     .updatedAt(DataUtil.convertTimeWithFormat(debtDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                     .build();
         }
+    }
+
+    public static EmployeeResponse toModelEmployee(UserDTO userDTO) {
+        EmployeeResponse employeeResponse = EmployeeResponse.builder().build();
+        if (userDTO == null) {
+            return null;
+        }
+        employeeResponse.setCreatedAt(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+        employeeResponse.setEmail(userDTO.getEmail());
+        employeeResponse.setId(userDTO.getId());
+        employeeResponse.setName(userDTO.getName());
+        employeeResponse.setPhone(userDTO.getPhone());
+        employeeResponse.setRole(userDTO.getRole());
+        employeeResponse.setUserName(userDTO.getUserName());
+        return employeeResponse;
     }
 }
