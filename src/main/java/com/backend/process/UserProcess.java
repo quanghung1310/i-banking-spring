@@ -109,7 +109,7 @@ public class UserProcess {
                 request.getReceiverCard(),
                 request.getAmount(),
                 request.getTypeFee(),
-                request.getTypeTrans(),
+                1, //send/receiver
                 request.getMerchantId(),
                 request.getContent(),
                 StatusConstant.PENDING.toString(),

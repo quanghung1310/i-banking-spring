@@ -28,4 +28,6 @@ public interface ITransactionRepository extends CrudRepository<TransactionDTO, L
     List<TransactionDTO> findAllByNotMyBankAndCreatedAtBetween(@Param("merchantId") int merchantId,
                                                                 @Param("beginTime") String beginTime,
                                                                 @Param("endTime") String endTime);
+
+    TransactionDTO findByTransIdAndTypeTrans(long transId, int typeTrans);
 }
