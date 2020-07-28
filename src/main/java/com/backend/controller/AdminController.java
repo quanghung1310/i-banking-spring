@@ -47,6 +47,9 @@ public class AdminController {
     @Value("${action.update}")
     private String UPDATE;
 
+    @Value( "${my.bank.id}" )
+    private int myBankId;
+
     private IUserService userService;
     private IAdminService adminService;
     private IPartnerService partnerService;
@@ -233,7 +236,7 @@ public class AdminController {
                     return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
                 }
             } else {
-                merchantId = 0;
+                merchantId = myBankId;
             }
             List<TransMerchantResponse> transMerchantResponses = adminService.controlTransaction(logId, merchantId, beginTime, endTime);
             if (transMerchantResponses.size() <= 0) {
