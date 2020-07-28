@@ -30,4 +30,7 @@ public class OtpDTO {
     private int status; //1. INIT, 2.DELETE
 
     private long userId; //người nhận được otp (người cần chuyển tiền)
+
+    @Column(length = 20)
+    private long transId;
 }

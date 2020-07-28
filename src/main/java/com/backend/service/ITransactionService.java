@@ -12,4 +12,5 @@ public interface ITransactionService {
 
     Transaction saveTransaction(TransactionDTO transactionDTO);
 
+    Transaction getByTransIdAndType(long transId, int type);
 }

@@ -7,8 +7,10 @@ import com.backend.constants.StringConstant;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.OtpDTO;
 import com.backend.dto.ReminderDTO;
+import com.backend.dto.TransactionDTO;
 import com.backend.model.Account;
 import com.backend.model.Partner;
+import com.backend.model.Transaction;
 import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.debt.DeleteDebtRequest;
 import com.backend.model.request.debt.PayDebtRequest;
@@ -328,10 +330,6 @@ public class UserController {
                 }
                 newReceiverBalance = UserProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
 
-                if (request.getTypeTrans() == 2) {
-                    //remove debt
-                }
-
                 //insert transaction
                 long transId = transactionService.insertTransaction(logId, request);
                 if (transId == -1) {
@@ -571,8 +569,9 @@ public class UserController {
         }
     }
 
-    @GetMapping("/send-otp/{action}")
-    public ResponseEntity<String> sendOtp(@PathVariable String action) {
+    @GetMapping("/send-otp/{action}/{transId}")
+    public ResponseEntity<String> sendOtp(@PathVariable String action,
+                                          @PathVariable long transId) {
         String logId = DataUtil.createRequestId();
         logger.info("{}| Request data: action - {}", logId, action);
         int otp = new Random().nextInt(900000);
@@ -581,6 +580,14 @@ public class UserController {
         try {
             if (!action.equals(otpPayment) && !action.equals(otpDebt)) {
                 logger.warn("{}| Action - {} not existed!", logId, action);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2);
+
+            if (transactionDTO == null) {
+                logger.warn("{}| Transaction - {} not existed!", logId, transId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
@@ -598,6 +605,7 @@ public class UserController {
             otpDTO.setUpdatedAt(currentTime);
             otpDTO.setAction(action);
             otpDTO.setUserId(user.getId());
+            otpDTO.setTransId(transId);
             javaMailSender.send(msg);
 
             OtpDTO otpDto = otpService.saveOtp(otpDTO);
@@ -610,8 +618,8 @@ public class UserController {
 
             JsonObject result = new JsonObject().put("otp", otp)
                     .put("id", otpDto.getId())
-                    .put("createDate", DataUtil.convertTimeWithFormat(otpDto.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
-
+                    .put("createDate", DataUtil.convertTimeWithFormat(otpDto.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                    .put("transId", transId);
             response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
             logger.info("{}| Response to client: {}", logId, response.toString());
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);
@@ -633,14 +641,24 @@ public class UserController {
         try {
             JsonObject request = new JsonObject(requestBody);
             String action = request.getString("action", "");
+            long transId = request.getLong("transId", 0L);
+
             int otp = request.getInteger("otp", 0);
             if ((!action.equals(otpPayment) && !action.equals(otpDebt) && otp == 0) || StringUtils.isBlank(action)) {
                 logger.warn("{}| Validate base request data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
+
+            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2);
+            if (transactionDTO == null) {
+                logger.warn("{}| Transaction - {} not existed!", logId, transId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
             UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-            boolean validateOtp = otpService.validateOtp(logId, user.getId(), otp, action, session, currentTime);
+            boolean validateOtp = otpService.validateOtp(logId, user.getId(), otp, action, session, currentTime, transId);
             JsonObject result = new JsonObject().put("result", validateOtp);
             if (!validateOtp) {
                 logger.warn("{}| Validate otp - {} fail!", logId, otp);

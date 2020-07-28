@@ -39,6 +39,9 @@ public class TransactionService implements ITransactionService {
     @Value( "${fee.transfer}" )
     private long fee;
 
+    @Value( "${my.bank.id}" )
+    private long myBankId;
+
     private IAccountPaymentRepository accountPaymentRepository;
     private ITransactionRepository transactionRepository;
 
@@ -186,5 +189,17 @@ public class TransactionService implements ITransactionService {
         TransactionDTO transactionDTO1 = transactionRepository.save(transactionDTO);
         AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO1.getReceiverCard());
         return TransactionMapper.toModelTransaction(transactionDTO1, accountPaymentDTO.getCardNumber(), accountPaymentDTO.getCardName());
+    }
+
+    @Override
+    public Transaction getByTransIdAndType(long transId, int type) {
+        TransactionDTO transactionDTO = transactionRepository.findByTransIdAndTypeTrans(transId, type);
+        long cardNumber = transactionDTO.getReceiverCard();
+        String cardName = transactionDTO.getCardName();
+        if (transactionDTO.getMerchantId() == myBankId) {
+            AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
+            cardName = accountPaymentDTO.getCardName();
+        }
+        return TransactionMapper.toModelTransaction(transactionDTO, cardNumber, cardName);
     }
 }
