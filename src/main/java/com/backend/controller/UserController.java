@@ -6,7 +6,6 @@ import com.backend.constants.ErrorConstant;
 import com.backend.constants.StringConstant;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.OtpDTO;
-import com.backend.dto.PartnerDTO;
 import com.backend.dto.ReminderDTO;
 import com.backend.model.Account;
 import com.backend.model.Partner;
@@ -48,8 +47,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-
-//import org.springframework.security.core.Authentication;
 
 @Controller
 public class UserController {
