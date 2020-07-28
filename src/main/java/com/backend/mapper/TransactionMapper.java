@@ -9,6 +9,9 @@ import com.backend.util.DataUtil;
 
 public class TransactionMapper {
 
+    private static int TRANS_SENDER = 1;
+    private static int TRANS_RECEIVER = 2;
+
     public static TransactionResponse toModelTransResponse(TransactionDTO transactionDTO, String cardName) {
         if (transactionDTO == null) {
             return null;
@@ -63,16 +66,18 @@ public class TransactionMapper {
                 .build();
     }
 
-    public static TransactionMerchant toModelTransMerchant(TransactionDTO transactionDTO, String receiverName) {
+    public static TransactionMerchant toModelTransMerchant(TransactionDTO transactionDTO, long cardNumber, String cardName, int type) {
         if (transactionDTO == null) {
             return null;
         }
-        return TransactionMerchant.builder()
+
+        //auto lh-bank la receiver
+        TransactionMerchant transactionMerchant = TransactionMerchant.builder()
                 .amount(transactionDTO.getAmount())
                 .createDate(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .merchantId(transactionDTO.getMerchantId())
-                .receiverCard(transactionDTO.getReceiverCard())
-                .receiverName(receiverName)
+                .receiverCard(cardNumber)
+                .receiverName(cardName)
                 .senderCard(transactionDTO.getSenderCard())
                 .senderName(transactionDTO.getCardName())
                 .status(transactionDTO.getStatus())
@@ -80,5 +85,12 @@ public class TransactionMapper {
                 .fee(transactionDTO.getFee())
                 .typeFee(transactionDTO.getTypeFee())
                 .build();
+        if (type == TRANS_SENDER) {
+            transactionMerchant.setSenderCard(cardNumber);
+            transactionMerchant.setSenderName(cardName);
+            transactionMerchant.setReceiverCard(transactionDTO.getReceiverCard());
+            transactionMerchant.setReceiverName(transactionDTO.getCardName());
+        }
+        return transactionMerchant;
     }
 }

@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.util.*;
 
 @Service
@@ -34,6 +33,9 @@ public class AdminService implements IAdminService {
 
     @Value("${role.employer}")
     private String EMPLOYER;
+
+    private int TRANS_SENDER = 1;
+    private int TRANS_RECEIVER = 2;
 
     private IUserRepository userRepository;
     private ITransactionRepository transactionRepository;
@@ -127,7 +129,17 @@ public class AdminService implements IAdminService {
                         ? new ArrayList<>()
                         : transMerchantResponse.getTransactionMerchants();
                 AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard());
-                transaction.add(TransactionMapper.toModelTransMerchant(transactionDTO, accountPaymentDTO.getCardName()));
+                long cardNumber = 0L;
+                int type = TRANS_RECEIVER;
+
+                if (accountPaymentDTO == null) {
+                    accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard());
+                    cardNumber = accountPaymentDTO.getCardNumber();
+                    type = TRANS_SENDER;
+                } else {
+                    cardNumber = accountPaymentDTO.getCardNumber();
+                }
+                transaction.add(TransactionMapper.toModelTransMerchant(transactionDTO, cardNumber, accountPaymentDTO.getCardName(), type));
 
                 PartnerDTO partnerDTO = partnerRepository.findById(transactionDTO.getMerchantId()).get();
 
