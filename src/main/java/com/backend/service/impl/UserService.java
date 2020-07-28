@@ -189,8 +189,12 @@ public class UserService implements IUserService {
         logger.info("{}| user - {} have {} reminder!", logId, userId, reminderDTOS.size());
 
         for (ReminderDTO reminder : reminderDTOS) {
-            accounts.add(UserMapper.toModelReminder(
-                    reminder));
+            AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(reminder.getCardNumber());
+            String cardName = "";
+            if (accountPaymentDTO != null) {
+                cardName = accountPaymentDTO.getCardName();
+            }
+            accounts.add(UserMapper.toModelReminder(reminder, cardName));
         }
         //Step 2: Build response
         return UserMapper.toModelUser(userDTO, accounts);
