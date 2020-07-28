@@ -2,13 +2,12 @@ package com.backend.controller;
 
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.UserDTO;
+import com.backend.model.Partner;
 import com.backend.model.request.employee.EmployeeRequest;
 import com.backend.model.request.employee.RegisterRequest;
-import com.backend.model.response.BaseResponse;
-import com.backend.model.response.EmployeeResponse;
-import com.backend.model.response.RegisterResponse;
-import com.backend.model.response.UserResponse;
+import com.backend.model.response.*;
 import com.backend.service.IAdminService;
+import com.backend.service.IPartnerService;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
@@ -50,12 +49,14 @@ public class AdminController {
 
     private IUserService userService;
     private IAdminService adminService;
+    private IPartnerService partnerService;
 
     @Autowired
     public AdminController(IAdminService adminService,
-                              IUserService userService) {
+                           IUserService userService, IPartnerService partnerService) {
         this.userService = userService;
         this.adminService = adminService;
+        this.partnerService = partnerService;
     }
 
 
@@ -197,6 +198,57 @@ public class AdminController {
         } catch (Exception ex) {
             logger.error("{}| Request register catch exception: ", logId, ex);
             response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(),null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping(value = {"/get-transaction-merchant/{beginTime}/{endTime}", "/get-transaction-merchant/{beginTime}/{endTime}/{merchantId}"})
+    public ResponseEntity<String> getTransactionMerchant(@PathVariable(required = false) Integer merchantId,
+                                                         @PathVariable String beginTime,
+                                                         @PathVariable String endTime) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: beginTime - {}, endTime - {}, merchantId - {},", logId, beginTime, endTime, merchantId);
+        BaseResponse response;
+        try {
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            if (!user.getRole().equals(ADMIN)) {
+                logger.warn("{}| User - {} not authenticate!", logId, user.getId());
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.UNAUTHORIZED);
+            }
+
+            if (StringUtils.isBlank(beginTime) || StringUtils.isBlank(endTime)) {
+                logger.warn("{}| Begin time - {} and End time - {} not empty!", logId, beginTime, endTime);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            if (merchantId != null) {
+                Partner partner = partnerService.findById(merchantId);
+                if (partner == null) {
+                    logger.warn("{}| Merchant - {} not existed!", logId, merchantId);
+                    response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                    return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+                }
+            } else {
+                merchantId = 0;
+            }
+            List<TransMerchantResponse> transMerchantResponses = adminService.controlTransaction(logId, merchantId, beginTime, endTime);
+            if (transMerchantResponses.size() <= 0) {
+                logger.warn("{}| Get Transaction Merchant - {} Responses not found!", logId, merchantId);
+                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+            }
+
+            String result = new JsonObject().put("transactions", transMerchantResponses).toString();
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result);;
+            logger.info("{}| Response to client: {}", logId, response);
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request Get Transaction Merchant catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
             return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);

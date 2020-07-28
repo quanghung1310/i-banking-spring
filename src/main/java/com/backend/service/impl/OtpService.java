@@ -47,6 +47,8 @@ public class OtpService implements IOtpService {
         otpDTO.setStatus(ActionConstant.DELETE.getValue());
         otpDTO.setUpdatedAt(currentTime);
         otpRepository.save(otpDTO);
+
+        //todo update status transaction pending - > success
         return true;
     }
 }

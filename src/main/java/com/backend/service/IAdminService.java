@@ -4,7 +4,9 @@ import com.backend.dto.UserDTO;
 import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.response.EmployeeResponse;
 import com.backend.model.response.RegisterResponse;
+import com.backend.model.response.TransMerchantResponse;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 public interface IAdminService {
@@ -15,4 +17,6 @@ public interface IAdminService {
     UserDTO findById(long id);
 
     EmployeeResponse saveEmployee(UserDTO userDTO);
+
+    List<TransMerchantResponse> controlTransaction(String logId, int merchantId, String beginTime, String endTime);
 }

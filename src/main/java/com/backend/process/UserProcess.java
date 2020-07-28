@@ -140,7 +140,7 @@ public class UserProcess {
                 .amount(amount)
                 .typeFee(typeFee)
                 .typeTrans(typeTrans)
-                .merchantId(merchantId)
+                .merchantId((int) merchantId)
                 .content(content)
                 .status(status)
                 .createdAt(create)
