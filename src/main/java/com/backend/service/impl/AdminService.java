@@ -34,6 +34,9 @@ public class AdminService implements IAdminService {
     @Value("${role.employer}")
     private String EMPLOYER;
 
+    @Value( "${my.bank.id}" )
+    private long myBankId;
+
     private int TRANS_SENDER = 1;
     private int TRANS_RECEIVER = 2;
 
@@ -113,47 +116,50 @@ public class AdminService implements IAdminService {
     @Override
     public List<TransMerchantResponse> controlTransaction(String logId, int merchantId, String beginTime, String endTime) {
         Map<Integer, TransMerchantResponse> transactionMerchantMap = new TreeMap<>();
-        if (merchantId == 0) {
-            //get all
+        List<TransactionDTO> transactionDTOS;
+        if (merchantId == myBankId) {
+            transactionDTOS = transactionRepository.findAllByNotMyBankAndCreatedAtBetween(merchantId, beginTime, endTime);
         }  else {
-            List<TransactionDTO> transactionDTOS = transactionRepository.findAllByMerchantIdAndCreatedAtBetween(merchantId, beginTime, endTime);
-            if (transactionDTOS.size() <= 0) {
-                logger.warn("{}| Merchant - {} not found transaction!", logId, merchantId);
-                return null;
-            }
+            transactionDTOS = transactionRepository.findAllByMerchantIdAndCreatedAtBetween(merchantId, beginTime, endTime);
+        }
+        if (transactionDTOS.size() <= 0) {
+            logger.warn("{}| Merchant - {} not found transaction!", logId, merchantId);
+            return null;
+        }
+
+        transactionDTOS.forEach(transactionDTO -> {
             TransMerchantResponse transMerchantResponse = transactionMerchantMap
-                    .getOrDefault(merchantId, TransMerchantResponse.builder().build());
+                    .getOrDefault(transactionDTO.getMerchantId(), TransMerchantResponse.builder().build());
 
-            transactionDTOS.forEach(transactionDTO -> {
-                List<TransactionMerchant> transaction = transMerchantResponse.getTransactionMerchants() == null
-                        ? new ArrayList<>()
-                        : transMerchantResponse.getTransactionMerchants();
-                AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard());
-                long cardNumber = 0L;
-                int type = TRANS_RECEIVER;
+            List<TransactionMerchant> transaction = transMerchantResponse.getTransactionMerchants() == null
+                    ? new ArrayList<>()
+                    : transMerchantResponse.getTransactionMerchants();
+            AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard());
+            long cardNumber;
+            int type = TRANS_RECEIVER;
 
-                if (accountPaymentDTO == null) {
-                    accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard());
-                    cardNumber = accountPaymentDTO.getCardNumber();
-                    type = TRANS_SENDER;
-                } else {
-                    cardNumber = accountPaymentDTO.getCardNumber();
-                }
-                transaction.add(TransactionMapper.toModelTransMerchant(transactionDTO, cardNumber, accountPaymentDTO.getCardName(), type));
+            if (accountPaymentDTO == null) {
+                accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getSenderCard());
+                cardNumber = accountPaymentDTO.getCardNumber();
+                type = TRANS_SENDER;
+            } else {
+                cardNumber = accountPaymentDTO.getCardNumber();
+            }
+            transaction.add(TransactionMapper.toModelTransMerchant(transactionDTO, cardNumber, accountPaymentDTO.getCardName(), type));
 
-                PartnerDTO partnerDTO = partnerRepository.findById(transactionDTO.getMerchantId()).get();
+            PartnerDTO partnerDTO = partnerRepository.findById(transactionDTO.getMerchantId()).get();
 
+            if (transMerchantResponse.getMerchantId() == 0) {
                 transMerchantResponse.setMerchantEmail(partnerDTO.getEmail());
                 transMerchantResponse.setMerchantId(partnerDTO.getId());
                 transMerchantResponse.setMerchantName(partnerDTO.getName());
                 transMerchantResponse.setMerchantPhone(partnerDTO.getPhoneNumber());
-                transMerchantResponse.setTransactionMerchants(transaction);
-                transMerchantResponse.setTotalAMount(transMerchantResponse.getTotalAMount() + transactionDTO.getAmount());
+            }
+            transMerchantResponse.setTransactionMerchants(transaction);
+            transMerchantResponse.setTotalAMount(transMerchantResponse.getTotalAMount() + transactionDTO.getAmount());
 
-                transactionMerchantMap.put(transactionDTO.getMerchantId(), transMerchantResponse);
-            });
-        }
-
+            transactionMerchantMap.put(transactionDTO.getMerchantId(), transMerchantResponse);
+        });
         return new ArrayList<>(transactionMerchantMap.values());
     }
 }
