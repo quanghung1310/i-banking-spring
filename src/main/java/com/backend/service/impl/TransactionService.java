@@ -3,14 +3,12 @@ package com.backend.service.impl;
 import com.backend.dto.AccountPaymentDTO;
 import com.backend.dto.TransactionDTO;
 import com.backend.mapper.TransactionMapper;
-import com.backend.mapper.UserMapper;
 import com.backend.model.Transaction;
 import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.TransactionsResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.IAccountPaymentRepository;
 import com.backend.repository.ITransactionRepository;
-import com.backend.repository.IUserRepository;
 import com.backend.service.ITransactionService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,8 +43,7 @@ public class TransactionService implements ITransactionService {
     private ITransactionRepository transactionRepository;
 
     @Autowired
-    public TransactionService(IUserRepository userRepository,
-                           IAccountPaymentRepository accountPaymentRepository,
+    public TransactionService(IAccountPaymentRepository accountPaymentRepository,
                            ITransactionRepository transactionRepository) {
         this.accountPaymentRepository = accountPaymentRepository;
         this.transactionRepository = transactionRepository;

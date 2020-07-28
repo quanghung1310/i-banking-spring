@@ -1,12 +1,21 @@
 package com.backend.service.impl;
 
 import com.backend.constants.StringConstant;
+import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.PartnerDTO;
+import com.backend.dto.TransactionDTO;
 import com.backend.dto.UserDTO;
+import com.backend.mapper.TransactionMapper;
 import com.backend.mapper.UserMapper;
+import com.backend.model.TransactionMerchant;
 import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.response.EmployeeResponse;
 import com.backend.model.response.RegisterResponse;
+import com.backend.model.response.TransMerchantResponse;
 import com.backend.process.UserProcess;
+import com.backend.repository.IAccountPaymentRepository;
+import com.backend.repository.IPartnerRepository;
+import com.backend.repository.ITransactionRepository;
 import com.backend.repository.IUserRepository;
 import com.backend.service.IAdminService;
 import com.backend.util.DataUtil;
@@ -16,9 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.sql.Timestamp;
+import java.util.*;
 
 @Service
 public class AdminService implements IAdminService {
@@ -28,10 +36,18 @@ public class AdminService implements IAdminService {
     private String EMPLOYER;
 
     private IUserRepository userRepository;
+    private ITransactionRepository transactionRepository;
+    private IAccountPaymentRepository accountPaymentRepository;
+    private IPartnerRepository partnerRepository;
 
     @Autowired
-    public AdminService(IUserRepository userRepository) {
+    public AdminService(IUserRepository userRepository,
+                        ITransactionRepository transactionRepository,
+                        IAccountPaymentRepository accountPaymentRepository, IPartnerRepository partnerRepository) {
         this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
+        this.accountPaymentRepository = accountPaymentRepository;
+        this.partnerRepository = partnerRepository;
     }
 
 
@@ -90,5 +106,42 @@ public class AdminService implements IAdminService {
     public EmployeeResponse saveEmployee(UserDTO userDTO) {
         UserDTO userDTO1 = userRepository.save(userDTO);
         return UserMapper.toModelEmployee(userDTO1);
+    }
+
+    @Override
+    public List<TransMerchantResponse> controlTransaction(String logId, int merchantId, String beginTime, String endTime) {
+        Map<Integer, TransMerchantResponse> transactionMerchantMap = new TreeMap<>();
+        if (merchantId == 0) {
+            //get all
+        }  else {
+            List<TransactionDTO> transactionDTOS = transactionRepository.findAllByMerchantIdAndCreatedAtBetween(merchantId, beginTime, endTime);
+            if (transactionDTOS.size() <= 0) {
+                logger.warn("{}| Merchant - {} not found transaction!", logId, merchantId);
+                return null;
+            }
+            TransMerchantResponse transMerchantResponse = transactionMerchantMap
+                    .getOrDefault(merchantId, TransMerchantResponse.builder().build());
+
+            transactionDTOS.forEach(transactionDTO -> {
+                List<TransactionMerchant> transaction = transMerchantResponse.getTransactionMerchants() == null
+                        ? new ArrayList<>()
+                        : transMerchantResponse.getTransactionMerchants();
+                AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO.getReceiverCard());
+                transaction.add(TransactionMapper.toModelTransMerchant(transactionDTO, accountPaymentDTO.getCardName()));
+
+                PartnerDTO partnerDTO = partnerRepository.findById(transactionDTO.getMerchantId()).get();
+
+                transMerchantResponse.setMerchantEmail(partnerDTO.getEmail());
+                transMerchantResponse.setMerchantId(partnerDTO.getId());
+                transMerchantResponse.setMerchantName(partnerDTO.getName());
+                transMerchantResponse.setMerchantPhone(partnerDTO.getPhoneNumber());
+                transMerchantResponse.setTransactionMerchants(transaction);
+                transMerchantResponse.setTotalAMount(transMerchantResponse.getTotalAMount() + transactionDTO.getAmount());
+
+                transactionMerchantMap.put(transactionDTO.getMerchantId(), transMerchantResponse);
+            });
+        }
+
+        return new ArrayList<>(transactionMerchantMap.values());
     }
 }

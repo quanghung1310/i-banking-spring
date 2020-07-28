@@ -3,6 +3,7 @@ package com.backend.mapper;
 import com.backend.constants.StringConstant;
 import com.backend.dto.TransactionDTO;
 import com.backend.model.Transaction;
+import com.backend.model.TransactionMerchant;
 import com.backend.model.response.TransactionResponse;
 import com.backend.util.DataUtil;
 
@@ -18,7 +19,7 @@ public class TransactionMapper {
                 .content(transactionDTO.getContent())
                 .createDate(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .fee(transactionDTO.getFee())
-                .merchantId(transactionDTO.getMerchantId())
+                .merchantId((long) transactionDTO.getMerchantId())
                 .receiverCard(transactionDTO.getReceiverCard())
                 .status(transactionDTO.getStatus())
                 .transId(transactionDTO.getTransId())
@@ -59,6 +60,25 @@ public class TransactionMapper {
                 .merchantId(transactionDTO.getMerchantId())
                 .createDate(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .fee(transactionDTO.getFee())
+                .build();
+    }
+
+    public static TransactionMerchant toModelTransMerchant(TransactionDTO transactionDTO, String receiverName) {
+        if (transactionDTO == null) {
+            return null;
+        }
+        return TransactionMerchant.builder()
+                .amount(transactionDTO.getAmount())
+                .createDate(DataUtil.convertTimeWithFormat(transactionDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                .merchantId(transactionDTO.getMerchantId())
+                .receiverCard(transactionDTO.getReceiverCard())
+                .receiverName(receiverName)
+                .senderCard(transactionDTO.getSenderCard())
+                .senderName(transactionDTO.getCardName())
+                .status(transactionDTO.getStatus())
+                .content(transactionDTO.getContent())
+                .fee(transactionDTO.getFee())
+                .typeFee(transactionDTO.getTypeFee())
                 .build();
     }
 }
