@@ -22,6 +22,7 @@ public class Account {
     public long reminderId;
     public String typeReminder;
     public long merchantId;
+    public String reminderName;
 
     @Override
     public String toString() {
