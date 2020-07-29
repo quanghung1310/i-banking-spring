@@ -169,9 +169,9 @@ public class TransactionService implements ITransactionService {
 
 
     @Override
-    public long insertTransaction(String logId, TransactionRequest request) {
+    public long insertTransaction(String logId, TransactionRequest request, long senderCard) {
         //Build transactionDTO
-        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
+        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, senderCard, fee);
         TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
         long transactionId = transactionDTO.getTransId();
 

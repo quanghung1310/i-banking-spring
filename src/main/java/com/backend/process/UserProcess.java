@@ -104,8 +104,8 @@ public class UserProcess {
                 .build();
     }
 
-    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, long fee) {
-        return createTrans(request.getSenderCard(),
+    public static TransactionDTO buildTransaction(Timestamp currentTime, TransactionRequest request, long senderCard, long fee) {
+        return createTrans(senderCard,
                 request.getReceiverCard(),
                 request.getAmount(),
                 request.getTypeFee(),

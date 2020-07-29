@@ -289,6 +289,8 @@ public class UserController {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
+        UserResponse fromUser = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        long senderCard = fromUser.getAccount().get(0).getCardNumber();
         try {
             if (!request.isValidData()) {
                 logger.warn("{}| Validate request transaction data: Fail!", logId);
@@ -298,7 +300,6 @@ public class UserController {
             logger.info("{}| Valid data request deposit success!", logId);
 
             if (request.getMerchantId() == myBankId) {
-                UserResponse fromUser = userService.queryAccount(logId, request.getSenderCard(), myBankId, paymentBank, true);
                 UserResponse toUser = userService.queryAccount(logId, request.getReceiverCard(), myBankId, paymentBank, true);
                 Account senderAccount = fromUser.getAccount().get(0);
                 Account receiverAccount = toUser.getAccount().get(0);
@@ -331,7 +332,7 @@ public class UserController {
                 newReceiverBalance = UserProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
 
                 //insert transaction
-                long transId = transactionService.insertTransaction(logId, request);
+                long transId = transactionService.insertTransaction(logId, request, senderCard);
                 if (transId == -1) {
                     logger.warn("{}| Create transaction: Fail!", logId);
                     response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
@@ -379,7 +380,7 @@ public class UserController {
                     String url = PartnerConfig.getUrlQueryAccount(mid);
 
                     JsonObject requestBody = new JsonObject()
-                            .put("from", String.valueOf(request.getSenderCard()))
+                            .put("from", String.valueOf(senderCard))
                             .put("description", request.getContent())
                             .put("to", String.valueOf(request.getReceiverCard()))
                             .put("amount", request.getAmount())
