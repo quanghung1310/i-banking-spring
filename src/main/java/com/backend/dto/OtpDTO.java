@@ -25,9 +25,12 @@ public class OtpDTO {
 
     private Timestamp updatedAt;
 
-//    private int action; //1: otp payment, 2: otp pay debt
+    private String action; //payment: otp payment, debt: otp pay debt
 
     private int status; //1. INIT, 2.DELETE
 
     private long userId; //người nhận được otp (người cần chuyển tiền)
+
+    @Column(length = 20)
+    private long transId;
 }

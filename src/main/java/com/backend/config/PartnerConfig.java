@@ -18,16 +18,32 @@ public class PartnerConfig {
         }
     }
 
-    public static JsonObject getMerchantConfig() {
-        return partnerConfig.getJsonObject("lang1", new JsonObject());
+    public static JsonObject getMerchantConfig(String id) {
+        return partnerConfig.getJsonObject(id, new JsonObject());
     }
-    public static String getPrivateKey() {
-        return getMerchantConfig().getString("private_key", "");
+    public static String getPrivateKey(String id) {
+        return getMerchantConfig(id).getString("private_key", "");
     }
-    public static String getPublicKey() {
-        return getMerchantConfig().getString("public_key", "");
+    public static String getPublicKey(String id) {
+        return getMerchantConfig(id).getString("public_key", "");
     }
-    public static String getSecretKey() {
-        return getMerchantConfig().getString("secret_key", "");
+    public static String getPartnerSecretKey(String id) {
+        return getMerchantConfig(id).getString("partner_secret_key", "");
     }
+    public static String getAlg(String id) {
+        return getMerchantConfig(id).getString("alg", "");
+    }
+    public static String getUrlQueryAccount(String id) {
+        return getMerchantConfig(id).getString("url_query_account", "");
+    }
+    public static String getUrlTransfer(String id) {
+        return getMerchantConfig(id).getString("url_transfer", "");
+    }
+    public static String getPartnerCode(String id) {
+        return getMerchantConfig(id).getString("partner_code", "");
+    }
+    public static String getPartnerPubKey(String id) {
+        return getMerchantConfig(id).getString("partner_public_key", "");
+    }
+
 }

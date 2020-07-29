@@ -5,6 +5,7 @@ import com.backend.dto.*;
 import com.backend.model.Account;
 import com.backend.model.Debt;
 import com.backend.model.Transaction;
+import com.backend.model.response.EmployeeResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.util.DataUtil;
@@ -29,16 +30,17 @@ public class UserMapper {
                 .build();
     }
 
-    public static Account toModelReminder(ReminderDTO reminderDTO) {
+    public static Account toModelReminder(ReminderDTO reminderDTO, String cardName) {
         if (reminderDTO == null) {
             return null;
         }
         return Account.builder()
-                .cardName(reminderDTO.getNameReminisce())
+                .cardName(cardName)
                 .cardNumber(reminderDTO.getCardNumber())
                 .typeReminder(reminderDTO.getType() == 1 ? "send" : "debt")
                 .reminderId(reminderDTO.getId())
                 .merchantId(reminderDTO.getMerchantId())
+                .reminderName(reminderDTO.getNameReminisce())
                 .build();
     }
     public static Account toModelAccount(AccountSavingDTO accountSavingDTO, AccountPaymentDTO accountPaymentDTO, int type, boolean isQueryBalance) {
@@ -113,5 +115,20 @@ public class UserMapper {
                     .updatedAt(DataUtil.convertTimeWithFormat(debtDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                     .build();
         }
+    }
+
+    public static EmployeeResponse toModelEmployee(UserDTO userDTO) {
+        EmployeeResponse employeeResponse = EmployeeResponse.builder().build();
+        if (userDTO == null) {
+            return null;
+        }
+        employeeResponse.setCreatedAt(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss));
+        employeeResponse.setEmail(userDTO.getEmail());
+        employeeResponse.setId(userDTO.getId());
+        employeeResponse.setName(userDTO.getName());
+        employeeResponse.setPhone(userDTO.getPhone());
+        employeeResponse.setRole(userDTO.getRole());
+        employeeResponse.setUserName(userDTO.getUserName());
+        return employeeResponse;
     }
 }

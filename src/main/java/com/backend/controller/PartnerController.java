@@ -1,25 +1,28 @@
 package com.backend.controller;
 
+import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.TransactionDTO;
 import com.backend.model.Account;
 import com.backend.model.Partner;
-import com.backend.model.request.QueryAccountRequest;
-import com.backend.model.request.TransactionRequest;
-import com.backend.model.request.TransferRequest;
+import com.backend.model.Transaction;
+import com.backend.model.request.bank.QueryAccountRequest;
+import com.backend.model.request.transaction.TransferRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.PartnerProcess;
 import com.backend.process.UserProcess;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IPartnerService;
+import com.backend.service.ITransactionService;
 import com.backend.service.IUserService;
-import com.backend.service.impl.PartnerService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,27 +64,27 @@ public class PartnerController {
     private IPartnerService partnerService;
     private IUserService userService;
     private IAccountPaymentService accountPaymentService;
+    private ITransactionService transactionService;
 
     @Autowired
     public PartnerController(IPartnerService partnerService,
                              IUserService userService,
-                             IAccountPaymentService accountPaymentService) {
+                             IAccountPaymentService accountPaymentService,
+                             ITransactionService transactionService) {
         this.partnerService = partnerService;
         this.userService = userService;
         this.accountPaymentService = accountPaymentService;
+        this.transactionService = transactionService;
     }
 
-
-    //todo api create merchant
-
-    @PostMapping(value = "/transfer/bank")
+    @PostMapping(value = "/transfer-bank")
     public ResponseEntity<String> transfer(@RequestBody TransferRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
         try {
             //Step 0: Validate request
-            //0.1. Base reuqest
+            //0.1. Base request
             if (!request.isValidData()) {
                 logger.warn("{}| Validate request transfer bank data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
@@ -119,13 +123,13 @@ public class PartnerController {
             logger.info("{}| Valid data partner success!", logId);
 
             //Step 2: A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn
-            if (System.currentTimeMillis() - request.getRequestTime() > session) {
-                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
-                response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
-                return new ResponseEntity<>(
-                        response.toString(),
-                        HttpStatus.BAD_REQUEST);
-            }
+//            if (System.currentTimeMillis() - request.getRequestTime() > session) {
+//                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
+//                response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
+//                return new ResponseEntity<>(
+//                        response.toString(),
+//                        HttpStatus.BAD_REQUEST);
+//            }
             logger.info("{}| Valid data session success!", logId);
 
             //Step 3: A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa
@@ -139,25 +143,25 @@ public class PartnerController {
             logger.info("{}| Valid request hash success!", logId);
 
             //Step 4: verify chữ ký bất đối xứng PGP
-//            String dataSig = new JsonObject()
-//                    .put("bankCode", request.getBankCode())
-//                    .put("cardName", request.getCardName())
-//                    .put("from", request.getFrom())
-//                    .put("isTransfer", request.getIsTransfer())
-//                    .put("partnerCode", request.getPartnerCode())
-//                    .put("requestId", request.getRequestId())
-//                    .put("requestTime", request.getRequestTime())
-//                    .put("to", request.getTo())
-//                    .put("typeFee", request.getTypeFee())
-//                    .put("value", request.getValue())
-//                    .put("hash", request.getHash())
-//                    .toString();
-//            PGPSecretKey pgpSecretKey = PartnerProcess.readSecretKey(partner.getSecretKey(),
-//                    PartnerProcess.readPublicKey(partner.getPublicKey()).getKeyID());
+            String dataSig = new JsonObject()
+                    .put("bankCode", request.getBankCode())
+                    .put("cardName", request.getCardName())
+                    .put("from", request.getFrom())
+                    .put("isTransfer", request.getIsTransfer())
+                    .put("partnerCode", request.getPartnerCode())
+                    .put("requestId", request.getRequestId())
+                    .put("requestTime", request.getRequestTime())
+                    .put("to", request.getTo())
+                    .put("typeFee", request.getTypeFee())
+                    .put("value", request.getValue())
+                    .put("hash", request.getHash())
+                    .toString();
+            PGPSecretKey pgpSecretKey = PartnerProcess.readSecretKey(partner.getSecretKey(),
+                    PartnerProcess.readPublicKey(partner.getPublicKey()).getKeyID());
 //            String genSig = PartnerProcess.signaturePgp(dataSig, pgpSecretKey, partner.getPassword().toCharArray());
             boolean isVerify = PartnerProcess.verifySignaturePgp(logId, request.getSignature().getBytes(), partner.getPublicKey());
             if (!isVerify) {
-                logger.warn("{}| Signature - {} wrong!", logId, request.getHash());
+                logger.warn("{}| Signature - {} wrong!", logId, request.getSignature());
                 response = DataUtil.buildResponse(ErrorConstant.CHECK_SIGNATURE_FAIL, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
@@ -182,21 +186,31 @@ public class PartnerController {
                             HttpStatus.BAD_REQUEST);
                 }
             }
-            newBalance = UserProcess.newBalance(request.getIsTransfer(), request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
+            newBalance = UserProcess.newBalance(false, request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
 
             //5.2: Insert transaction
-            //Build transaction request (chưa làm)
-            TransactionRequest transactionRequest = new TransactionRequest();
-
-            long transId = userService.insertTransaction(logId, transactionRequest);
-            if (transId <= 0) {
+            Timestamp currentTime = new Timestamp(request.getRequestTime());
+            TransactionDTO transactionDTO = UserProcess.createTrans(request.getFrom(),
+                    request.getTo(),
+                    request.getValue(),
+                    request.getTypeFee(),
+                    1,
+                    partner.getId(),
+                    request.getDescription(),
+                    ActionConstant.COMPLETED.name(),
+                    currentTime,
+                    currentTime,
+                    feeTransfer);
+            transactionDTO.setCardName(request.getCardName());
+            Transaction transaction = transactionService.saveTransaction(transactionDTO);
+            if (transaction == null) {
                 logger.warn("{}| Insert new transaction fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(),null);
                 return new ResponseEntity<>(
                         response.toString(),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            logger.info("{}| Insert new transaction success with transId: {}!", logId, transId);
+            logger.info("{}| Insert new transaction success with transId: {}!", logId, transaction.getTransId());
 
             //5.3: Update balance
             AccountPaymentDTO accountPaymentDTO = accountPaymentService.updateBalance(logId, accountId, newBalance);
@@ -207,9 +221,8 @@ public class PartnerController {
                         response.toString(),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             } else {
-                String dataResponse = new JsonObject().put("transId", transId).toString();
-                response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, dataResponse);
-                logger.info("{}| Response to client: {}", logId, dataResponse);
+                response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, transaction.toString());
+                logger.info("{}| Response to client: {}", logId, transaction.toString());
                 return new ResponseEntity<>(response.toString(), HttpStatus.OK);
             }
         } catch (Exception ex) {
@@ -221,7 +234,7 @@ public class PartnerController {
         }
     }
 
-    @PostMapping(value = "/account/bank")
+    @PostMapping(value = "/account-bank")
     public ResponseEntity<String> queryAccount(@RequestBody QueryAccountRequest request) {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
@@ -247,13 +260,13 @@ public class PartnerController {
             logger.info("{}| Valid data partner success!", logId);
 
             //Step 2: A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn
-            if (System.currentTimeMillis() - request.getRequestTime() > session) {
-                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
-                response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
-                return new ResponseEntity<>(
-                        response.toString(),
-                        HttpStatus.BAD_REQUEST);
-            }
+//            if (System.currentTimeMillis() - request.getRequestTime() > session) {
+//                logger.warn("{}| Request - {} out of session with - {} milliseconds!", logId, request.getRequestId(), session);
+//                response = DataUtil.buildResponse(ErrorConstant.TIME_EXPIRED, request.getRequestId(),null);
+//                return new ResponseEntity<>(
+//                        response.toString(),
+//                        HttpStatus.BAD_REQUEST);
+//            }
             logger.info("{}| Valid data session success!", logId);
 
             //Step 3: A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa
@@ -306,10 +319,89 @@ public class PartnerController {
             }
         } catch (Exception ex) {
             logger.error("{}| Request query account bank catch exception: ", logId, ex);
-            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
             return new ResponseEntity<>(
                     response.toString(),
                     HttpStatus.BAD_REQUEST);
         }
     }
+
+//    @GetMapping("/get-account-partner/{bankId}/{cardNumber}")
+//    public ResponseEntity<String> getAccountPartner(@PathVariable Integer bankId,
+//                                    @PathVariable Long cardNumber) {
+//        String logId = DataUtil.createRequestId();
+//        logger.info("{}| Request data: bankId - {}, cardNumber - {}", logId, bankId, cardNumber);
+//        BaseResponse response;
+//        try {
+//            //Step 1: Validate partner
+//            if (bankId == null || cardNumber == null) {
+//                logger.warn("{}| bank id - {} or cardNumber - {} not empty!", logId, bankId, cardNumber);
+//                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+//                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+//            }
+//            Partner partner = partnerService.findById(bankId);
+//            if (partner == null) {
+//                logger.warn("{}| Partner with bank id - {} not found!", logId, bankId);
+//                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+//                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+//            }
+//            //Step 2: Encrypt
+//            String alg = PartnerConfig.getAlg(partner.getId().toString());
+//            if (alg.equals("RSA")) {
+//                //RSA
+//                //2.1: Build json body
+//                String secretKey = PartnerConfig.getSecretKey(partner.getId().toString());
+//                String partnerPub = PartnerConfig.getPartnerPubKey(partner.getId().toString());
+//                long currentTime = System.currentTimeMillis();
+//                String partnerCode = PartnerConfig.getPartnerCode(partner.getId().toString());
+//                String url = PartnerConfig.getUrlQueryAccount(partner.getId().toString());
+//
+//                //(JSON.stringify(req.body)+ secretKey + time + partnerCode, 'base64')
+//                String dataCrypto = new JsonObject().put("stk", cardNumber.toString())
+//                        + secretKey
+//                        + System.currentTimeMillis()
+//                        + partnerCode
+//                        + "base64";
+//                String hash = DataUtil.signHmacSHA256(dataCrypto, partnerPub);
+//                if (StringUtils.isBlank(hash)) {
+//                    logger.warn("{}| Hash data fail!", logId);
+//                }
+//                JsonObject requestBody = new JsonObject()
+//                        .put("stk", cardNumber.toString());
+//
+//                RestTemplate restTemplate = new RestTemplate();
+//
+//                // HttpHeaders
+//                HttpHeaders headers = new HttpHeaders();
+//
+//                headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+//                // Request to return JSON format
+//                headers.setContentType(MediaType.APPLICATION_JSON);
+//                headers.set("x-partner-code", partnerCode);
+//                headers.set("x-timestamp", String.valueOf(currentTime));
+//                headers.set("x-data-encrypted", hash);
+//
+//                HttpEntity<JsonObject> request = new HttpEntity<>(requestBody, headers);
+//                ResponseEntity<JsonObject> resp = restTemplate.postForEntity(url, request, JsonObject.class);
+//                /// TODO: 7/26/2020
+//            } else if (alg.equals("PGP")) {
+//                //PGP
+//                //todo
+//            } else {
+//                logger.warn("{}| alg - {} of bank id - {} not existed!", logId, alg, bankId);
+//                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+//                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+//            }
+//
+//
+//            return null;
+//        } catch (Exception ex) {
+//            logger.error("{}| Request query account bank catch exception: ", logId, ex);
+//            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+//            return new ResponseEntity<>(
+//                    response.toString(),
+//                    HttpStatus.BAD_REQUEST);
+//        }
+//    }
+
 }

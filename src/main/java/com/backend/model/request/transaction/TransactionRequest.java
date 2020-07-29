@@ -1,4 +1,4 @@
-package com.backend.model.request;
+package com.backend.model.request.transaction;
 
 import com.backend.util.DataUtil;
 import lombok.Getter;
@@ -14,10 +14,9 @@ public class TransactionRequest {
     private long senderCard; //from
     private long receiverCard; //to
     private Integer typeFee; //1: người nhận trả, 2. người chuyển trả
-    private Integer typeTrans; //1: transfer, 2.debt
     private String content;
     private long amount;
-    private Long merchantId; //merchant của from
+    private Long merchantId; //merchant của to
 
     public boolean isValidData() {
         try {
@@ -28,7 +27,6 @@ public class TransactionRequest {
                     || requestTime <= 0
                     || amount <= 0
                     || typeFee <= 0
-                    || typeTrans <= 0
                     || merchantId < 0);
         }
         catch (Exception ex) {

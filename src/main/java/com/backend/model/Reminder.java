@@ -1,14 +1,8 @@
 package com.backend.model;
 
 import io.vertx.core.json.jackson.DatabindCodec;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-@Builder
-public class Account {
+public class Reminder {
     public long id;
     public long cardNumber;
     public String cardName;
@@ -22,7 +16,6 @@ public class Account {
     public long reminderId;
     public String typeReminder;
     public long merchantId;
-    public String reminderName;
 
     @Override
     public String toString() {

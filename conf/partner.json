@@ -1,10 +1,18 @@
 {
-  "lang1": {
-    "private_key": "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIxhEm3zkvaX1ZFOOZXDSgxzcjR1fmMS20ktz+9zhY0apAXWal9s94jInj9KiRSysuq7Zlv7o+5ezQcogPy/AvzjqZf4mpaA92//8Fs8mUL5vEoOOCfQAqLdcsZUTPaPbsBVmMGerF0qiqYrjq15msBKhLm2rLVoQlKR9fKEEStXAgMBAAECgYAxCmx0yuXpjcuHUqudXTcOOHqKRw2bMOg4nW+J+HKMg+UPQQOySJAFUgiulaxj9bW5eTReJ//x815vBMBjC5vQE4q2jnOSjaPcmFCBZVtCQWzKWK2vOeb5E5fUkfxZkl3i0Mad328bMkWj6SYY5DxAfiRsvgFsbVyc95nbUjMpgQJBAOpfJwOYthVDcgszuSCIzT6QBLHRz6lc8DDMg5sreAmmKK+Cz6548WyQud3IGitWr0vkEBFhzc/zw53lCE4tjxcCQQCZVWucR+UgMJ5Acg5WM19wVbNtGsUQLnKcAFNc/w9qVs6+Y7GfMPcPIh5SKKL0wavGhRRKMfnvWq/HogGzwO3BAkEAixo4fKD5iPtDx7RGLzIipvwxXRzK5JldkYkAn2sYTpnI0gqQmtv7ZlUri59FMO29EwzkIHzs+3yRYLhbypKttwJADjCiic75fFYjfxFPFFkivvGfbjxo+ktiHd/F1zhfg9bOwT3WpUXRx1u/9JiAJCh8Lh4It6kSWT1KQS5T+/+hwQJAcYHpcj5uiZukdak9IchXE22A3wiLPNNttkt0756ap/LOXeDUoRn1Tre5/wsnFDdOy9XeMHDAbZUlaWESCD1xOA==",
-    "public_key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCMYRJt85L2l9WRTjmVw0oMc3I0dX5jEttJLc/vc4WNGqQF1mpfbPeIyJ4/SokUsrLqu2Zb+6PuXs0HKID8vwL846mX+JqWgPdv//BbPJlC+bxKDjgn0AKi3XLGVEz2j27AVZjBnqxdKoqmK46teZrASoS5tqy1aEJSkfXyhBErVwIDAQAB",
-    "secret_key": "5561baf6ee334fa782ce5b764699a749",
-    "partnerCode": "lang1",
-    "phone": "01627421137",
-    "email": "tranlang.dtnt@gmail.com"
+  "3": {
+    "partner_code": "TttwVLKHvXRujyllDq",
+    "partner_public_key": "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCTrlHb3adQstaRWJlqtsrIeFo57lSpE5FemvbIiBn0gGVMl+SveVm8Zj1JnpLfJngkfnsUgyJp1fLodhgtN581o7AdYGUQlx70kWw75WhSMbDAzH5qjpFNSlNNjC8rT5XyCE/YFJ6DuEloJgXoJvRnNXPxPWj4IelLJ84ZfAWI5QIDAQAB-----END PUBLIC KEY-----",
+    "partner_secret_key": "hPZno63KBfZeIcvYLDwx",
+    "alg": "RSA",
+    "private_key": "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKOOfozoUnbzsgwu\nrRYPaivP0khENR7MuALwv9lOcHA9bPSDuN0wNCMMhxl8gkLZeULQFHIf/GRNVjWQ\nLo5rmqDna+PZCNOSSdxqyoIkHL2axxkXK+7qec0F5Vx5WCX+pKUmdx8JqrpuBnGh\nYl6lXNDgFnThMBao67XrRkCQRW7VAgMBAAECgYBgYGUd7wA469zs5MxFhYvQiUOm\nJdsPbR65TNgf2uLSoL+FTeEvJWpzhLxPPlkbvz5/KlIB9espx5CXO4DTl4Cjfy3I\nSz/kbpJ9MCwwNpGr0zCyamrjL0G3aEcRjk0MSjqQE33D9csEuk1Fm7blqaQLJ4fd\nw6JnnA0yA535tnM1gQJBAPNwdgH5hcg7+RZ13J0E5pnH2AW7PFNxwEJYaWG+Xx6i\nSfN8ngeiFuFk2puhRAOo7pDv7QeXy6Pw4j/jkgkXeSUCQQCr/uExEUtwhDRfIHk6\nPKRCct37s50cZtBpxu2e6/kTKpsQGPzk7QFvKJWLVthCGce+KrLIbLE5DVkRFpJW\nrOfxAkB0/EhZbpWxwdBT0NPxyRcgM39GUdINr45a063gwOFpEUhEcFBpDqW8LwE2\n5OqQb7Aliob3rSS5Zdr0JOJa6CLZAkBG3I75AVAcfkt5ec6YYM2oFt1AS2MKhY2O\nVwgldsE61U3nlvPyeXcizgy2yMP2j9qMjdj03Fszzz0H3k3SahBxAkEAwaUq4kyd\ndIjYnX2r5VWXttPImieYj7nkl4NJt/L9T4qCfnwiZJx3O9+N26VhcIEAbhROKuFI\n8RaJSO51o/mWhg==",
+    "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCjjn6M6FJ287IMLq0WD2orz9JI\nRDUezLgC8L/ZTnBwPWz0g7jdMDQjDIcZfIJC2XlC0BRyH/xkTVY1kC6Oa5qg52vj\n2QjTkkncasqCJBy9mscZFyvu6nnNBeVceVgl/qSlJncfCaq6bgZxoWJepVzQ4BZ0\n4TAWqOu160ZAkEVu1QIDAQAB\n-----END PUBLIC KEY-----",
+    "url_query_account": "https://api.monca.me/v1/rsa/info",
+    "url_transfer": "https://api.monca.me/v1/rsa/transfers"
+
+  },
+
+  "header": {
+    "content-type": "application/json",
+    "x-partner-code": "6ae118690c0f241b1d5a98b4449d8a67"
   }
 }

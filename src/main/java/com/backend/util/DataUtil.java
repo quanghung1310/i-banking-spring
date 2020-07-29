@@ -7,6 +7,7 @@ import com.backend.model.response.UserResponse;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +28,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import static com.backend.cryption.SHA256.HMAC_SHA256;
-
 public class DataUtil {
     private static final Logger logger = LogManager.getLogger(DataUtil.class);
+
+    public static final String HMAC_SHA256 = "HmacSHA256";
 
     public static String createRequestId() {
         return UUID.randomUUID().toString().replace("-", "");
@@ -70,6 +71,13 @@ public class DataUtil {
         BASE64Encoder base64Encoder = new BASE64Encoder();
         prkey = base64Encoder.encode(privateKey.getEncoded()).replaceAll("\\r\\n|\\r|\\n", "");
         return prkey;
+    }
+
+    public static String pgpPubKeyToString(PGPPublicKey publicKey) throws IOException {
+        String secKey = "";
+        BASE64Encoder base64Encoder = new BASE64Encoder();
+        secKey = base64Encoder.encode(publicKey.getEncoded()).replaceAll("\\r\\n|\\r|\\n", "");
+        return secKey;
     }
 
     public static String pgpSecretKeyToString(PGPSecretKey secretKey) throws IOException {

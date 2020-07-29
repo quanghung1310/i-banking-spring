@@ -30,7 +30,7 @@ public class TransactionDTO {
 
     private Integer typeTrans; //1. deposit, 2.debt
 
-    private Long merchantId;
+    private int merchantId;
 
     @Column(length = 100)
     private String content;
@@ -43,4 +43,6 @@ public class TransactionDTO {
     private Timestamp updatedAt;
 
     private long fee;
+
+    private String cardName; //card of partner
 }

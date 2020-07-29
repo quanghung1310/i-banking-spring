@@ -4,11 +4,12 @@ import com.backend.constants.StatusConstant;
 import com.backend.dto.*;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
-import com.backend.model.request.CreateDebtorRequest;
-import com.backend.model.request.RegisterRequest;
-import com.backend.model.request.TransactionRequest;
+import com.backend.model.request.debt.CreateDebtorRequest;
+import com.backend.model.request.employee.RegisterRequest;
+import com.backend.model.request.transaction.TransactionRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.Random;
 public class UserProcess {
     private static final Logger logger = LogManager.getLogger(UserProcess.class);
 
-    public static UserDTO createUser(String logId, RegisterRequest request, String userName) {
+    public static UserDTO createUser(RegisterRequest request, String userName, String role) {
         int leftLimit = 97; // letter 'a'
         int rightLimit = 122; // letter 'z'
         int targetStringLength = 15;
@@ -39,6 +40,7 @@ public class UserProcess {
                 .lastPassword(password)
                 .createdAt(new Timestamp(request.getRequestTime()))
                 .updatedAt(new Timestamp(request.getRequestTime()))
+                .role(role)
                 .build();
     }
     public static AccountPaymentDTO createAccountPayment(String logId, List<AccountPaymentDTO> accounts, long userId, long adminId, String cardName, Timestamp currentTime, long milliseconds) {
@@ -107,7 +109,7 @@ public class UserProcess {
                 request.getReceiverCard(),
                 request.getAmount(),
                 request.getTypeFee(),
-                request.getTypeTrans(),
+                1, //send/receiver
                 request.getMerchantId(),
                 request.getContent(),
                 StatusConstant.PENDING.toString(),
@@ -138,7 +140,7 @@ public class UserProcess {
                 .amount(amount)
                 .typeFee(typeFee)
                 .typeTrans(typeTrans)
-                .merchantId(merchantId)
+                .merchantId((int) merchantId)
                 .content(content)
                 .status(status)
                 .createdAt(create)

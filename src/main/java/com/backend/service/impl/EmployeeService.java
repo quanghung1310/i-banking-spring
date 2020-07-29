@@ -2,17 +2,13 @@ package com.backend.service.impl;
 
 import com.backend.constants.StringConstant;
 import com.backend.dto.AccountPaymentDTO;
-import com.backend.dto.TransactionDTO;
 import com.backend.dto.UserDTO;
-import com.backend.mapper.TransactionMapper;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
-import com.backend.model.Transaction;
-import com.backend.model.request.DepositRequest;
-import com.backend.model.request.RegisterRequest;
+import com.backend.model.request.bank.DepositRequest;
+import com.backend.model.request.employee.RegisterRequest;
 import com.backend.model.response.DepositResponse;
 import com.backend.model.response.RegisterResponse;
-import com.backend.model.response.TransactionsResponse;
 import com.backend.process.UserProcess;
 import com.backend.repository.IAccountPaymentRepository;
 import com.backend.repository.ITransactionRepository;
@@ -23,11 +19,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -48,7 +42,7 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
-    public RegisterResponse register(String logId, RegisterRequest request) {
+    public RegisterResponse register(String logId, RegisterRequest request, long employeeId, String role) {
         Timestamp currentTime = new Timestamp(request.getRequestTime());
         String userName = request.getName().toLowerCase().replaceAll("\\s+","");
         List<UserDTO> users = (List<UserDTO>) userRepository.findAll();
@@ -59,7 +53,7 @@ public class EmployeeService implements IEmployeeService {
             }
         }
         logger.warn("{}| Username - {} is not exist!", logId, userName);
-        UserDTO userDTO = userRepository.save(UserProcess.createUser(logId, request, userName));
+        UserDTO userDTO = userRepository.save(UserProcess.createUser(request, userName, role));
         Long userId = userDTO.getId();
 
         if (userId == null) {
@@ -69,7 +63,7 @@ public class EmployeeService implements IEmployeeService {
         logger.info("{}| Save user - {}: success!", logId, userId);
 
         List<AccountPaymentDTO> accounts = (List<AccountPaymentDTO>) accountPaymentRepository.findAll();
-        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.save(UserProcess.createAccountPayment(logId, accounts, userId, request.getAdminId(), request.getCardName(), currentTime, request.getRequestTime()));
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.save(UserProcess.createAccountPayment(logId, accounts, userId, employeeId, request.getCardName(), currentTime, request.getRequestTime()));
         Long accountId = accountPaymentDTO.getId();
         logger.info("{}| Save account payment - {}:{}", logId, accountId, accountId == null ? "false" : "success");
         Account account = UserMapper.toModelRegister(accountPaymentDTO);

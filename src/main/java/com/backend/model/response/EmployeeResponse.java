@@ -1,4 +1,4 @@
-package com.backend.model;
+package com.backend.model.response;
 
 import io.vertx.core.json.jackson.DatabindCodec;
 import lombok.Builder;
@@ -8,18 +8,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class Transaction {
+public class EmployeeResponse {
     private long id;
-    private long transId;
-    private long cardNumber;
-    private String cardName;
-    private Long amount;
-    private Integer typeFee;
-    private Long fee;
-    private String content;
-    private String status;
-    private int merchantId;
-    private String createDate;
+    private String email;
+    private String name;
+    private String phone;
+    private String createdAt;
+    private String role;
+    private String userName;
 
     @Override
     public String toString() {
