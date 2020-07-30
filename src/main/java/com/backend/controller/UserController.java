@@ -25,6 +25,7 @@ import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.*;
+import com.backend.service.impl.AccountPaymentService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
@@ -290,6 +291,11 @@ public class UserController {
         String logId = request.getRequestId();
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
+        UserResponse fromUser = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        AccountPaymentDTO accountSender = accountPaymentService.getAccountByUserId(fromUser.getId());
+
+        long senderCard = accountSender.getCardNumber();
+
         try {
             if (!request.isValidData()) {
                 logger.warn("{}| Validate request transaction data: Fail!", logId);
@@ -299,15 +305,13 @@ public class UserController {
             logger.info("{}| Valid data request deposit success!", logId);
 
             if (request.getMerchantId() == myBankId) {
-                UserResponse fromUser = userService.queryAccount(logId, request.getSenderCard(), myBankId, paymentBank, true);
                 UserResponse toUser = userService.queryAccount(logId, request.getReceiverCard(), myBankId, paymentBank, true);
-                Account senderAccount = fromUser.getAccount().get(0);
                 Account receiverAccount = toUser.getAccount().get(0);
                 long newSenderBalance;
                 long newReceiverBalance;
-                long senderBalance = senderAccount.balance;
+                long senderBalance = accountSender.getBalance();//senderAccount.balance;
                 long receiverBalance = receiverAccount.balance;
-                long senderId = senderAccount.id;
+                long senderId = accountSender.getId(); //senderAccount.id
                 long receiverId = receiverAccount.id;
                 long balanceTransfer = request.getAmount();
                 int senderFee = 0;
@@ -332,7 +336,7 @@ public class UserController {
                 newReceiverBalance = TransactionProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
 
                 //insert transaction
-                long transId = transactionService.insertTransaction(logId, request);
+                long transId = transactionService.insertTransaction(logId, request, senderCard);
                 if (transId == -1) {
                     logger.warn("{}| Create transaction: Fail!", logId);
                     response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
@@ -380,7 +384,7 @@ public class UserController {
                     String url = PartnerConfig.getUrlQueryAccount(mid);
 
                     JsonObject requestBody = new JsonObject()
-                            .put("from", String.valueOf(request.getSenderCard()))
+                            .put("from", String.valueOf(senderCard))
                             .put("description", request.getContent())
                             .put("to", String.valueOf(request.getReceiverCard()))
                             .put("amount", request.getAmount())

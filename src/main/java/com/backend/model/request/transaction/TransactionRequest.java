@@ -11,7 +11,6 @@ public class TransactionRequest {
     //from (merchant nào) - to (luôn luôn là LH-Bank) - value (bao nhiêu tiền) - typeTrans
     private String requestId = DataUtil.createRequestId();
     private Long requestTime = System.currentTimeMillis();
-    private long senderCard; //from
     private long receiverCard; //to
     private Integer typeFee; //1: người nhận trả, 2. người chuyển trả
     private String content;
@@ -22,7 +21,6 @@ public class TransactionRequest {
         try {
             return !(StringUtils.isBlank(this.requestId)
                     || StringUtils.isBlank(this.content)
-                    || senderCard <= 0
                     || receiverCard <= 0
                     || requestTime <= 0
                     || amount <= 0
