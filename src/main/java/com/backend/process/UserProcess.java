@@ -1,16 +1,15 @@
 package com.backend.process;
 
-import com.backend.constants.ActionConstant;
-import com.backend.constants.StatusConstant;
-import com.backend.dto.*;
+import com.backend.dto.AccountPaymentDTO;
+import com.backend.dto.AccountSavingDTO;
+import com.backend.dto.DebtDTO;
+import com.backend.dto.UserDTO;
 import com.backend.mapper.UserMapper;
 import com.backend.model.Account;
 import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.employee.RegisterRequest;
-import com.backend.model.request.transaction.TransactionRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -20,17 +19,8 @@ import java.util.Random;
 public class UserProcess {
     private static final Logger logger = LogManager.getLogger(UserProcess.class);
 
-    public static UserDTO createUser(RegisterRequest request, String userName, String role) {
-        int leftLimit = 97; // letter 'a'
-        int rightLimit = 122; // letter 'z'
-        int targetStringLength = 15;
-        Random random = new Random();
-
+    public static UserDTO createUser(RegisterRequest request, String userName, String role, String password) {
         String name = request.getName();
-        String password = random.ints(leftLimit, rightLimit + 1)
-                .limit(targetStringLength)
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString();
 
         return UserDTO.builder()
                 .name(name)

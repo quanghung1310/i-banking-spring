@@ -11,6 +11,7 @@ import com.backend.dto.TransactionDTO;
 import com.backend.model.Account;
 import com.backend.model.Partner;
 import com.backend.model.Transaction;
+import com.backend.model.request.PasswordRequest;
 import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.debt.DeleteDebtRequest;
 import com.backend.model.request.debt.PayDebtRequest;
@@ -22,10 +23,8 @@ import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.TransactionProcess;
-import com.backend.process.UserProcess;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.*;
-import com.backend.service.impl.AccountPaymentService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.json.JsonObject;
@@ -689,5 +688,51 @@ public class UserController {
     @PostMapping("/create-account-saving")
     public ResponseEntity<String> createAccountSaving(@RequestBody RegisterRequest request) {
         return  null;
+    }
+
+    @PostMapping(value = "/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody PasswordRequest request) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request validate otp data: {}", logId, request);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request pay debt data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            String newPass = request.getPassword();
+            if (newPass.length() < 6 || newPass.length() > 20) {
+                logger.warn("{}| Length new password need: [6 -> 20] character!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_PASSWORD, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            String userName = ((UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+
+            String password = userService.updatePassword(logId, newPass,userName);
+
+            if (StringUtils.isBlank(password)) {
+                logger.warn("{}| Update password - {}: fail!", logId, newPass);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            String dataResponse = new JsonObject()
+                    .put("userName", userName)
+                    .put("newPassword", password).toString();
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, dataResponse);
+            logger.info("{}| Response to client: {}", logId, dataResponse);
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -53,7 +54,10 @@ public class EmployeeService implements IEmployeeService {
             }
         }
         logger.warn("{}| Username - {} is not exist!", logId, userName);
-        UserDTO userDTO = userRepository.save(UserProcess.createUser(request, userName, role));
+
+        String password = DataUtil.generatePass();
+        logger.info("{}| generate password for username - {}: {}", logId, userName, password);
+        UserDTO userDTO = userRepository.save(UserProcess.createUser(request, userName, role, BCrypt.hashpw(password, BCrypt.gensalt(password.length()))));
         Long userId = userDTO.getId();
 
         if (userId == null) {
@@ -70,7 +74,7 @@ public class EmployeeService implements IEmployeeService {
 
         return RegisterResponse.builder()
                 .userName(userDTO.getUserName())
-                .password(userDTO.getPassword())
+                .password(password)
                 .createDate(DataUtil.convertTimeWithFormat(userDTO.getCreatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
                 .account(account)
                 .build();

@@ -29,6 +29,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -160,7 +161,7 @@ public class UserService implements IUserService {
 
         ReminderDTO reminderDTO = reminderRepository.save(reminder);
 
-        if (reminderDTO == null) {
+        if (reminderDTO.getId() <= 0) {
             logger.warn("{}| Save card number - {} fail!", logId, cardNumber);
             return null;
         } else {
@@ -469,5 +470,15 @@ public class UserService implements IUserService {
                 + partnerCode;
         String encrypt = RSAUtils.encrypt(dataCrypto, PartnerConfig.getPublicKey(mid));
         String decrypt = RSAUtils.decrypt(encrypt, PartnerConfig.getPrivateKey(mid));
+    }
+
+    @Override
+    public String updatePassword(String logId, String newPass, String userName) {
+        UserDTO userDTO = userRepository.findFirstByUserName(userName);
+        userDTO.setPassword(BCrypt.hashpw(newPass, BCrypt.gensalt()));
+        userDTO.setLastPassword(userDTO.getPassword());
+        userDTO.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        UserDTO user = userRepository.save(userDTO);
+        return user.getPassword();
     }
 }

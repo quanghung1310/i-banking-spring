@@ -6,7 +6,6 @@ import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.debt.DeleteDebtRequest;
 import com.backend.model.request.debt.PayDebtRequest;
 import com.backend.model.request.reminder.CreateReminderRequest;
-import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
@@ -46,4 +45,6 @@ public interface IUserService {
     ReminderDTO saveReminder(ReminderDTO reminderDTO);
 
     TransactionResponse payDebt(String logId, PayDebtRequest request, long userId);
+
+    String updatePassword(String logId, String newPass, String userName);
 }
