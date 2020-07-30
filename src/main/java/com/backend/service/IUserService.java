@@ -47,4 +47,6 @@ public interface IUserService {
     TransactionResponse payDebt(String logId, PayDebtRequest request, long userId);
 
     String updatePassword(String logId, String newPass, String userName);
+
+    String forgotPassword(String logId, String userName);
 }

@@ -18,6 +18,7 @@ import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
+import com.backend.util.DataUtil;
 import com.backend.util.RSAUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
@@ -480,5 +481,22 @@ public class UserService implements IUserService {
         userDTO.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         UserDTO user = userRepository.save(userDTO);
         return user.getPassword();
+    }
+
+    @Override
+    public String forgotPassword(String logId, String userName) {
+        UserDTO userDTO = userRepository.findFirstByUserName(userName);
+        String password = DataUtil.generatePass();
+        String hashPass = BCrypt.hashpw(password, BCrypt.gensalt());
+
+        userDTO.setPassword(hashPass);
+        userDTO.setLastPassword(userDTO.getPassword());
+        userDTO.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        UserDTO user = userRepository.save(userDTO);
+
+        return new JsonObject()
+                .put("password", password)
+                .put("hashPassword", hashPass)
+                .toString();
     }
 }

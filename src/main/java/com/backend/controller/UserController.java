@@ -735,4 +735,47 @@ public class UserController {
                     HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping(value = {"/forgot-password", "/forgot-password/{email"})
+    public ResponseEntity<String> forgotPassword(@PathVariable(name = "email", required = false) String email) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: email - {}", logId, email);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        BaseResponse response;
+        try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            String userName = ((UserDetails)principal).getUsername();
+            UserResponse user = getUser(logId, principal);
+            String userEmail = user.getEmail();
+
+            if (StringUtils.isBlank(user.getEmail())) {
+                logger.warn("{}| Email of user name - {}: not found!", logId, userName);
+                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            JsonObject result = new JsonObject(userService.forgotPassword(logId, userName));
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            if (StringUtils.isNotBlank(email)) {
+                userEmail = email;
+            }
+            msg.setTo(userEmail);
+            msg.setSubject("Your new password to view the message");
+            msg.setText("Here is your new password \n" + result.getString("password", ""));
+
+            javaMailSender.send(msg);
+
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
 }
