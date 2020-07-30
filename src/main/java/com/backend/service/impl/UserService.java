@@ -14,6 +14,7 @@ import com.backend.model.request.reminder.CreateReminderRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
+import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
@@ -432,8 +433,8 @@ public class UserService implements IUserService {
         debtRepository.save(debtDTO);
 
         //Step 8: insert transaction
-        TransactionDTO transactionDTO = UserProcess.createTrans
-                (accountFrom.getCardNumber(),
+        TransactionDTO transactionDTO = TransactionProcess.createTrans(
+                accountFrom.getCardNumber(),
                 accountTo.getCardNumber(),
                 amountPay,
                 request.getTypeFee(),

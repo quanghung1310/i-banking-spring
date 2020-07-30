@@ -12,6 +12,7 @@ import com.backend.model.request.transaction.TransferRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.PartnerProcess;
+import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IPartnerService;
@@ -186,11 +187,11 @@ public class PartnerController {
                             HttpStatus.BAD_REQUEST);
                 }
             }
-            newBalance = UserProcess.newBalance(false, request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
+            newBalance = TransactionProcess.newBalance(false, request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
 
             //5.2: Insert transaction
             Timestamp currentTime = new Timestamp(request.getRequestTime());
-            TransactionDTO transactionDTO = UserProcess.createTrans(request.getFrom(),
+            TransactionDTO transactionDTO = TransactionProcess.createTrans(request.getFrom(),
                     request.getTo(),
                     request.getValue(),
                     request.getTypeFee(),

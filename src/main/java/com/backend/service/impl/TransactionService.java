@@ -6,6 +6,7 @@ import com.backend.mapper.TransactionMapper;
 import com.backend.model.Transaction;
 import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.TransactionsResponse;
+import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.IAccountPaymentRepository;
 import com.backend.repository.ITransactionRepository;
@@ -171,7 +172,7 @@ public class TransactionService implements ITransactionService {
     @Override
     public long insertTransaction(String logId, TransactionRequest request) {
         //Build transactionDTO
-        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
+        TransactionDTO firstTrans = TransactionProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
         TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
         long transactionId = transactionDTO.getTransId();
 
@@ -192,8 +193,8 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public Transaction getByTransIdAndType(long transId, int type) {
-        TransactionDTO transactionDTO = transactionRepository.findByTransIdAndTypeTrans(transId, type);
+    public Transaction getByTransIdAndType(long transId, int type, String status) {
+        TransactionDTO transactionDTO = transactionRepository.findByTransIdAndTypeTransAndStatus(transId, type, status);
         long cardNumber = transactionDTO.getReceiverCard();
         String cardName = transactionDTO.getCardName();
         if (transactionDTO.getMerchantId() == myBankId) {
@@ -201,5 +202,11 @@ public class TransactionService implements ITransactionService {
             cardName = accountPaymentDTO.getCardName();
         }
         return TransactionMapper.toModelTransaction(transactionDTO, cardNumber, cardName);
+    }
+
+    @Override
+    public TransactionDTO getByTransIdAndTypeAndAction(long transId, int type, String status) {
+        return transactionRepository.findByTransIdAndTypeTransAndStatus(transId, type, status);
+
     }
 }

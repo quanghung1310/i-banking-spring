@@ -21,6 +21,7 @@ import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
+import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.*;
@@ -320,7 +321,7 @@ public class UserController {
                     receiverFee = 2;
                 }
 
-                newSenderBalance = UserProcess.newBalance(true, senderFee, feeTransfer, balanceTransfer, senderBalance);
+                newSenderBalance = TransactionProcess.newBalance(true, senderFee, feeTransfer, balanceTransfer, senderBalance);
                 if (newSenderBalance < 0) {
                     logger.warn("{}| Current balance account - {} can't transfer!", logId, senderId);
                     response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), null);
@@ -328,7 +329,7 @@ public class UserController {
                             response.toString(),
                             HttpStatus.BAD_REQUEST);
                 }
-                newReceiverBalance = UserProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
+                newReceiverBalance = TransactionProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
 
                 //insert transaction
                 long transId = transactionService.insertTransaction(logId, request);
@@ -584,8 +585,7 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2);
-
+            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2, ActionConstant.INIT.name());
             if (transactionDTO == null) {
                 logger.warn("{}| Transaction - {} not existed!", logId, transId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
@@ -650,7 +650,7 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2);
+            TransactionDTO transactionDTO = transactionService.getByTransIdAndTypeAndAction(transId, action.equals(otpPayment) ? 1 : 2, ActionConstant.INIT.name());
             if (transactionDTO == null) {
                 logger.warn("{}| Transaction - {} not existed!", logId, transId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
@@ -665,6 +665,10 @@ public class UserController {
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, result.toString());
                 return new ResponseEntity<>(response.toString(), HttpStatus.OK);
             }
+
+            //Update transaction success
+            transactionDTO.setStatus(ActionConstant.COMPLETED.name());
+            transactionService.saveTransaction(transactionDTO);
 
             response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
             logger.info("{}| Response to client: {}", logId, response.toString());
