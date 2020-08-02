@@ -11,6 +11,7 @@ import com.backend.dto.TransactionDTO;
 import com.backend.model.Account;
 import com.backend.model.Partner;
 import com.backend.model.Transaction;
+import com.backend.model.request.PasswordRequest;
 import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.debt.DeleteDebtRequest;
 import com.backend.model.request.debt.PayDebtRequest;
@@ -21,7 +22,7 @@ import com.backend.model.response.BaseResponse;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
-import com.backend.process.UserProcess;
+import com.backend.process.TransactionProcess;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.*;
 import com.backend.util.DataUtil;
@@ -290,7 +291,10 @@ public class UserController {
         logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
         BaseResponse response;
         UserResponse fromUser = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        long senderCard = fromUser.getAccount().get(0).getCardNumber();
+        AccountPaymentDTO accountSender = accountPaymentService.getAccountByUserId(fromUser.getId());
+
+        long senderCard = accountSender.getCardNumber();
+
         try {
             if (!request.isValidData()) {
                 logger.warn("{}| Validate request transaction data: Fail!", logId);
@@ -301,13 +305,12 @@ public class UserController {
 
             if (request.getMerchantId() == myBankId) {
                 UserResponse toUser = userService.queryAccount(logId, request.getReceiverCard(), myBankId, paymentBank, true);
-                Account senderAccount = fromUser.getAccount().get(0);
                 Account receiverAccount = toUser.getAccount().get(0);
                 long newSenderBalance;
                 long newReceiverBalance;
-                long senderBalance = senderAccount.balance;
+                long senderBalance = accountSender.getBalance();//senderAccount.balance;
                 long receiverBalance = receiverAccount.balance;
-                long senderId = senderAccount.id;
+                long senderId = accountSender.getId(); //senderAccount.id
                 long receiverId = receiverAccount.id;
                 long balanceTransfer = request.getAmount();
                 int senderFee = 0;
@@ -321,7 +324,7 @@ public class UserController {
                     receiverFee = 2;
                 }
 
-                newSenderBalance = UserProcess.newBalance(true, senderFee, feeTransfer, balanceTransfer, senderBalance);
+                newSenderBalance = TransactionProcess.newBalance(true, senderFee, feeTransfer, balanceTransfer, senderBalance);
                 if (newSenderBalance < 0) {
                     logger.warn("{}| Current balance account - {} can't transfer!", logId, senderId);
                     response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), null);
@@ -329,7 +332,7 @@ public class UserController {
                             response.toString(),
                             HttpStatus.BAD_REQUEST);
                 }
-                newReceiverBalance = UserProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
+                newReceiverBalance = TransactionProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
 
                 //insert transaction
                 long transId = transactionService.insertTransaction(logId, request, senderCard);
@@ -585,8 +588,7 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2);
-
+            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2, ActionConstant.INIT.name());
             if (transactionDTO == null) {
                 logger.warn("{}| Transaction - {} not existed!", logId, transId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
@@ -651,7 +653,7 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2);
+            TransactionDTO transactionDTO = transactionService.getByTransIdAndTypeAndAction(transId, action.equals(otpPayment) ? 1 : 2, ActionConstant.INIT.name());
             if (transactionDTO == null) {
                 logger.warn("{}| Transaction - {} not existed!", logId, transId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
@@ -666,6 +668,10 @@ public class UserController {
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, result.toString());
                 return new ResponseEntity<>(response.toString(), HttpStatus.OK);
             }
+
+            //Update transaction success
+            transactionDTO.setStatus(ActionConstant.COMPLETED.name());
+            transactionService.saveTransaction(transactionDTO);
 
             response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
             logger.info("{}| Response to client: {}", logId, response.toString());
@@ -682,5 +688,94 @@ public class UserController {
     @PostMapping("/create-account-saving")
     public ResponseEntity<String> createAccountSaving(@RequestBody RegisterRequest request) {
         return  null;
+    }
+
+    @PostMapping(value = "/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody PasswordRequest request) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request validate otp data: {}", logId, request);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request pay debt data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            String newPass = request.getPassword();
+            if (newPass.length() < 6 || newPass.length() > 20) {
+                logger.warn("{}| Length new password need: [6 -> 20] character!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_PASSWORD, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            String userName = ((UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+
+            String password = userService.updatePassword(logId, newPass,userName);
+
+            if (StringUtils.isBlank(password)) {
+                logger.warn("{}| Update password - {}: fail!", logId, newPass);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            String dataResponse = new JsonObject()
+                    .put("userName", userName)
+                    .put("newPassword", password).toString();
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, dataResponse);
+            logger.info("{}| Response to client: {}", logId, dataResponse);
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping(value = {"/forgot-password", "/forgot-password/{email"})
+    public ResponseEntity<String> forgotPassword(@PathVariable(name = "email", required = false) String email) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: email - {}", logId, email);
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        BaseResponse response;
+        try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            String userName = ((UserDetails)principal).getUsername();
+            UserResponse user = getUser(logId, principal);
+            String userEmail = user.getEmail();
+
+            if (StringUtils.isBlank(user.getEmail())) {
+                logger.warn("{}| Email of user name - {}: not found!", logId, userName);
+                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            JsonObject result = new JsonObject(userService.forgotPassword(logId, userName));
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            if (StringUtils.isNotBlank(email)) {
+                userEmail = email;
+            }
+            msg.setTo(userEmail);
+            msg.setSubject("Your new password to view the message");
+            msg.setText("Here is your new password \n" + result.getString("password", ""));
+
+            javaMailSender.send(msg);
+
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("{}| Request pay debt catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 }

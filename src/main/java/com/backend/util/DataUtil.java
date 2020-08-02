@@ -23,10 +23,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Formatter;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 public class DataUtil {
     private static final Logger logger = LogManager.getLogger(DataUtil.class);
@@ -168,5 +165,15 @@ public class DataUtil {
         return new ResponseEntity<>(response.toString(), HttpStatus.OK);
     }
 
+    public static String generatePass() {
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 15;
+        Random random = new Random();
 
+        return random.ints(leftLimit, rightLimit + 1)
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+    }
 }

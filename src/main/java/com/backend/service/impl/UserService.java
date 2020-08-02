@@ -14,9 +14,11 @@ import com.backend.model.request.reminder.CreateReminderRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
+import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
+import com.backend.util.DataUtil;
 import com.backend.util.RSAUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +30,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -159,7 +162,7 @@ public class UserService implements IUserService {
 
         ReminderDTO reminderDTO = reminderRepository.save(reminder);
 
-        if (reminderDTO == null) {
+        if (reminderDTO.getId() <= 0) {
             logger.warn("{}| Save card number - {} fail!", logId, cardNumber);
             return null;
         } else {
@@ -432,8 +435,8 @@ public class UserService implements IUserService {
         debtRepository.save(debtDTO);
 
         //Step 8: insert transaction
-        TransactionDTO transactionDTO = UserProcess.createTrans
-                (accountFrom.getCardNumber(),
+        TransactionDTO transactionDTO = TransactionProcess.createTrans(
+                accountFrom.getCardNumber(),
                 accountTo.getCardNumber(),
                 amountPay,
                 request.getTypeFee(),
@@ -468,5 +471,32 @@ public class UserService implements IUserService {
                 + partnerCode;
         String encrypt = RSAUtils.encrypt(dataCrypto, PartnerConfig.getPublicKey(mid));
         String decrypt = RSAUtils.decrypt(encrypt, PartnerConfig.getPrivateKey(mid));
+    }
+
+    @Override
+    public String updatePassword(String logId, String newPass, String userName) {
+        UserDTO userDTO = userRepository.findFirstByUserName(userName);
+        userDTO.setPassword(BCrypt.hashpw(newPass, BCrypt.gensalt()));
+        userDTO.setLastPassword(userDTO.getPassword());
+        userDTO.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        UserDTO user = userRepository.save(userDTO);
+        return user.getPassword();
+    }
+
+    @Override
+    public String forgotPassword(String logId, String userName) {
+        UserDTO userDTO = userRepository.findFirstByUserName(userName);
+        String password = DataUtil.generatePass();
+        String hashPass = BCrypt.hashpw(password, BCrypt.gensalt());
+
+        userDTO.setPassword(hashPass);
+        userDTO.setLastPassword(userDTO.getPassword());
+        userDTO.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        UserDTO user = userRepository.save(userDTO);
+
+        return new JsonObject()
+                .put("password", password)
+                .put("hashPassword", hashPass)
+                .toString();
     }
 }

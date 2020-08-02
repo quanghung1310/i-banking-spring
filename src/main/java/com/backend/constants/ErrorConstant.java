@@ -16,6 +16,7 @@ public class ErrorConstant {
     public static final int BAD_REQUEST = -1;
     public static final int NOT_EXISTED = 1;
     public static final int CANT_MINE = 11;
+    public static final int BAD_PASSWORD = 12;
 
     private static final HashMap<Integer, String> errorMap = new HashMap<>();
 
@@ -32,6 +33,7 @@ public class ErrorConstant {
         errorMap.put(TIME_EXPIRED, "Yêu cầu hết thời hạn");
         errorMap.put(HASH_NOT_VALID, "Mã hóa thất bại. Vui lòng kiểm tra lại");
         errorMap.put(NOT_EXISTED, "Không tìm thấy dữ liệu. Vui lòng thử lại");
+        errorMap.put(BAD_PASSWORD, "Vui lòng tạo mật khẩu dài từ 6 đến 20 ký tự");
     }
 
     public static String getMessage(int errorCode) {

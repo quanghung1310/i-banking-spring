@@ -29,5 +29,5 @@ public interface ITransactionRepository extends CrudRepository<TransactionDTO, L
                                                                 @Param("beginTime") String beginTime,
                                                                 @Param("endTime") String endTime);
 
-    TransactionDTO findByTransIdAndTypeTrans(long transId, int typeTrans);
+    TransactionDTO findByTransIdAndTypeTransAndStatus(long transId, int typeTrans, String status);
 }
