@@ -294,7 +294,6 @@ public class UserController {
         AccountPaymentDTO accountSender = accountPaymentService.getAccountByUserId(fromUser.getId());
 
         long senderCard = accountSender.getCardNumber();
-
         try {
             if (!request.isValidData()) {
                 logger.warn("{}| Validate request transaction data: Fail!", logId);
@@ -304,25 +303,10 @@ public class UserController {
             logger.info("{}| Valid data request deposit success!", logId);
 
             if (request.getMerchantId() == myBankId) {
-                UserResponse toUser = userService.queryAccount(logId, request.getReceiverCard(), myBankId, paymentBank, true);
-                Account receiverAccount = toUser.getAccount().get(0);
                 long newSenderBalance;
-                long newReceiverBalance;
                 long senderBalance = accountSender.getBalance();//senderAccount.balance;
-                long receiverBalance = receiverAccount.balance;
                 long senderId = accountSender.getId(); //senderAccount.id
-                long receiverId = receiverAccount.id;
                 long amountTransfer = request.getAmount();
-                int senderFee = 0;
-                int receiverFee = 0;
-
-                if (request.getTypeFee() == 1) {
-                    senderFee = 2;
-                }
-
-                if (request.getTypeFee() == 2) {
-                    receiverFee = 2;
-                }
 
                 newSenderBalance = TransactionProcess.newBalance(true, request.getTypeFee() == 1, feeTransfer, amountTransfer, senderBalance);
                 if (newSenderBalance < 0) {
@@ -332,7 +316,6 @@ public class UserController {
                             response.toString(),
                             HttpStatus.BAD_REQUEST);
                 }
-                newReceiverBalance = TransactionProcess.newBalance(false, request.getTypeFee() == 2, feeTransfer, amountTransfer, receiverBalance);
 
                 //insert transaction
                 long transId = transactionService.insertTransaction(logId, request, senderCard);
@@ -342,22 +325,10 @@ public class UserController {
                     return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
                 }
                 logger.info("{}| Create transaction success with transId: {}!", logId, transId);
-
-                //update payment
-//                AccountPaymentDTO senderAccountPaymentDTO = accountPaymentService.updateBalance(logId, senderId, newSenderBalance);
-//                AccountPaymentDTO receiverAccountPaymentDTO = accountPaymentService.updateBalance(logId, receiverId, newReceiverBalance);
-//                if (senderAccountPaymentDTO == null || receiverAccountPaymentDTO == null) {
-//                    logger.warn("{}| Update new balance: fail!", logId);
-//                    response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), null);
-//                    return new ResponseEntity<>(
-//                            response.toString(),
-//                            HttpStatus.INTERNAL_SERVER_ERROR);
-//                } else {
                     String dataResponse = new JsonObject().put("transId", transId).toString();
                     response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, dataResponse);
                     logger.info("{}| Response to client: {}", logId, dataResponse);
                     return new ResponseEntity<>(response.toString(), HttpStatus.OK);
-//                }
             } else {
                 //Lien ngan hang
                 int merchantId = Math.toIntExact(request.getMerchantId());
@@ -752,7 +723,7 @@ public class UserController {
 
             String userName = ((UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
 
-            String password = userService.updatePassword(logId, newPass,userName);
+            String password = userService.updatePassword(logId, newPass, userName);
 
             if (StringUtils.isBlank(password)) {
                 logger.warn("{}| Update password - {}: fail!", logId, newPass);
