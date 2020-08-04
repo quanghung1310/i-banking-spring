@@ -28,10 +28,10 @@ public class UserDTO {
     @Column(length = 100)
     private String userName;
 
-    @Column(length = 15)
+    @Column(length = 200)
     private String password;
 
-    @Column(length = 15)
+    @Column(length = 200)
     private String lastPassword;
 
     private Timestamp createdAt;
