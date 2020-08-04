@@ -312,7 +312,7 @@ public class UserController {
                 long receiverBalance = receiverAccount.balance;
                 long senderId = accountSender.getId(); //senderAccount.id
                 long receiverId = receiverAccount.id;
-                long balanceTransfer = request.getAmount();
+                long amountTransfer = request.getAmount();
                 int senderFee = 0;
                 int receiverFee = 0;
 
@@ -324,7 +324,7 @@ public class UserController {
                     receiverFee = 2;
                 }
 
-                newSenderBalance = TransactionProcess.newBalance(true, senderFee, feeTransfer, balanceTransfer, senderBalance);
+                newSenderBalance = TransactionProcess.newBalance(true, request.getTypeFee() == 1, feeTransfer, amountTransfer, senderBalance);
                 if (newSenderBalance < 0) {
                     logger.warn("{}| Current balance account - {} can't transfer!", logId, senderId);
                     response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, request.getRequestId(), null);
@@ -332,7 +332,7 @@ public class UserController {
                             response.toString(),
                             HttpStatus.BAD_REQUEST);
                 }
-                newReceiverBalance = TransactionProcess.newBalance(false, receiverFee, feeTransfer, balanceTransfer, receiverBalance);
+                newReceiverBalance = TransactionProcess.newBalance(false, request.getTypeFee() == 2, feeTransfer, amountTransfer, receiverBalance);
 
                 //insert transaction
                 long transId = transactionService.insertTransaction(logId, request, senderCard);
@@ -344,20 +344,20 @@ public class UserController {
                 logger.info("{}| Create transaction success with transId: {}!", logId, transId);
 
                 //update payment
-                AccountPaymentDTO senderAccountPaymentDTO = accountPaymentService.updateBalance(logId, senderId, newSenderBalance);
-                AccountPaymentDTO receiverAccountPaymentDTO = accountPaymentService.updateBalance(logId, receiverId, newReceiverBalance);
-                if (senderAccountPaymentDTO == null || receiverAccountPaymentDTO == null) {
-                    logger.warn("{}| Update new balance: fail!", logId);
-                    response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), null);
-                    return new ResponseEntity<>(
-                            response.toString(),
-                            HttpStatus.INTERNAL_SERVER_ERROR);
-                } else {
+//                AccountPaymentDTO senderAccountPaymentDTO = accountPaymentService.updateBalance(logId, senderId, newSenderBalance);
+//                AccountPaymentDTO receiverAccountPaymentDTO = accountPaymentService.updateBalance(logId, receiverId, newReceiverBalance);
+//                if (senderAccountPaymentDTO == null || receiverAccountPaymentDTO == null) {
+//                    logger.warn("{}| Update new balance: fail!", logId);
+//                    response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(), null);
+//                    return new ResponseEntity<>(
+//                            response.toString(),
+//                            HttpStatus.INTERNAL_SERVER_ERROR);
+//                } else {
                     String dataResponse = new JsonObject().put("transId", transId).toString();
                     response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, dataResponse);
                     logger.info("{}| Response to client: {}", logId, dataResponse);
                     return new ResponseEntity<>(response.toString(), HttpStatus.OK);
-                }
+//                }
             } else {
                 //Lien ngan hang
                 int merchantId = Math.toIntExact(request.getMerchantId());
@@ -654,12 +654,13 @@ public class UserController {
             }
 
             TransactionDTO transactionDTO = transactionService.getByTransIdAndTypeAndAction(transId, action.equals(otpPayment) ? 1 : 2, ActionConstant.INIT.name());
-            if (transactionDTO == null) {
+            if (transactionDTO.getId() <= 0) {
                 logger.warn("{}| Transaction - {} not existed!", logId, transId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
+            //Step 1: validate otp
             UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
             boolean validateOtp = otpService.validateOtp(logId, user.getId(), otp, action, session, currentTime, transId);
             JsonObject result = new JsonObject().put("result", validateOtp);
@@ -669,7 +670,46 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.OK);
             }
 
-            //Update transaction success
+            //Step 2: Update balance
+            long amountTransfer = transactionDTO.getAmount();
+            AccountPaymentDTO accountSender = accountPaymentService.getAccountByUserId(user.getId());
+            AccountPaymentDTO accountReceiver = new AccountPaymentDTO();
+            long receiverBalance = 0;
+
+            if (transactionDTO.getMerchantId() == myBankId) { //Cung ngan hang -> cong tien cho receiver
+                accountReceiver = accountPaymentService.findByCardNumber(transactionDTO.getReceiverCard());
+                receiverBalance = accountReceiver.getBalance();
+            } else { //khac ngan hang -> goi api cho partner
+
+            }
+
+            //2.1 Update sender
+            long newSenderBalance = TransactionProcess.newBalance(true, transactionDTO.getTypeFee() == 1, feeTransfer, amountTransfer, accountSender.getBalance());
+
+            if (newSenderBalance < 0) {
+                logger.warn("{}| Current balance account - {} can't transfer!", logId, accountSender.getId());
+                response = DataUtil.buildResponse(ErrorConstant.BAD_REQUEST, logId, null);
+                return new ResponseEntity<>(
+                        response.toString(),
+                        HttpStatus.BAD_REQUEST);
+            }
+            AccountPaymentDTO senderAccountPaymentDTO = accountPaymentService.updateBalance(logId, accountSender.getId(), newSenderBalance);
+
+            //2.2 Update receiver
+            long newReceiverBalance = TransactionProcess.newBalance(false, transactionDTO.getTypeFee() == 2, feeTransfer, amountTransfer, receiverBalance);
+
+            //update payment
+            AccountPaymentDTO receiverAccountPaymentDTO = accountPaymentService.updateBalance(logId, accountReceiver.getId(), newReceiverBalance);
+
+            if (senderAccountPaymentDTO == null || receiverAccountPaymentDTO == null) {
+                logger.warn("{}| Update new balance: fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
+                return new ResponseEntity<>(
+                        response.toString(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            //Steo 3: Update transaction success
             transactionDTO.setStatus(ActionConstant.COMPLETED.name());
             transactionService.saveTransaction(transactionDTO);
 

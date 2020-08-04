@@ -24,14 +24,14 @@ public class TransactionProcess {
                 fee);
     }
 
-    public static long newBalance(boolean isTransfer, int typeFee, long fee, long amount, long currentBalance) {
-        long balance = 0L;
-        if(isTransfer) { //chuyển tiền
+    public static long newBalance(boolean isTransfer, boolean isPayFee, long fee, long amount, long currentBalance) {
+        long balance;
+        if (isTransfer) { //chuyển tiền
             balance = currentBalance - amount;
         } else { //nhận tiền
             balance = currentBalance + amount;
         }
-        if (typeFee == 2) {
+        if (isPayFee) { //true: tự trả fee
             balance -= fee;
         }
         return balance;

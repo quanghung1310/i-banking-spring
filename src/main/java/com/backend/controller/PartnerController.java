@@ -187,7 +187,7 @@ public class PartnerController {
                             HttpStatus.BAD_REQUEST);
                 }
             }
-            newBalance = TransactionProcess.newBalance(false, request.getTypeFee(), feeTransfer, balanceTransfer, currentBalance);
+            newBalance = TransactionProcess.newBalance(false, request.getTypeFee() != 1, feeTransfer, balanceTransfer, currentBalance);
 
             //5.2: Insert transaction
             Timestamp currentTime = new Timestamp(request.getRequestTime());

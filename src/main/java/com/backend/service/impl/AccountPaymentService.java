@@ -33,4 +33,9 @@ public class AccountPaymentService implements IAccountPaymentService {
     public AccountPaymentDTO getAccountByUserId(long userId) {
         return accountPaymentRepository.findFirstByUserId(userId);
     }
+
+    @Override
+    public AccountPaymentDTO findByCardNumber(long cardNumber) {
+        return accountPaymentRepository.findFirstByCardNumber(cardNumber);
+    }
 }
