@@ -89,7 +89,7 @@ public class TransactionService implements ITransactionService {
                         accountPaymentDTO == null ? transactionDTO.getCardName() : accountPaymentDTO.getCardName()));
             });
         } else if (typeTrans.equals(debt)){
-            transactionDTOS = transactionRepository.findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(cardNumber, cardNumber, typeDebt);
+            transactionDTOS = transactionRepository.findAllByCardNumberAndTypeTrans(cardNumber, typeDebt);
             if (transactionDTOS.size() <= 0) {
                 logger.warn("{}| card number - {} not found transaction!", logId, cardNumber);
                 return TransactionsResponse.builder().build();

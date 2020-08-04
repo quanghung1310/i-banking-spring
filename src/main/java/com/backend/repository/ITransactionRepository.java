@@ -17,7 +17,11 @@ public interface ITransactionRepository extends CrudRepository<TransactionDTO, L
 
     List<TransactionDTO> findAllBySenderCardOrReceiverCardOrderByCreatedAtDesc(long senderCard, long receiverCard);
 
-    List<TransactionDTO> findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(long senderCard, long receiverCard, int typeTrans);
+    @Query(value = "select * from transactions " +
+                    " where (sender_card = :cardNumber or receiver_card = :cardNumber) and type_trans = :typeDebt " +
+                    " order by created_at desc", nativeQuery = true)
+    List<TransactionDTO> findAllByCardNumberAndTypeTrans(@Param("cardNumber") long cardNumber,
+                                                         @Param("typeDebt") int typeDebt);
 
     @Query(value = "SELECT * from transactions where merchant_id = :merchantId and created_at >= cast(:beginTime as timestamp) and created_at <= cast(:endTime as timestamp)", nativeQuery = true)
     List<TransactionDTO> findAllByMerchantIdAndCreatedAtBetween(@Param("merchantId") int merchantId,
