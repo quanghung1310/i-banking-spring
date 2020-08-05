@@ -1,6 +1,7 @@
 package com.backend.service;
 
 import com.backend.dto.ReminderDTO;
+import com.backend.dto.UserDTO;
 import com.backend.model.Account;
 import com.backend.model.request.debt.CreateDebtorRequest;
 import com.backend.model.request.debt.DeleteDebtRequest;
@@ -49,4 +50,6 @@ public interface IUserService {
     String updatePassword(String logId, String newPass, String userName);
 
     String forgotPassword(String logId, String userName);
+
+    UserDTO getByCardNumber(String logId, long cardNumber);
 }

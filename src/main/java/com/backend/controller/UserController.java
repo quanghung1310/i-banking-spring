@@ -4,10 +4,7 @@ import com.backend.config.PartnerConfig;
 import com.backend.constants.ActionConstant;
 import com.backend.constants.ErrorConstant;
 import com.backend.constants.StringConstant;
-import com.backend.dto.AccountPaymentDTO;
-import com.backend.dto.OtpDTO;
-import com.backend.dto.ReminderDTO;
-import com.backend.dto.TransactionDTO;
+import com.backend.dto.*;
 import com.backend.model.Account;
 import com.backend.model.Partner;
 import com.backend.model.Transaction;
@@ -88,6 +85,7 @@ public class UserController {
     private IOtpService otpService;
     private ITransactionService transactionService;
     private IPartnerService partnerService;
+    private INotifyService notifyService;
 
     @Autowired
     public UserController(IUserService userService,
@@ -96,7 +94,8 @@ public class UserController {
                           JavaMailSender javaMailSender,
                           IOtpService otpService,
                           ITransactionService transactionService,
-                          IPartnerService partnerService) {
+                          IPartnerService partnerService,
+                          INotifyService notifyService) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
         this.accountPaymentService = accountPaymentService;
@@ -104,6 +103,7 @@ public class UserController {
         this.otpService = otpService;
         this.transactionService = transactionService;
         this.partnerService = partnerService;
+        this.notifyService = notifyService;
     }
 
     @GetMapping(value = {"/get-accounts", "/get-accounts/{type}"})
@@ -532,6 +532,7 @@ public class UserController {
                 response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
+
             response = DataUtil.buildResponse(ErrorConstant.SUCCESS, request.getRequestId(), result.toString());
             logger.info("{}| Response to client: {}", logId, response.toString());
             return new ResponseEntity<>(response.toString(), HttpStatus.OK);

@@ -72,26 +72,26 @@ public class UserService implements IUserService {
     private IReminderRepository reminderRepository;
     private IDebtRepository debtRepository;
     private ITransactionRepository transactionRepository;
-    private IOtpRepository otpRepository;
     private IPartnerRepository partnerRepository;
+    private INotifyRepository notifyRepository;
 
     @Autowired
     public UserService(IAccountPaymentRepository accountPaymentRepository,
-            IAccountSavingRepository accountSavingRepository,
-            IUserRepository userRepository,
-            IReminderRepository reminderRepository,
-            IDebtRepository debtRepository,
-            ITransactionRepository transactionRepository,
-            IOtpRepository otpRepository,
-            IPartnerRepository partnerRepository) {
+                       IAccountSavingRepository accountSavingRepository,
+                       IUserRepository userRepository,
+                       IReminderRepository reminderRepository,
+                       IDebtRepository debtRepository,
+                       ITransactionRepository transactionRepository,
+                       IPartnerRepository partnerRepository,
+                       INotifyRepository notifyRepository) {
         this.accountPaymentRepository   = accountPaymentRepository;
         this.accountSavingRepository    = accountSavingRepository;
         this.userRepository             = userRepository;
         this.reminderRepository         = reminderRepository;
         this.debtRepository             = debtRepository;
         this.transactionRepository      = transactionRepository;
-        this.otpRepository              = otpRepository;
         this.partnerRepository          = partnerRepository;
+        this.notifyRepository           = notifyRepository;
     }
 
     @Override
@@ -447,6 +447,21 @@ public class UserService implements IUserService {
                 currentTime,
                 currentTime,
                 fee);
+
+        //Save notification
+        UserDTO userDTO = userRepository.findById(accountTo.getUserId()).get();
+        UserDTO fromDTO = userRepository.findById(userId).get();
+        String receiverName = fromDTO.getName();
+        NotifyDTO notifyDTO = new NotifyDTO();
+        notifyDTO.setUserId(userDTO.getId());
+        notifyDTO.setContent("Nhận tiền thanh toán nợ thành công");
+        notifyDTO.setTitle("Quý khách đã nhận được số tiền " + debtDTO.getAmount() + "đ thanh toán nợ từ " + receiverName + ". Phí giao dịch: " + fee + "đ, do " + (request.getTypeFee() == 1 ? receiverName : "quý khách") + " thanh toán. Mã giao dịch " + transactionDTO.getTransId() + ".");
+        notifyDTO.setIsActive(1);
+        notifyDTO.setSeen(false);
+        notifyDTO.setCreateAt(currentTime);
+        notifyDTO.setUpdateAt(currentTime);
+        notifyRepository.save(notifyDTO);
+
         return TransactionMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
     }
 
@@ -492,11 +507,21 @@ public class UserService implements IUserService {
         userDTO.setPassword(hashPass);
         userDTO.setLastPassword(userDTO.getPassword());
         userDTO.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
-        UserDTO user = userRepository.save(userDTO);
+        userRepository.save(userDTO);
 
         return new JsonObject()
                 .put("password", password)
                 .put("hashPassword", hashPass)
                 .toString();
+    }
+
+    @Override
+    public UserDTO getByCardNumber(String logId, long cardNumber) {
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
+        if (accountPaymentDTO == null) {
+            return null;
+        }
+        Optional<UserDTO> userDTO = userRepository.findById(accountPaymentDTO.getUserId());
+        return userDTO.orElse(null);
     }
 }

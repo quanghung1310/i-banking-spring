@@ -18,10 +18,10 @@ public class NotifyDTO {
 
     private long userId;
 
-    @Column(length = 100)
+    @Column(length = 1000)
     private String title;
 
-    @Column(length = 2000)
+    @Column(length = 3000)
     private String content;
 
     private Timestamp createAt;

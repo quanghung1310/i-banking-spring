@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,5 +53,21 @@ public class NotifyService implements INotifyService {
         notifyResponse.setTotalNotify(total);
         notifyResponse.setTotalNotifyNew(totalNew[0]);
         return notifyResponse;
+    }
+
+    @Override
+    public void saveNotification(String logId, long userId, String title, String content) {
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        NotifyDTO notifyDTO = new NotifyDTO();
+        notifyDTO.setUserId(userId);
+        notifyDTO.setContent(content);
+        notifyDTO.setTitle(title);
+        notifyDTO.setIsActive(1);
+        notifyDTO.setSeen(false);
+        notifyDTO.setCreateAt(currentTime);
+        notifyDTO.setUpdateAt(currentTime);
+
+        NotifyDTO saveDto = notifyRepository.save(notifyDTO);
+        logger.info("{}| Save notify with id - {}", logId, saveDto.getId());
     }
 }
