@@ -8,8 +8,11 @@ import com.backend.model.response.TransactionsResponse;
 public interface ITransactionService {
     TransactionsResponse getTransactions(String logId, long cardNumber, String typeTrans);
 
-    long insertTransaction(String logId, TransactionRequest request);
+    long insertTransaction(String logId, TransactionRequest request, long senderCard);
 
     Transaction saveTransaction(TransactionDTO transactionDTO);
 
+    Transaction getByTransIdAndType(long transId, int type, String status);
+
+    TransactionDTO getByTransIdAndTypeAndAction(long transId, int type, String statuc);
 }

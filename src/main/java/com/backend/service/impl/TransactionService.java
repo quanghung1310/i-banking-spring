@@ -6,6 +6,7 @@ import com.backend.mapper.TransactionMapper;
 import com.backend.model.Transaction;
 import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.response.TransactionsResponse;
+import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.IAccountPaymentRepository;
 import com.backend.repository.ITransactionRepository;
@@ -38,6 +39,9 @@ public class TransactionService implements ITransactionService {
 
     @Value( "${fee.transfer}" )
     private long fee;
+
+    @Value( "${my.bank.id}" )
+    private long myBankId;
 
     private IAccountPaymentRepository accountPaymentRepository;
     private ITransactionRepository transactionRepository;
@@ -85,7 +89,7 @@ public class TransactionService implements ITransactionService {
                         accountPaymentDTO == null ? transactionDTO.getCardName() : accountPaymentDTO.getCardName()));
             });
         } else if (typeTrans.equals(debt)){
-            transactionDTOS = transactionRepository.findAllBySenderCardOrReceiverCardAndTypeTransOrderByCreatedAtDesc(cardNumber, cardNumber, typeDebt);
+            transactionDTOS = transactionRepository.findAllByCardNumberAndTypeTrans(cardNumber, typeDebt);
             if (transactionDTOS.size() <= 0) {
                 logger.warn("{}| card number - {} not found transaction!", logId, cardNumber);
                 return TransactionsResponse.builder().build();
@@ -166,9 +170,9 @@ public class TransactionService implements ITransactionService {
 
 
     @Override
-    public long insertTransaction(String logId, TransactionRequest request) {
+    public long insertTransaction(String logId, TransactionRequest request, long senderCard) {
         //Build transactionDTO
-        TransactionDTO firstTrans = UserProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, fee);
+        TransactionDTO firstTrans = TransactionProcess.buildTransaction(new Timestamp(request.getRequestTime()), request, senderCard, fee);
         TransactionDTO transactionDTO = transactionRepository.save(firstTrans);
         long transactionId = transactionDTO.getTransId();
 
@@ -186,5 +190,23 @@ public class TransactionService implements ITransactionService {
         TransactionDTO transactionDTO1 = transactionRepository.save(transactionDTO);
         AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO1.getReceiverCard());
         return TransactionMapper.toModelTransaction(transactionDTO1, accountPaymentDTO.getCardNumber(), accountPaymentDTO.getCardName());
+    }
+
+    @Override
+    public Transaction getByTransIdAndType(long transId, int type, String status) {
+        TransactionDTO transactionDTO = transactionRepository.findByTransIdAndTypeTransAndStatus(transId, type, status);
+        long cardNumber = transactionDTO.getReceiverCard();
+        String cardName = transactionDTO.getCardName();
+        if (transactionDTO.getMerchantId() == myBankId) {
+            AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
+            cardName = accountPaymentDTO.getCardName();
+        }
+        return TransactionMapper.toModelTransaction(transactionDTO, cardNumber, cardName);
+    }
+
+    @Override
+    public TransactionDTO getByTransIdAndTypeAndAction(long transId, int type, String status) {
+        return transactionRepository.findByTransIdAndTypeTransAndStatus(transId, type, status);
+
     }
 }

@@ -5,7 +5,8 @@ public enum ActionConstant {
     INIT (1),
     DELETE(2),
     UPDATE(3),
-    COMPLETED(4);
+    COMPLETED(4),
+    CONFIRM(5);
 
     private int value;
 

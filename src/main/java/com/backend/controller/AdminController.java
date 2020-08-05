@@ -21,12 +21,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Controller
@@ -167,6 +169,7 @@ public class AdminController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
+            String password = request.getPassword();
             if (action.equals(DELETE)) {
                 employee.setRole(EMPLOYER + "DEL");
             } else if (action.equals(UPDATE)) {
@@ -174,7 +177,15 @@ public class AdminController {
                     employee.setEmail(request.getEmail());
                 }
                 if (StringUtils.isNotBlank(request.getPassword())) {
-                    employee.setPassword(request.getPassword());
+
+                    if (password.length() < 6 || password.length() > 20) {
+                        logger.warn("{}| Length new password need: [6 -> 20] character!", logId);
+                        response = DataUtil.buildResponse(ErrorConstant.BAD_PASSWORD, request.getRequestId(), null);
+                        return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+                    }
+                    employee.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+                    employee.setLastPassword(employee.getPassword());
+                    employee.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
                 }
                 if (StringUtils.isNotBlank(request.getName())) {
                     employee.setName(request.getName());

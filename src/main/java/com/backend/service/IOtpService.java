@@ -7,5 +7,5 @@ import java.sql.Timestamp;
 public interface IOtpService {
     OtpDTO saveOtp(OtpDTO otpDTO);
 
-    boolean validateOtp(String logId, long userId, int otpCode, String action, int session, Timestamp currentTime);
+    boolean validateOtp(String logId, long userId, int otpCode, String action, int session, Timestamp currentTime, long transId);
 }
