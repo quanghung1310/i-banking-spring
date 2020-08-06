@@ -11,6 +11,7 @@ import com.backend.service.INotifyService;
 import com.backend.service.IUserService;
 import com.backend.service.notify.PushNotificationService;
 import com.backend.util.DataUtil;
+import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -87,6 +88,41 @@ public class PushNotificationController {
         return new ResponseEntity<>(emitter, HttpStatus.OK);
     }
 
+    @PostMapping(value = "/seen-notification")
+    public ResponseEntity<String> seenNotification(@RequestBody String requestData) {
+        String logId = DataUtil.createRequestId();
+        logger.info("{}| Request data: {}", logId, requestData);
+        BaseResponse response;
+        try {
+            JsonObject request = new JsonObject(requestData);
+            if (request.isEmpty()) {
+                logger.warn("{}| Request not empty", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            int notifyId = request.getInteger("notifyId");
+            if (notifyId < 0) {
+                logger.warn("{}| notifyId bad data", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            NotifyResponse notifyResponse = notifyService.updateSeenNotification(logId, user.getId(), notifyId);
+
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, notifyResponse.toString());
+            logger.info("{}| Response to client: {}", logId, response.toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+
+        } catch (Exception ex) {
+            logger.error("{}| Request get users catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId,null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
     private UserResponse getUser(String logId, Object principal) {
         return userService.getUser(logId, ((UserDetails)principal).getUsername());
     }

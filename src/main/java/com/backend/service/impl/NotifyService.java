@@ -70,4 +70,31 @@ public class NotifyService implements INotifyService {
         NotifyDTO saveDto = notifyRepository.save(notifyDTO);
         logger.info("{}| Save notify with id - {}", logId, saveDto.getId());
     }
+
+    @Override
+    public NotifyResponse updateSeenNotification(String logId, long userId, int notifyId) {
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        if (notifyId == 0) { //seen all
+            List<NotifyDTO> notifyDTOS = notifyRepository.findAllByUserIdAndIsActive(userId, 1); //notify not seen
+            if (notifyDTOS.size() <= 0) {
+                logger.warn("{}| Notify was seen!", logId);
+            } else {
+                notifyDTOS.forEach(notifyDTO -> {
+                    notifyDTO.setSeen(true);
+                    notifyDTO.setUpdateAt(currentTime);
+                    notifyRepository.save(notifyDTO);
+                });
+            }
+        } else {
+            NotifyDTO notifyDTO = notifyRepository.findByIdAndUserIdAndIsActive(notifyId, userId, 1);
+            if (notifyDTO == null) {
+                logger.warn("{}| Notify - {} was seen!", logId, notifyId);
+            } else {
+                notifyDTO.setSeen(true);
+                notifyDTO.setUpdateAt(currentTime);
+                notifyRepository.save(notifyDTO);
+            }
+        }
+        return getNotification(logId, userId);
+    }
 }
