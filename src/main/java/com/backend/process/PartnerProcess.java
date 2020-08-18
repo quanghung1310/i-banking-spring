@@ -13,20 +13,27 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import sun.misc.BASE64Encoder;
 
 import java.io.*;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Security;
-import java.security.SignatureException;
+import java.security.*;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
 
 public class PartnerProcess {
     private static final Logger logger = LogManager.getLogger(PartnerProcess.class);
+    private static final BouncyCastleProvider provider = new BouncyCastleProvider();
 
     @Autowired
     IPartnerService partnerService;
@@ -35,8 +42,7 @@ public class PartnerProcess {
             throws IOException, PGPException {
         InputStream in = new ByteArrayInputStream(input.getBytes());
         PGPPublicKey k = null;
-        in = PGPUtil.getDecoderStream(in);
-        PGPPublicKeyRingCollection pgpPub = new PGPPublicKeyRingCollection(in);
+        PGPPublicKeyRingCollection pgpPub = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream( in ), new JcaKeyFingerprintCalculator());
         in.close();
         Iterator rIt = pgpPub.getKeyRings();
         while (rIt.hasNext()) {
@@ -57,7 +63,7 @@ public class PartnerProcess {
         InputStream in = new ByteArrayInputStream(input.getBytes());
         in = org.bouncycastle.openpgp.PGPUtil.getDecoderStream(in);
 
-        PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(in);
+        PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(in, new BcKeyFingerprintCalculator());
         in.close();
         PGPSecretKey key = pgpSec.getSecretKey(keyId);
 
@@ -68,10 +74,9 @@ public class PartnerProcess {
     }
 
     public static String signaturePgp(String message, PGPSecretKey pgpSec, char[] pass) throws IOException,
-            NoSuchAlgorithmException, NoSuchProviderException, PGPException,
-            SignatureException {
+            PGPException {
         byte[] messageCharArray = message.getBytes();
-        Security.addProvider(new BouncyCastleProvider());
+        Security.addProvider(provider);
 
         ByteArrayOutputStream encOut = new ByteArrayOutputStream();
         OutputStream out = encOut;
@@ -83,7 +88,11 @@ public class PartnerProcess {
         BASE64Encoder base64Encoder = new BASE64Encoder();
         sec = base64Encoder.encode(pgpSec.getEncoded()).replaceAll("\\r\\n|\\r|\\n|", "");
         logger.info("sec: {}", sec);
-        PGPPrivateKey pgpPrivKey = pgpSec.extractPrivateKey(pass, "BC");
+
+        PBESecretKeyDecryptor secretKeyDecrypt =
+                new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider())
+                        .build(pass);
+        PGPPrivateKey pgpPrivKey = pgpSec.extractPrivateKey(secretKeyDecrypt);
 
         if (pgpPrivKey == null)
             throw new IllegalArgumentException("Unsupported signing key"
@@ -93,9 +102,12 @@ public class PartnerProcess {
 
         // Signature generator, we can generate the public key from the private
         // key! Nifty!
-        PGPSignatureGenerator sGen = new PGPSignatureGenerator(publicKey.getAlgorithm(), PGPUtil.SHA1, "BC");
 
-        sGen.initSign(PGPSignature.BINARY_DOCUMENT, pgpPrivKey);
+        PGPSignatureGenerator sGen = new PGPSignatureGenerator(
+                new JcaPGPContentSignerBuilder(publicKey
+                        .getAlgorithm(), PGPUtil.SHA512));
+
+        sGen.init(PGPSignature.BINARY_DOCUMENT, pgpPrivKey); //PGPSignature.DIRECT_KEY
 
 
         Iterator it = pgpSec.getPublicKey().getUserIDs();
@@ -137,19 +149,19 @@ public class PartnerProcess {
         return encOut.toString();
     }
 
-    public static boolean verifySignaturePgp(String logId, byte[] signedMessage, String pub) throws PGPException {
+    public static boolean verifySignaturePgp(String logId, byte[] signedMessage, String pub) {
         try
         {
-            Security.addProvider(new BouncyCastleProvider());
+            Security.addProvider(provider);
 
             PGPPublicKey publicKey = readPublicKey(pub);
             InputStream in = PGPUtil.getDecoderStream( new ByteArrayInputStream( signedMessage ) );
 
-            PGPObjectFactory  pgpFact = new PGPObjectFactory ( in );
+            PGPObjectFactory  pgpFact = new PGPObjectFactory ( in, new BcKeyFingerprintCalculator() );
 
             PGPCompressedData c1 = ( PGPCompressedData ) pgpFact.nextObject();
 
-            pgpFact = new PGPObjectFactory ( c1.getDataStream() );
+            pgpFact = new PGPObjectFactory ( c1.getDataStream(),  new BcKeyFingerprintCalculator() );
 
             PGPOnePassSignatureList p1 = ( PGPOnePassSignatureList ) pgpFact.nextObject();
 
@@ -160,8 +172,7 @@ public class PartnerProcess {
             InputStream dIn = p2.getInputStream();
             int ch;
 
-
-            ops.initVerify(publicKey, "BC");
+            ops.init( new JcaPGPContentVerifierBuilderProvider().setProvider(Security.getProvider("BC")), publicKey);
 
             while ( ( ch = dIn.read() ) >= 0 )
             {
