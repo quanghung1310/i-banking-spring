@@ -29,6 +29,8 @@ public class DataUtil {
     private static final Logger logger = LogManager.getLogger(DataUtil.class);
 
     public static final String HMAC_SHA256 = "HmacSHA256";
+    public static final String HMAC_SHA512 = "HmacSHA512";
+
 
     public static String createRequestId() {
         return UUID.randomUUID().toString().replace("-", "");
@@ -121,6 +123,10 @@ public class DataUtil {
 
     public static String signHmacSHA256(String data, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException {
         return signHmacSHA(data, secretKey, HMAC_SHA256);
+    }
+
+    public static String signHmacSHA512(String data, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException {
+        return signHmacSHA(data, secretKey, HMAC_SHA512);
     }
 
     public static String signHmacSHA(String data, String secretKey, String type) throws NoSuchAlgorithmException, InvalidKeyException {

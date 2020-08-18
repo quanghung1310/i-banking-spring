@@ -105,6 +105,13 @@ public class EmployeeController {
             }
             logger.info("{}| Valid data request deposit success!", logId);
 
+            UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            if (!user.getRole().equals(EMPLOYER)) {
+                logger.warn("{}| User - {} not authenticate!", logId, user.getId());
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.UNAUTHORIZED);
+            }
+
             DepositResponse depositResponse = employeeService.deposit(logId, request);
 
             if (depositResponse.getTotalBalance() == 0L) {

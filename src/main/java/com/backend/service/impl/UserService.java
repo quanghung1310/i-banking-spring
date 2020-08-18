@@ -14,22 +14,29 @@ import com.backend.model.request.reminder.CreateReminderRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
+import com.backend.process.PartnerProcess;
 import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
+import com.backend.util.PGPEncryptionUtil;
 import com.backend.util.RSAUtils;
+import io.vertx.core.impl.StringEscapeUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.modelmapper.internal.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -37,7 +44,10 @@ import org.springframework.web.client.RestTemplate;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -45,10 +55,7 @@ import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService implements IUserService {
@@ -204,7 +211,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidParameterSpecException {
+    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws Exception {
         List<Account> accounts = new ArrayList<>();
         long userId = 0;
         if (merchantId == myBankId) {
@@ -230,6 +237,18 @@ public class UserService implements IUserService {
             String mid = String.valueOf(merchantId);
             String alg = PartnerConfig.getAlg(mid);
             String cardPartner = String.valueOf(cardNumber);
+            String url = PartnerConfig.getUrlQueryAccount(mid);
+            URI uri = new URI(url);
+
+            RestTemplate restTemplate = new RestTemplate();
+//            restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(username, password));
+
+            // HttpHeaders
+            HttpHeaders headers = new HttpHeaders();
+
+//            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+//            // Request to return JSON format
+//            headers.setContentType(MediaType.APPLICATION_JSON);
 
             if (alg.equals("RSA")) {
                 //RSA
@@ -238,7 +257,6 @@ public class UserService implements IUserService {
                 String partnerPub = PartnerConfig.getPartnerPubKey(mid);
                 long currentTime = 1595770284249L;//System.currentTimeMillis();
                 String partnerCode = PartnerConfig.getPartnerCode(mid);
-                String url = PartnerConfig.getUrlQueryAccount(mid);
 
                 //(JSON.stringify(req.body)+ secretKey + time + partnerCode, 'base64')
                 JsonObject requestBody = new JsonObject()
@@ -258,14 +276,6 @@ public class UserService implements IUserService {
                     return null;
                 }
 
-                RestTemplate restTemplate = new RestTemplate();
-
-                // HttpHeaders
-                HttpHeaders headers = new HttpHeaders();
-
-                headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-                // Request to return JSON format
-                headers.setContentType(MediaType.APPLICATION_JSON);
                 headers.set("x-partner-code", partnerCode);
                 headers.set("x-timestamp", String.valueOf(currentTime));
                 headers.set("x-data-encrypted", encrypt);
@@ -275,8 +285,28 @@ public class UserService implements IUserService {
                 /// TODO: 7/26/2020
                 return UserResponse.builder().build();
             } else if (alg.equals("PGP")) {
-                //PGP
-                //todo
+                String data = new JsonObject().put("account_number", cardNumber).toString();
+                String pubKey = StringEscapeUtils.unescapeJava(PartnerConfig.getPartnerPubKey(mid));
+                String secretKey = PartnerConfig.getPartnerSecretKey(mid);
+                if (StringUtils.isBlank(pubKey)) {
+                    logger.warn("{}| Public key of partner - {} not existed!", logId, merchantId);
+                    return null;
+                }
+
+                PGPPublicKey pgpPublicKey = PartnerProcess.readPublicKey(pubKey);
+                String payload = PGPEncryptionUtil.encryptMessage(data, new ByteArrayInputStream(pubKey.getBytes()));
+                String signature = DataUtil.signHmacSHA512(StringEscapeUtils.escapeJava(payload), secretKey);
+
+                JsonObject requestBody = new JsonObject()
+                        .put("payload", payload)
+                        .put("signature", signature);
+                HttpEntity<JsonObject> request = new HttpEntity<>(requestBody, headers);
+
+                ResponseEntity<JsonObject> result = restTemplate.postForEntity(uri, request, JsonObject.class);
+                int status = result.getStatusCodeValue();
+
+                ResponseEntity<JsonObject> resp = restTemplate.postForEntity(url, request, JsonObject.class);
+
                 return UserResponse.builder().build();
             } else {
                 logger.warn("{}| alg - {} of merchant id - {} not existed!", logId, alg, merchantId);

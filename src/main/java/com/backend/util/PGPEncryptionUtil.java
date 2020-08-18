@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -16,6 +17,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -84,6 +86,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.google.common.base.Preconditions;
+import sun.misc.BASE64Encoder;
 
 
 /**
@@ -105,8 +108,38 @@ public class PGPEncryptionUtil
         throw new IllegalAccessError( "Utility class" );
     }
 
+    private static byte[] compress( byte data[] ) throws IOException
+    {
+        PGPCompressedDataGenerator compressGen = new PGPCompressedDataGenerator( CompressionAlgorithmTags.ZIP );
 
-    public static byte[] encrypt( final byte[] message, final PGPPublicKey publicKey, boolean armored )
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+        OutputStream compressOut = compressGen.open( bos );
+
+        OutputStream os =
+                new PGPLiteralDataGenerator().open( compressOut, PGPLiteralData.BINARY, "", data.length, new Date() );
+
+        os.write( data );
+
+        os.close();
+
+        compressGen.close();
+
+        return bos.toByteArray();
+    }
+
+    private static PGPEncryptedDataGenerator getEncryptedGenerator( PGPPublicKey publicKey ) {
+        PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(
+                new JcePGPDataEncryptorBuilder( PGPEncryptedData.CAST5 ).setWithIntegrityPacket( true )
+                        .setSecureRandom( new SecureRandom() )
+                        .setProvider( "BC" ) );
+
+        encGen.addMethod( new JcePublicKeyKeyEncryptionMethodGenerator( publicKey ).setProvider( "BC" ) );
+
+        return encGen;
+    }
+
+    public static String encrypt(byte[] message, PGPPublicKey publicKey, boolean armored )
             throws PGPException
     {
         try
@@ -133,7 +166,7 @@ public class PGPEncryptionUtil
             cOut.write( bytes );
             cOut.close();
             theOut.close();
-            return out.toByteArray();
+            return new BASE64Encoder().encode(out.toByteArray());
         }
         catch ( Exception e )
         {
@@ -1431,7 +1464,25 @@ public class PGPEncryptionUtil
         }
     }
 
+    public static String encryptMessage(String data, InputStream fis) throws IOException, PGPException {
+        //the private key file
+//        InputStream fis = this.getClass().getResourceAsStream("/path/to/key/file.id");
 
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        //convert the data to input stream
+        InputStream stream = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+
+        //encrypt it!
+        SimplePgpUtil.encryptStream(out, SimplePgpUtil.readPublicKey(fis), stream);
+
+        //close all the stream
+        out.close();
+        stream.close();
+
+        return new String(out.toByteArray());
+
+    }
 //    public static PGPPublicKeyRing removeSignature( PGPPublicKeyRing keyToRemoveFrom,
 //                                                    PGPPublicKey keySignatureToRemove ) throws PGPException
 //    {

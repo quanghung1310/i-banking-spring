@@ -6,27 +6,31 @@ import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.request.transaction.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
+import io.vertx.core.impl.StringEscapeUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
-import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.*;
+import org.bouncycastle.util.io.Streams;
 import org.springframework.beans.factory.annotation.Autowired;
 import sun.misc.BASE64Encoder;
 
+import javax.crypto.Cipher;
 import java.io.*;
 import java.security.*;
 import java.util.Collection;
+import java.nio.ByteBuffer;
+import java.security.*;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -246,5 +250,150 @@ public class PartnerProcess {
     public static String callPartnerTransfer(int bankId, TransactionRequest request) {
 
         return null;
+    }
+
+    public static String encrypt(byte[] data, String publicKeyFile) {
+        try
+        {
+//            // ----- Read in the public key
+            PGPPublicKey key = readPublicKey(StringEscapeUtils.unescapeJava(publicKeyFile));
+            System.out.println("Creating a temp file...");
+            // create a file and write the string to it
+            File tempFile = File.createTempFile("pgp", null);
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            fos.write(data);
+            fos.close();
+            System.out.println("Temp file created at ");
+            System.out.println(tempFile.getAbsolutePath());
+            System.out.println("Reading the temp file to make sure that the bits were written\n--------------");
+            BufferedReader isr = new BufferedReader(new FileReader(tempFile));
+            String line = "";
+            while ( (line = isr.readLine()) != null )
+            {
+                System.out.println(line + "\n");
+            }
+            // find out a little about the keys in the public key ring
+            System.out.println("Key Strength = " + key.getBitStrength());
+            System.out.println("Algorithm = " + key.getAlgorithm());
+            System.out.println("Bit strength = " + key.getBitStrength());
+            System.out.println("Version = " + key.getVersion());
+            System.out.println("Encryption key = " + key.isEncryptionKey()+ ", Master key = " + key.isMasterKey());
+            int count = 0;
+            for ( java.util.Iterator iterator = key.getUserIDs(); iterator.hasNext(); )
+            {
+                count++;
+                System.out.println((String) iterator.next());
+            }
+            System.out.println("Key Count = " + count);
+            // create an armored ascii file
+            // FileOutputStream out = new FileOutputStream(outputfile);
+            // encrypt the file
+            // encryptFile(tempfile.getAbsolutePath(), out, key);
+            // Encrypt the data
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            System.out.println("encrypted text length before=" + baos.size());
+            _encrypt(tempFile.getAbsolutePath(), baos, key);
+            System.out.println("encrypted text length=" + baos.size());
+            tempFile.delete();
+
+//            KeyPair pair = generateKeyPair();
+//            PrivateKey privateKey = pair.getPrivate();
+//
+//            Cipher cipher = Cipher.getInstance("RSA");
+//            cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+//
+//            byte[] encryptedMessage = cipher.doFinal(data);
+//
+//            cipher.init(Cipher.ENCRYPT_MODE, (Key) key);
+//
+//            byte[] encryptedPublicKey = cipher.doFinal(pair.getPublic().getEncoded());
+//
+//            ByteBuffer buffer = ByteBuffer.allocate((encryptedPublicKey.length + encryptedMessage.length) + 4);
+//            buffer.putInt(encryptedPublicKey.length);
+//            buffer.put(encryptedPublicKey);
+//            buffer.put(encryptedMessage);
+//            return new BASE64Encoder().encode(buffer.array());
+            return new BASE64Encoder().encode(baos.toByteArray());
+        }
+        catch (PGPException e)
+        {
+            // System.out.println(e.toString());
+            System.out.println(e.getUnderlyingException().toString());
+            e.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    protected static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(1024, SecureRandom.getInstance("SHA1PRNG"));
+        return keyPairGenerator.generateKeyPair();
+    }
+    private static void _encrypt(String fileName, OutputStream out, PGPPublicKey encKey)
+            throws IOException, PGPException
+    {
+        out = new DataOutputStream(out);
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        System.out.println("creating comData...");
+        // get the data from the original file
+        PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(PGPCompressedDataGenerator.ZIP);
+        PGPUtil.writeFileToLiteralData(comData.open(bOut), PGPLiteralData.BINARY, new File(fileName));
+        comData.close();
+        System.out.println("comData created...");
+        System.out.println("using PGPEncryptedDataGenerator...");
+        // object that encrypts the data
+        JcePGPDataEncryptorBuilder builder = new JcePGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256)
+                .setWithIntegrityPacket(true)
+                .setSecureRandom(new SecureRandom()).setProvider("BC");
+        PGPEncryptedDataGenerator cPk = new PGPEncryptedDataGenerator(builder);
+        cPk.addMethod( new JcePublicKeyKeyEncryptionMethodGenerator( encKey ).setProvider( "BC" ));
+        System.out.println("used PGPEncryptedDataGenerator...");
+        // take the outputstream of the original file and turn it into a byte
+        // array
+        byte[] bytes = bOut.toByteArray();
+        System.out.println("wrote bOut to byte array...");
+        // write the plain text bytes to the armored outputstream
+        OutputStream cOut = cPk.open(out, bytes.length);
+        cOut.write(bytes);
+        cPk.close();
+        out.close();
+    }
+
+    public static String createEncryptedData(
+            byte[] data,
+            String pubKey)
+            throws Exception {
+//        encryptionKey
+
+        JcePGPDataEncryptorBuilder builder = new JcePGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256)
+                        .setWithIntegrityPacket(true)
+                        .setSecureRandom(new SecureRandom()).setProvider("BC");
+        PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(builder);
+//        encGen.addMethod(readPublicKey(StringEscapeUtils.unescapeJava(pubKey)));
+
+//        PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(
+//                new JcePGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256)
+//                        .setWithIntegrityPacket(true)
+//                        .setSecureRandom(new SecureRandom()).setProvider("BC"));
+//        encGen.addMethod(
+//                new JcePublicKeyKeyEncryptionMethodGenerator(encryptionKey)
+//                        .setProvider("BC"));
+        ByteArrayOutputStream encOut = new ByteArrayOutputStream();
+        // create an indefinite length encrypted stream
+        OutputStream cOut = encGen.open(encOut, new byte[4096]);
+        // write out the literal data
+        PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
+        OutputStream pOut = lData.open(
+                cOut, PGPLiteralData.BINARY,
+                PGPLiteralData.CONSOLE, data.length, new Date());
+        pOut.write(data);
+        pOut.close();
+        // finish the encryption
+        cOut.close();
+        return new BASE64Encoder().encode(encOut.toByteArray()) ;
     }
 }

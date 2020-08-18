@@ -10,10 +10,12 @@ import com.backend.model.request.reminder.CreateReminderRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
+import org.bouncycastle.openpgp.PGPException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -33,7 +35,7 @@ public interface IUserService {
 
     UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
 
-    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidParameterSpecException;
+    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws Exception;
 
     DebtorResponse createDebtor(String logId, CreateDebtorRequest request, long userId);
 
