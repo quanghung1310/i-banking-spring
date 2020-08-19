@@ -113,6 +113,7 @@ public class UserMapper {
                     .partnerId(userDTO.getId())
                     .partnerPhone(userDTO.getPhone())
                     .updatedAt(DataUtil.convertTimeWithFormat(debtDTO.getUpdatedAt().getTime(), StringConstant.FORMAT_ddMMyyyyTHHmmss))
+                    .transId(debtDTO.getTransId())
                     .build();
         }
     }
