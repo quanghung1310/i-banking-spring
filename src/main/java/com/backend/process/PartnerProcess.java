@@ -4,7 +4,7 @@ import com.backend.config.PartnerConfig;
 import com.backend.model.Partner;
 import com.backend.model.request.bank.QueryAccountRequest;
 import com.backend.model.request.partner.GenerateQueryAccountRequest;
-import com.backend.model.request.transaction.TransactionRequest;
+import com.backend.model.request.partner.GenerateTransfer;
 import com.backend.model.request.transaction.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
@@ -221,15 +221,13 @@ public class PartnerProcess {
         return true;
     }
 
-    public static String generateQueryAccountHash(String logId, Partner partner, GenerateQueryAccountRequest request) throws IOException, PGPException {
+    public static String generateQueryAccountHash(String logId, GenerateQueryAccountRequest request) throws IOException, PGPException {
         JsonObject dataToHash = new JsonObject();
         dataToHash.put("cardNumber", request.getCardNumber())
                 .put("partnerCode", request.getPartnerCode())
                 .put("requestId", request.getRequestId())
                 .put("requestTime", request.getRequestTime());
-        PGPPublicKey publicKey = readPublicKey(partner.getPublicKey());
-        String secretKey = DataUtil.pgpSecretKeyToString(readSecretKey(partner.getSecretKey(), publicKey.getKeyID()));
-        String hashGen = DataUtil.createHash(dataToHash, secretKey, logId);
+        String hashGen = DataUtil.createHash(dataToHash, request.getSecretKey(), logId);
         logger.info("{}| Hash - {}", logId, hashGen);
         if (StringUtils.isBlank(hashGen)) {
             logger.warn("{}| Generate signature: Fail!", logId);
@@ -262,9 +260,24 @@ public class PartnerProcess {
         return true;
     }
 
-    public static String callPartnerTransfer(int bankId, TransactionRequest request) {
-
-        return null;
+    public static String generateTransferHash(String logId, GenerateTransfer request) {
+        JsonObject dataToHash = new JsonObject()
+                .put("cardName", request.getCardName())
+                .put("bankCode", request.getBankCode())
+                .put("from", request.getFrom())
+                .put("isTransfer", request.getIsTransfer())
+                .put("merchantCode", request.getPartnerCode())
+                .put("requestId", request.getRequestId())
+                .put("requestTime", request.getRequestTime())
+                .put("to", request.getTo())
+                .put("typeFee", request.getTypeFee())
+                .put("value", request.getValue());
+        String hash = DataUtil.createHash(dataToHash, request.getSecretKey(), logId);
+        logger.info("{}| Hash - {}", logId, hash);
+        if (StringUtils.isBlank(hash)) {
+            logger.warn("{}| Generate hash: Fail!", logId);
+        }
+        return hash;
     }
 
     public static String encrypt(byte[] data, String publicKeyFile) {

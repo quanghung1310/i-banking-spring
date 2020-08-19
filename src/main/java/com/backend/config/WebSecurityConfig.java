@@ -33,8 +33,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable().authorizeRequests().antMatchers("/authenticate",
-                "/transfer-bank", "/account-bank", "https://yasuobank.herokuapp.com/api/v1/associate-bank/Lh/account-info")
+        http.cors().and().csrf().disable().authorizeRequests().antMatchers( "/transfer-bank",
+                "/account-bank",
+                "/generate-query-account",
+                "/generate-transfer")
                 .permitAll().anyRequest().authenticated()
                 .and().exceptionHandling().and().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

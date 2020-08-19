@@ -11,13 +11,15 @@ public class GenerateQueryAccountRequest {
     private Long requestTime;
     private String partnerCode;
     private Long cardNumber;
+    private String secretKey;
 
     public boolean isValidData() {
         try {
             return !(StringUtils.isBlank(this.requestId)
                     || StringUtils.isBlank(this.partnerCode)
                     || this.cardNumber <= 0
-                    || this.requestTime <= 0);
+                    || this.requestTime <= 0
+                    || StringUtils.isBlank(this.secretKey));
         }
         catch (Exception ex) {
             return false;
