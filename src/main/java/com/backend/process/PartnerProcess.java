@@ -3,20 +3,18 @@ package com.backend.process;
 import com.backend.config.PartnerConfig;
 import com.backend.model.Partner;
 import com.backend.model.request.bank.QueryAccountRequest;
+import com.backend.model.request.partner.GenerateQueryAccountRequest;
 import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.request.transaction.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.impl.StringEscapeUtils;
 import io.vertx.core.json.JsonObject;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.HTTP;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
-import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.*;
@@ -25,20 +23,16 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.*;
-import org.bouncycastle.util.io.Streams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import sun.misc.BASE64Encoder;
 
-import javax.crypto.Cipher;
 import java.io.*;
 import java.security.*;
-import java.util.*;
-import java.nio.ByteBuffer;
-import java.security.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Objects;
 
 
 public class PartnerProcess {
@@ -227,6 +221,21 @@ public class PartnerProcess {
         return true;
     }
 
+    public static String generateQueryAccountHash(String logId, Partner partner, GenerateQueryAccountRequest request) throws IOException, PGPException {
+        JsonObject dataToHash = new JsonObject();
+        dataToHash.put("cardNumber", request.getCardNumber())
+                .put("partnerCode", request.getPartnerCode())
+                .put("requestId", request.getRequestId())
+                .put("requestTime", request.getRequestTime());
+        PGPPublicKey publicKey = readPublicKey(partner.getPublicKey());
+        String secretKey = DataUtil.pgpSecretKeyToString(readSecretKey(partner.getSecretKey(), publicKey.getKeyID()));
+        String hashGen = DataUtil.createHash(dataToHash, secretKey, logId);
+        logger.info("{}| Hash - {}", logId, hashGen);
+        if (StringUtils.isBlank(hashGen)) {
+            logger.warn("{}| Generate signature: Fail!", logId);
+        }
+        return hashGen;
+    }
     public static Boolean validateTransferHash(String logId, Partner partner, TransferRequest request)
             throws IOException, PGPException {
         JsonObject dataToHash = new JsonObject()

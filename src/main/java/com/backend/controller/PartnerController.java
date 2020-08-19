@@ -8,6 +8,7 @@ import com.backend.model.Account;
 import com.backend.model.Partner;
 import com.backend.model.Transaction;
 import com.backend.model.request.bank.QueryAccountRequest;
+import com.backend.model.request.partner.GenerateQueryAccountRequest;
 import com.backend.model.request.transaction.TransferRequest;
 import com.backend.model.response.BaseResponse;
 import com.backend.model.response.UserResponse;
@@ -21,6 +22,7 @@ import com.backend.util.DataUtil;
 import com.google.gson.Gson;
 import io.vertx.core.impl.StringEscapeUtils;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -327,82 +329,48 @@ public class PartnerController {
         }
     }
 
-//    @GetMapping("/get-account-partner/{bankId}/{cardNumber}")
-//    public ResponseEntity<String> getAccountPartner(@PathVariable Integer bankId,
-//                                    @PathVariable Long cardNumber) {
-//        String logId = DataUtil.createRequestId();
-//        logger.info("{}| Request data: bankId - {}, cardNumber - {}", logId, bankId, cardNumber);
-//        BaseResponse response;
-//        try {
-//            //Step 1: Validate partner
-//            if (bankId == null || cardNumber == null) {
-//                logger.warn("{}| bank id - {} or cardNumber - {} not empty!", logId, bankId, cardNumber);
-//                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
-//                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-//            }
-//            Partner partner = partnerService.findById(bankId);
-//            if (partner == null) {
-//                logger.warn("{}| Partner with bank id - {} not found!", logId, bankId);
-//                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
-//                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-//            }
-//            //Step 2: Encrypt
-//            String alg = PartnerConfig.getAlg(partner.getId().toString());
-//            if (alg.equals("RSA")) {
-//                //RSA
-//                //2.1: Build json body
-//                String secretKey = PartnerConfig.getSecretKey(partner.getId().toString());
-//                String partnerPub = PartnerConfig.getPartnerPubKey(partner.getId().toString());
-//                long currentTime = System.currentTimeMillis();
-//                String partnerCode = PartnerConfig.getPartnerCode(partner.getId().toString());
-//                String url = PartnerConfig.getUrlQueryAccount(partner.getId().toString());
-//
-//                //(JSON.stringify(req.body)+ secretKey + time + partnerCode, 'base64')
-//                String dataCrypto = new JsonObject().put("stk", cardNumber.toString())
-//                        + secretKey
-//                        + System.currentTimeMillis()
-//                        + partnerCode
-//                        + "base64";
-//                String hash = DataUtil.signHmacSHA256(dataCrypto, partnerPub);
-//                if (StringUtils.isBlank(hash)) {
-//                    logger.warn("{}| Hash data fail!", logId);
-//                }
-//                JsonObject requestBody = new JsonObject()
-//                        .put("stk", cardNumber.toString());
-//
-//                RestTemplate restTemplate = new RestTemplate();
-//
-//                // HttpHeaders
-//                HttpHeaders headers = new HttpHeaders();
-//
-//                headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-//                // Request to return JSON format
-//                headers.setContentType(MediaType.APPLICATION_JSON);
-//                headers.set("x-partner-code", partnerCode);
-//                headers.set("x-timestamp", String.valueOf(currentTime));
-//                headers.set("x-data-encrypted", hash);
-//
-//                HttpEntity<JsonObject> request = new HttpEntity<>(requestBody, headers);
-//                ResponseEntity<JsonObject> resp = restTemplate.postForEntity(url, request, JsonObject.class);
-//                /// TODO: 7/26/2020
-//            } else if (alg.equals("PGP")) {
-//                //PGP
-//                //todo
-//            } else {
-//                logger.warn("{}| alg - {} of bank id - {} not existed!", logId, alg, bankId);
-//                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
-//                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
-//            }
-//
-//
-//            return null;
-//        } catch (Exception ex) {
-//            logger.error("{}| Request query account bank catch exception: ", logId, ex);
-//            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
-//            return new ResponseEntity<>(
-//                    response.toString(),
-//                    HttpStatus.BAD_REQUEST);
-//        }
-//    }
+    @PostMapping(value = "/generate-query-account")
+    public ResponseEntity<String> generateQueryAccount(@RequestBody GenerateQueryAccountRequest request) {
+        String logId = request.getRequestId();
+        logger.info("{}| Request data: {}", logId, PARSER.toJson(request));
+        BaseResponse response;
+        try {
+            if (!request.isValidData()) {
+                logger.warn("{}| Validate request generate query account bank data: Fail!", logId);
+                response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(), null);
+                return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data request generate query account bank success!", logId);
 
+            //Step 1: A kiểm tra lời gọi api có phải xuất phát từ B (đã đăng ký liên kết từ trước) hay không
+            Partner partner = partnerService.findByPartnerCode(request.getPartnerCode());
+
+            if (partner == null) {
+                logger.warn("{}| Partner - {} not fount!", logId, request.getPartnerCode());
+                response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(),null);
+                return new ResponseEntity<>(
+                        response.toString(),
+                        HttpStatus.BAD_REQUEST);
+            }
+            logger.info("{}| Valid data partner success!", logId);
+            logger.info("{}| Valid data session success!", logId);
+
+            String hash = PartnerProcess.generateQueryAccountHash(logId, partner, request);
+            if (StringUtils.isBlank(hash)) {
+                response = DataUtil.buildResponse(ErrorConstant.SYSTEM_ERROR, request.getRequestId(),null);
+                return new ResponseEntity<>(
+                        response.toString(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, new JsonObject().put("hash", hash).toString());
+            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+
+        } catch (Exception ex) {
+            logger.error("{}| Request query account bank catch exception: ", logId, ex);
+            response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, request.getRequestId(),null);
+            return new ResponseEntity<>(
+                    response.toString(),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
 }
