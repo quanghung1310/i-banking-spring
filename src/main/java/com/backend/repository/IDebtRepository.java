@@ -12,4 +12,6 @@ public interface IDebtRepository extends CrudRepository<DebtDTO, Long> {
     List<DebtDTO> findAllByCardNumberAndActionOrderByIdDesc(long cardNumber, int action);
 
     DebtDTO findFirstByIdAndActionAndIsActive(long id, int action, int isActive);
+
+    DebtDTO findFirstByTransIdAndActionAndIsActive(long transId, int action, int isActive);
 }

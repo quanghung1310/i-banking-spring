@@ -34,4 +34,11 @@ public class DebtDTO {
     private int action; //1. INIT, 2.DELETE, 3.COMPLETED
 
     private long amount; //so tien nợ
+
+    @Column(length = 20)
+    private Long transId;
+
+    public Long getTransId() {
+        return this.transId == null ? 0 : this.transId;
+    }
 }

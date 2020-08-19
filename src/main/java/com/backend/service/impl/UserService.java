@@ -39,21 +39,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.InvalidParameterSpecException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -453,31 +442,25 @@ public class UserService implements IUserService {
                 logger.warn("{}|Balance debtor: {} < {} (amountPay)", logId, currentBalanceFrom, amountPay + fee);
                 return null;
             }
-            accountFrom.setBalance(currentBalanceFrom - amountPay - fee);
-            accountTo.setBalance(currentBalanceTo + amountPay);
+//            accountFrom.setBalance(currentBalanceFrom - amountPay - fee);
+//            accountTo.setBalance(currentBalanceTo + amountPay);
         } else {
             if (currentBalanceFrom < amountPay) {
                 logger.warn("{}|Balance debtor: {} < {} (amountPay)", logId, currentBalanceFrom, amountPay);
                 return null;
             }
-            accountFrom.setBalance(currentBalanceFrom - amountPay);
-            accountTo.setBalance(currentBalanceTo + amountPay - fee);
+//            accountFrom.setBalance(currentBalanceFrom - amountPay);
+//            accountTo.setBalance(currentBalanceTo + amountPay - fee);
         }
         logger.info("{}| User - {} can pay debt!", logId, userId);
 
         //Step 5: update account of FROM
-        accountFrom.setUpdatedAt(currentTime);
-        accountPaymentRepository.save(accountFrom);
+//        accountFrom.setUpdatedAt(currentTime);
+//        accountPaymentRepository.save(accountFrom);
 
         //Step 6: update account of TO
-        accountTo.setUpdatedAt(currentTime);
-        accountPaymentRepository.save(accountTo);
-
-        //Step 7: Update action debt to COMPLETED
-        debtDTO.setAction(ActionConstant.COMPLETED.getValue());
-        debtDTO.setUpdatedAt(currentTime);
-        debtDTO.setContent(request.getContent());
-        debtRepository.save(debtDTO);
+//        accountTo.setUpdatedAt(currentTime);
+//        accountPaymentRepository.save(accountTo);
 
         //Step 8: insert transaction
         TransactionDTO transactionDTO = TransactionProcess.createTrans(
@@ -489,50 +472,34 @@ public class UserService implements IUserService {
                 2,
                 myBankId,
                 request.getContent(),
-                ActionConstant.COMPLETED.name(),
+                ActionConstant.INIT.name(),
                 currentTime,
                 currentTime,
                 fee);
 
-        //Save notification
-        UserDTO userDTO = userRepository.findById(accountTo.getUserId()).get();
-        UserDTO fromDTO = userRepository.findById(userId).get();
-        String receiverName = fromDTO.getName();
-        NotifyDTO notifyDTO = new NotifyDTO();
-        notifyDTO.setUserId(userDTO.getId());
-        notifyDTO.setContent("Nhận tiền thanh toán nợ thành công");
-        notifyDTO.setTitle("Quý khách đã nhận được số tiền " + debtDTO.getAmount() + "đ thanh toán nợ từ " + receiverName + ". Phí giao dịch: " + fee + "đ, do " + (request.getTypeFee() == 1 ? receiverName : "quý khách") + " thanh toán. Mã giao dịch " + transactionDTO.getTransId() + ".");
-        notifyDTO.setIsActive(1);
-        notifyDTO.setSeen(false);
-        notifyDTO.setCreateAt(currentTime);
-        notifyDTO.setUpdateAt(currentTime);
-        notifyRepository.save(notifyDTO);
+        //Step 7: Update action debt to COMPLETED
+//        debtDTO.setAction(ActionConstant.CONFIRM.getValue());
+        debtDTO.setTransId(transactionDTO.getTransId());
+        debtDTO.setUpdatedAt(currentTime);
+        debtDTO.setContent(request.getContent());
+        debtRepository.save(debtDTO);
+//        //Save notification
+//        UserDTO userDTO = userRepository.findById(accountTo.getUserId()).get();
+//        UserDTO fromDTO = userRepository.findById(userId).get();
+//        String receiverName = fromDTO.getName();
+//        NotifyDTO notifyDTO = new NotifyDTO();
+//        notifyDTO.setUserId(userDTO.getId());
+//        notifyDTO.setContent("Nhận tiền thanh toán nợ thành công");
+//        notifyDTO.setTitle("Quý khách đã nhận được số tiền " + debtDTO.getAmount() + "đ thanh toán nợ từ " + receiverName + ". Phí giao dịch: " + fee + "đ, do " + (request.getTypeFee() == 1 ? receiverName : "quý khách") + " thanh toán. Mã giao dịch " + transactionDTO.getTransId() + ".");
+//        notifyDTO.setIsActive(1);
+//        notifyDTO.setSeen(false);
+//        notifyDTO.setCreateAt(currentTime);
+//        notifyDTO.setUpdateAt(currentTime);
+//        notifyRepository.save(notifyDTO);
 
         return TransactionMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
     }
 
-    public static void main(String[] args) throws InvalidKeySpecException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidParameterSpecException {
-        String PATH_TO_CONFIG_FOLDER = "conf\\";
-        PartnerConfig.init(PATH_TO_CONFIG_FOLDER + "partner.json");
-
-        String mid = "3";
-        String cardPartner = "9001454953559";
-        String secretKey = PartnerConfig.getPartnerSecretKey(mid);
-        String partnerPub = PartnerConfig.getPartnerPubKey(mid);
-        long currentTime = System.currentTimeMillis();
-        String partnerCode = PartnerConfig.getPartnerCode(mid);
-        String url = PartnerConfig.getUrlQueryAccount(mid);
-
-        JsonObject requestBody = new JsonObject()
-                .put("stk", cardPartner);
-
-        String dataCrypto = requestBody
-                + secretKey
-                + currentTime
-                + partnerCode;
-        String encrypt = RSAUtils.encrypt(dataCrypto, PartnerConfig.getPublicKey(mid));
-        String decrypt = RSAUtils.decrypt(encrypt, PartnerConfig.getPrivateKey(mid));
-    }
 
     @Override
     public String updatePassword(String logId, String newPass, String userName) {
@@ -569,5 +536,10 @@ public class UserService implements IUserService {
         }
         Optional<UserDTO> userDTO = userRepository.findById(accountPaymentDTO.getUserId());
         return userDTO.orElse(null);
+    }
+
+    @Override
+    public UserDTO getById(long id) {
+        return userRepository.findById(id).isPresent() ? userRepository.findById(id).get() : null;
     }
 }
