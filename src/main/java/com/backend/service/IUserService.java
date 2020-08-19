@@ -35,7 +35,7 @@ public interface IUserService {
 
     UserResponse getReminders(String logId, long userId, int type, Long cardNumber);
 
-    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance, String token) throws Exception;
+    UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws Exception;
 
     DebtorResponse createDebtor(String logId, CreateDebtorRequest request, long userId);
 

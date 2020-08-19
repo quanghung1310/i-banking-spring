@@ -443,7 +443,7 @@ public class PartnerProcess {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
 
         if (response.getStatusCode() == HttpStatus.OK) {
-            logger.info("{}| Response from associate: {}", logId, response.getBody().toString());
+            logger.info("{}| Data hash: {}", logId, response.getBody());
             return new JsonObject(Objects.requireNonNull(response.getBody())).getJsonObject("data", new JsonObject());
         }
         return null;

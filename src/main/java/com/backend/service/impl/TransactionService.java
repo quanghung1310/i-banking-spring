@@ -189,7 +189,13 @@ public class TransactionService implements ITransactionService {
     public Transaction saveTransaction(TransactionDTO transactionDTO) {
         TransactionDTO transactionDTO1 = transactionRepository.save(transactionDTO);
         AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO1.getReceiverCard());
-        return TransactionMapper.toModelTransaction(transactionDTO1, accountPaymentDTO.getCardNumber(), accountPaymentDTO.getCardName());
+        long carNumber = transactionDTO1.getReceiverCard();
+        String cardName = transactionDTO1.getCardName();
+        if (accountPaymentDTO != null){
+            carNumber = accountPaymentDTO.getCardNumber();
+            cardName = accountPaymentDTO.getCardName();
+        }
+        return TransactionMapper.toModelTransaction(transactionDTO1, carNumber, cardName);
     }
 
     @Override

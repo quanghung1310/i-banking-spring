@@ -21,7 +21,7 @@
     "partner_secret_key": "f9538580-4d42-446e-ac53-ba0f6268adb6",
     "alg": "PGP",
     "url_query_account": "https://yasuobank.herokuapp.com/api/v1/associate-bank/Lh/account-info",
-    "url_transfer": "https://api.monca.me/v1/rsa/transfers"
+    "url_transfer": "https://yasuobank.herokuapp.com/api/v1/associate-bank/Lh/transfer"
   },
   "associate_bank": "https://yasuobank.herokuapp.com/api/v1/associate-bank"
 }

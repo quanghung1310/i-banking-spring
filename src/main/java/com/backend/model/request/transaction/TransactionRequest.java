@@ -16,6 +16,7 @@ public class TransactionRequest {
     private String content;
     private long amount;
     private Long merchantId; //merchant của to
+    private String receiverName;
 
     public boolean isValidData() {
         try {
