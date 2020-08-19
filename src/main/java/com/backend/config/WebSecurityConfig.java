@@ -33,7 +33,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable().authorizeRequests().antMatchers( "/transfer-bank",
+        http.cors().and().csrf().disable().authorizeRequests().antMatchers(
+                "/authenticate",
+                "/transfer-bank",
                 "/account-bank",
                 "/generate-query-account",
                 "/generate-transfer")
