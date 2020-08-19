@@ -856,23 +856,23 @@ public class UserController {
         }
     }
 
-    @GetMapping(value = {"/forgot-password", "/forgot-password/{email"})
-    public ResponseEntity<String> forgotPassword(@PathVariable(name = "email", required = false) String email) {
+    @GetMapping(value = {"/forgot-password/{userName}", "/forgot-password/{userName}/{email}"})
+    public ResponseEntity<String> forgotPassword(@PathVariable(name = "email", required = false) String email,
+                                                 @PathVariable(name = "userName") String userName) {
         String logId = DataUtil.createRequestId();
         logger.info("{}| Request data: email - {}", logId, email);
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
         BaseResponse response;
         try {
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            String userName = ((UserDetails) principal).getUsername();
-            UserResponse user = getUser(logId, principal);
-            String userEmail = user.getEmail();
+            UserResponse user = userService.getUser(logId, userName);
 
-            if (StringUtils.isBlank(user.getEmail())) {
-                logger.warn("{}| Email of user name - {}: not found!", logId, userName);
+            if (user == null) {
+                logger.warn("{}| User of user name - {}: not found!", logId, userName);
                 response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
+
+            String userEmail = user.getEmail();
 
             JsonObject result = new JsonObject(userService.forgotPassword(logId, userName));
 
