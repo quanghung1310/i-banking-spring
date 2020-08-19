@@ -14,5 +14,5 @@ public interface ITransactionService {
 
     Transaction getByTransIdAndType(long transId, int type, String status);
 
-    TransactionDTO getByTransIdAndTypeAndAction(long transId, int type, String statuc);
+    TransactionDTO getByTransIdAndTypeAndAction(long transId, int type, String status);
 }
