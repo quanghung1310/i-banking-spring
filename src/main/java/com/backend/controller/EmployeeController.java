@@ -22,10 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class EmployeeController {
@@ -139,7 +136,8 @@ public class EmployeeController {
 
     @GetMapping("/get-account-info/{cardNumber}/{merchantId}")
     public ResponseEntity<String> queryAccount(@PathVariable long cardNumber,
-                                               @PathVariable long merchantId) {
+                                               @PathVariable long merchantId,
+                                               @RequestHeader("Authorization") String authorization) {
         String logId = DataUtil.createRequestId();
         logger.info("{}| Request data: cardNumber - {}, merchantId - {}", logId, cardNumber, merchantId);
         BaseResponse response;
@@ -150,7 +148,7 @@ public class EmployeeController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId, paymentBank, false);
+            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId, paymentBank, false, authorization);
             return DataUtil.getStringResponseEntity(logId, userResponse);
         } catch (Exception ex) {
             logger.error("{}| Request query account catch exception: ", logId, ex);

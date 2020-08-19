@@ -46,4 +46,7 @@ public class PartnerConfig {
         return getMerchantConfig(id).getString("partner_public_key", "");
     }
 
+    public static String getUrlAssociate() {
+        return partnerConfig.getString("associate_bank", "https://yasuobank.herokuapp.com/api/v1/associate-bank");
+    }
 }

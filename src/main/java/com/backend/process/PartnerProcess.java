@@ -1,13 +1,17 @@
 package com.backend.process;
 
+import com.backend.config.PartnerConfig;
 import com.backend.model.Partner;
 import com.backend.model.request.bank.QueryAccountRequest;
 import com.backend.model.request.transaction.TransactionRequest;
 import com.backend.model.request.transaction.TransferRequest;
 import com.backend.service.IPartnerService;
 import com.backend.util.DataUtil;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.impl.StringEscapeUtils;
 import io.vertx.core.json.JsonObject;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HTTP;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -23,16 +27,18 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.*;
 import org.bouncycastle.util.io.Streams;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 import sun.misc.BASE64Encoder;
 
 import javax.crypto.Cipher;
 import java.io.*;
 import java.security.*;
-import java.util.Collection;
+import java.util.*;
 import java.nio.ByteBuffer;
 import java.security.*;
-import java.util.Date;
-import java.util.Iterator;
 
 
 public class PartnerProcess {
@@ -395,5 +401,29 @@ public class PartnerProcess {
         // finish the encryption
         cOut.close();
         return new BASE64Encoder().encode(encOut.toByteArray()) ;
+    }
+
+    public static JsonObject getDataPartner(String logId, JsonObject dataRequest, String merchantId) {
+        // create headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        RestTemplate restTemplate = new RestTemplate();
+        String url = PartnerConfig.getUrlAssociate();
+
+        // create object
+        JsonObject requestBody = new JsonObject()
+                .put("data", dataRequest)
+                .put("secret_key", PartnerConfig.getPartnerSecretKey(merchantId))
+                .put("public_key", PartnerConfig.getPartnerPubKey(merchantId));
+
+        HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            logger.info("{}| Response from associate: {}", logId, response.getBody().toString());
+            return new JsonObject(Objects.requireNonNull(response.getBody())).getJsonObject("data", new JsonObject());
+        }
+        return null;
     }
 }
