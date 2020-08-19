@@ -19,6 +19,7 @@ public class Debt {
     private int action;
     private String createdAt;
     private String updatedAt;
+    private long transId;
 
     @Override
     public String toString() {

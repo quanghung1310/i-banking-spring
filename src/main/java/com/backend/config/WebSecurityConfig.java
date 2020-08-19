@@ -37,6 +37,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 "/authenticate",
                 "/transfer-bank",
                 "/account-bank",
+                "/forgot-password/**",
                 "/generate-query-account",
                 "/generate-transfer")
                 .permitAll().anyRequest().authenticated()

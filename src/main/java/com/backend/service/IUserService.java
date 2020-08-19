@@ -54,4 +54,6 @@ public interface IUserService {
     String forgotPassword(String logId, String userName);
 
     UserDTO getByCardNumber(String logId, long cardNumber);
+
+    UserDTO getById(long id);
 }

@@ -21,6 +21,7 @@ import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.PartnerProcess;
 import com.backend.process.TransactionProcess;
+import com.backend.repository.IDebtRepository;
 import com.backend.repository.IReminderRepository;
 import com.backend.service.*;
 import com.backend.util.DataUtil;
@@ -87,6 +88,7 @@ public class UserController {
     private ITransactionService transactionService;
     private IPartnerService partnerService;
     private INotifyService notifyService;
+    private IDebtRepository debtRepository;
 
     @Autowired
     public UserController(IUserService userService,
@@ -96,7 +98,8 @@ public class UserController {
                           IOtpService otpService,
                           ITransactionService transactionService,
                           IPartnerService partnerService,
-                          INotifyService notifyService) {
+                          INotifyService notifyService,
+                          IDebtRepository debtRepository) {
         this.userService = userService;
         this.reminderRepository = reminderRepository;
         this.accountPaymentService = accountPaymentService;
@@ -105,6 +108,7 @@ public class UserController {
         this.transactionService = transactionService;
         this.partnerService = partnerService;
         this.notifyService = notifyService;
+        this.debtRepository = debtRepository;
     }
 
     @GetMapping(value = {"/get-accounts", "/get-accounts/{type}"})
@@ -688,7 +692,7 @@ public class UserController {
             //Step 2: Update balance
             long amountTransfer = transactionDTO.getAmount();
             AccountPaymentDTO accountSender = accountPaymentService.getAccountByUserId(user.getId());
-            AccountPaymentDTO accountReceiver;
+            AccountPaymentDTO accountReceiver = null;
             long receiverBalance = 0;
             long senderCard = transactionDTO.getSenderCard() == accountSender.getCardNumber() ? transactionDTO.getReceiverCard() : transactionDTO.getSenderCard();
 
@@ -792,6 +796,25 @@ public class UserController {
                 return new ResponseEntity<>(
                         response.toString(),
                         HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            if(transactionDTO.getTypeTrans() == 2) {//debt
+                DebtDTO debtDTO = debtRepository.findFirstByTransIdAndActionAndIsActive(transId, ActionConstant.INIT.getValue(), 1);
+                if (debtDTO != null) {
+                    //Step 7: Update action debt to COMPLETED
+                    debtDTO.setAction(ActionConstant.COMPLETED.getValue());
+                    debtDTO.setUpdatedAt(currentTime);
+                    debtRepository.save(debtDTO);
+                    //Save notification
+                    assert accountReceiver != null;
+                    UserDTO fromDTO = userService.getById(accountSender.getUserId());
+                    String receiverName = fromDTO.getName();
+                    notifyService.saveNotification(logId,
+                            accountReceiver.getUserId()
+                            ,"Quý khách đã nhận được số tiền " + debtDTO.getAmount() + "đ thanh toán nợ từ " + receiverName + ". Phí giao dịch: " + feeTransfer + "đ, do " + (transactionDTO.getTypeFee() == 1 ? receiverName : "quý khách") + " thanh toán. Mã giao dịch " + transactionDTO.getTransId() + "."
+                            ,"Nhận tiền thanh toán nợ thành công"
+                    );
+                }
             }
             response = DataUtil.buildResponse(ErrorConstant.SUCCESS, logId, result.toString());
             logger.info("{}| Response to client: {}", logId, response.toString());
