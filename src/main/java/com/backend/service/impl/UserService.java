@@ -61,6 +61,30 @@ public class UserService implements IUserService {
     @Value("${session.request}")
     private int session;
 
+    @Value("${pgp.bank.id}")
+    private int pgpBankId;
+
+    @Value("${pgp.public.key}")
+    private String pgpPublicKey;
+
+    @Value("${pgp.secret.key}")
+    private String pgpSecretKey;
+
+    @Value("${pgp.alg}")
+    private String pgpAlg;
+
+    @Value("${pgp.url.query.account}")
+    private String pgpUrlQueryAccount;
+
+    @Value("${pgp.url.transfer}")
+    private String pgpUrlTransfer;
+
+    @Value("${pgp.url.associate}")
+    private String pgpUrlAssociate;
+
+    @Value("${rsa.bank.id}")
+    private int rsaBankId;
+
     public static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writer()
             .withDefaultPrettyPrinter();
 
@@ -226,20 +250,20 @@ public class UserService implements IUserService {
             }
             //Step 2: Encrypt
             String mid = String.valueOf(merchantId);
-            String alg = PartnerConfig.getAlg(mid);
+//            String alg = PartnerConfig.getAlg(mid);
             String cardPartner = String.valueOf(cardNumber);
-            String url = PartnerConfig.getUrlQueryAccount(mid);
+//            String url = PartnerConfig.getUrlQueryAccount(mid);
 
-            if (alg.equals("RSA")) {
+            if (merchantId == rsaBankId) {
                 // HttpHeaders
                 MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
 
                 //RSA
                 //2.1: Build json body
-                String secretKey = PartnerConfig.getPartnerSecretKey(mid);
-                String partnerPub = PartnerConfig.getPartnerPubKey(mid);
+                String secretKey = "";//PartnerConfig.getPartnerSecretKey(mid);
+//                String partnerPub = PartnerConfig.getPartnerPubKey(mid);
                 long currentTime = 1595770284249L;//System.currentTimeMillis();
-                String partnerCode = PartnerConfig.getPartnerCode(mid);
+                String partnerCode = "";//PartnerConfig.getPartnerCode(mid);
 
                 //(JSON.stringify(req.body)+ secretKey + time + partnerCode, 'base64')
                 JsonObject requestBody = new JsonObject()
@@ -266,26 +290,26 @@ public class UserService implements IUserService {
                 RestTemplate restTemplate = new RestTemplate();
 
                 HttpEntity<JsonObject> request = new HttpEntity<>(requestBody, headers);
-                ResponseEntity<JsonObject> resp = restTemplate.postForEntity(url, request, JsonObject.class);
+                ResponseEntity<JsonObject> resp = restTemplate.postForEntity("", request, JsonObject.class);
                 /// TODO: 7/26/2020
                 return UserResponse.builder().build();
-            } else if (alg.equals("PGP")) {
+            } else if (merchantId == pgpBankId) {
                 String data = new JsonObject().put("account_number", cardNumber).toString();
-                String pubKey = StringEscapeUtils.unescapeJava(PartnerConfig.getPartnerPubKey(mid));
-                String secretKey = PartnerConfig.getPartnerSecretKey(mid);
+                String pubKey = StringEscapeUtils.unescapeJava(pgpPublicKey);
+                String secretKey = pgpSecretKey;//PartnerConfig.getPartnerSecretKey(mid);
                 if (StringUtils.isBlank(pubKey)) {
                     logger.warn("{}| Public key of partner - {} not existed!", logId, merchantId);
                     return null;
                 }
 
-                PGPPublicKey pgpPublicKey = PartnerProcess.readPublicKey(pubKey);
+//                PGPPublicKey pgpPublicKey = PartnerProcess.readPublicKey(pubKey);
                 String payload = PGPEncryptionUtil.encryptMessage(data, new ByteArrayInputStream(pubKey.getBytes()));
                 String signature = DataUtil.signHmacSHA512(StringEscapeUtils.escapeJava(payload), secretKey);
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 JsonObject requestBody;
-                requestBody = PartnerProcess.getDataPartner(logId, new JsonObject(data), mid);
+                requestBody = PartnerProcess.getDataPartner(logId, new JsonObject(data), pgpUrlAssociate, pgpSecretKey, pgpPublicKey);
 
                 if (requestBody == null) {
                     logger.warn("{}| Build request body fail!", logId);
@@ -296,7 +320,7 @@ public class UserService implements IUserService {
                 RestTemplate restTemplate = new RestTemplate();
                 HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
 
-                ResponseEntity<String> response = restTemplate.exchange(url,
+                ResponseEntity<String> response = restTemplate.exchange(pgpUrlQueryAccount,
                         HttpMethod.POST,
                         entity,
                         String.class);
@@ -313,7 +337,7 @@ public class UserService implements IUserService {
                         .account(accounts)
                         .build();
             } else {
-                logger.warn("{}| alg - {} of merchant id - {} not existed!", logId, alg, merchantId);
+                logger.warn("{}| merchant id - {} not existed!", logId, merchantId);
                 return null;
             }
         }
