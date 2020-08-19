@@ -384,6 +384,26 @@ public class UserService implements IUserService {
             debtDTO.setContent(request.getContent());
             debtRepository.save(debtDTO);
 
+            long debtUserId;
+            if (type == 1) { //Nợ do mình tạo -> gửi cho người nhắc
+                AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(debtDTO.getCardNumber());
+                debtUserId = accountPaymentDTO.getUserId();
+            } else { //Nợ người khác nhắc -> gửi cho chủ nợ
+                debtUserId = debtDTO.getUserId();
+            }
+
+            UserDTO userDTO = userRepository.findById(userId).get();
+            NotifyDTO notifyDTO = new NotifyDTO();
+            notifyDTO.setUserId(debtUserId);
+            notifyDTO.setContent("Nợ " + debtDTO.getId() + " đã bị - " + userDTO.getName() + " xóa với nội dung: " + request.getContent() + ". Quý khách vui lòng kiểm tra lại!");
+            notifyDTO.setTitle("Nợ " + debtDTO.getId() + " đã bị xóa");
+            notifyDTO.setIsActive(1);
+            notifyDTO.setSeen(false);
+            notifyDTO.setCreateAt(currentTime);
+            notifyDTO.setUpdateAt(currentTime);
+
+            NotifyDTO saveDto = notifyRepository.save(notifyDTO);
+            logger.info("{}| Save notify with id - {}", logId, saveDto.getId());
             return getDebts(logId, userId, ActionConstant.DELETE.getValue(), type);
             //Step 5: send notify
             //// TODO: 7/20/20 send notify 
@@ -435,32 +455,19 @@ public class UserService implements IUserService {
         //Step 3: validate balance FROM
         long amountPay = debtDTO.getAmount();
         long currentBalanceFrom = accountFrom.getBalance();
-        long currentBalanceTo = accountTo.getBalance();
 
         if (request.getTypeFee() == 1) { //from tra fee
             if (currentBalanceFrom < amountPay + fee) {
                 logger.warn("{}|Balance debtor: {} < {} (amountPay)", logId, currentBalanceFrom, amountPay + fee);
                 return null;
             }
-//            accountFrom.setBalance(currentBalanceFrom - amountPay - fee);
-//            accountTo.setBalance(currentBalanceTo + amountPay);
         } else {
             if (currentBalanceFrom < amountPay) {
                 logger.warn("{}|Balance debtor: {} < {} (amountPay)", logId, currentBalanceFrom, amountPay);
                 return null;
             }
-//            accountFrom.setBalance(currentBalanceFrom - amountPay);
-//            accountTo.setBalance(currentBalanceTo + amountPay - fee);
         }
         logger.info("{}| User - {} can pay debt!", logId, userId);
-
-        //Step 5: update account of FROM
-//        accountFrom.setUpdatedAt(currentTime);
-//        accountPaymentRepository.save(accountFrom);
-
-        //Step 6: update account of TO
-//        accountTo.setUpdatedAt(currentTime);
-//        accountPaymentRepository.save(accountTo);
 
         //Step 8: insert transaction
         TransactionDTO transactionDTO = TransactionProcess.createTrans(
@@ -478,24 +485,10 @@ public class UserService implements IUserService {
                 fee);
 
         //Step 7: Update action debt to COMPLETED
-//        debtDTO.setAction(ActionConstant.CONFIRM.getValue());
         debtDTO.setTransId(transactionDTO.getTransId());
         debtDTO.setUpdatedAt(currentTime);
         debtDTO.setContent(request.getContent());
         debtRepository.save(debtDTO);
-//        //Save notification
-//        UserDTO userDTO = userRepository.findById(accountTo.getUserId()).get();
-//        UserDTO fromDTO = userRepository.findById(userId).get();
-//        String receiverName = fromDTO.getName();
-//        NotifyDTO notifyDTO = new NotifyDTO();
-//        notifyDTO.setUserId(userDTO.getId());
-//        notifyDTO.setContent("Nhận tiền thanh toán nợ thành công");
-//        notifyDTO.setTitle("Quý khách đã nhận được số tiền " + debtDTO.getAmount() + "đ thanh toán nợ từ " + receiverName + ". Phí giao dịch: " + fee + "đ, do " + (request.getTypeFee() == 1 ? receiverName : "quý khách") + " thanh toán. Mã giao dịch " + transactionDTO.getTransId() + ".");
-//        notifyDTO.setIsActive(1);
-//        notifyDTO.setSeen(false);
-//        notifyDTO.setCreateAt(currentTime);
-//        notifyDTO.setUpdateAt(currentTime);
-//        notifyRepository.save(notifyDTO);
 
         return TransactionMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
     }
