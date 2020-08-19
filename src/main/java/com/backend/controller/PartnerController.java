@@ -13,13 +13,13 @@ import com.backend.model.response.BaseResponse;
 import com.backend.model.response.UserResponse;
 import com.backend.process.PartnerProcess;
 import com.backend.process.TransactionProcess;
-import com.backend.process.UserProcess;
 import com.backend.service.IAccountPaymentService;
 import com.backend.service.IPartnerService;
 import com.backend.service.ITransactionService;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
 import com.google.gson.Gson;
+import io.vertx.core.impl.StringEscapeUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,7 +102,7 @@ public class PartnerController {
                         response.toString(),
                         HttpStatus.BAD_REQUEST);
             }
-            UserResponse toUser = userService.queryAccount(logId, request.getTo(), myBankId, paymentBank, true);
+            UserResponse toUser = userService.queryAccount(logId, request.getTo(), myBankId, paymentBank, true, "");
             if (toUser == null) {
                 logger.warn("{}| Account target - {} not fount!", logId, request.getTo());
                 response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(),null);
@@ -160,7 +160,7 @@ public class PartnerController {
             PGPSecretKey pgpSecretKey = PartnerProcess.readSecretKey(partner.getSecretKey(),
                     PartnerProcess.readPublicKey(partner.getPublicKey()).getKeyID());
 //            String genSig = PartnerProcess.signaturePgp(dataSig, pgpSecretKey, partner.getPassword().toCharArray());
-            boolean isVerify = PartnerProcess.verifySignaturePgp(logId, request.getSignature().getBytes(), partner.getPublicKey());
+            boolean isVerify = PartnerProcess.verifySignaturePgp(logId, StringEscapeUtils.unescapeJava(request.getSignature()).getBytes(), partner.getPublicKey());
             if (!isVerify) {
                 logger.warn("{}| Signature - {} wrong!", logId, request.getSignature());
                 response = DataUtil.buildResponse(ErrorConstant.CHECK_SIGNATURE_FAIL, request.getRequestId(),null);
@@ -281,7 +281,7 @@ public class PartnerController {
             logger.info("{}| Valid request hash success!", logId);
 
             //Step 4: Query info account
-            UserResponse userResponse = userService.queryAccount(logId, request.getCardNumber(), myBankId, paymentBank, false);
+            UserResponse userResponse = userService.queryAccount(logId, request.getCardNumber(), myBankId, paymentBank, false, "");
             return DataUtil.getStringResponseEntity(logId, userResponse);
 
         } catch (Exception ex) {

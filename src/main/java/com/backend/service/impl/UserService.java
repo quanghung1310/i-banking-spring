@@ -14,29 +14,35 @@ import com.backend.model.request.reminder.CreateReminderRequest;
 import com.backend.model.response.DebtorResponse;
 import com.backend.model.response.TransactionResponse;
 import com.backend.model.response.UserResponse;
+import com.backend.process.PartnerProcess;
 import com.backend.process.TransactionProcess;
 import com.backend.process.UserProcess;
 import com.backend.repository.*;
 import com.backend.service.IUserService;
 import com.backend.util.DataUtil;
+import com.backend.util.PGPEncryptionUtil;
 import com.backend.util.RSAUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import io.vertx.core.impl.StringEscapeUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -46,25 +52,28 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class UserService implements IUserService {
     private static final Logger logger = LogManager.getLogger(UserService.class);
     private static final int TYPE_CREDITOR = 1;
-    @Value( "${my.bank.id}" )
+    @Value("${my.bank.id}")
     private long myBankId;
 
-    @Value( "${fee.transfer}" )
+    @Value("${fee.transfer}")
     private long fee;
 
-    @Value( "${status.transfer}" )
+    @Value("${status.transfer}")
     private String status;
 
-    @Value( "${session.request}" )
+    @Value("${session.request}")
     private int session;
+
+    public static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writer()
+            .withDefaultPrettyPrinter();
 
     private IAccountPaymentRepository accountPaymentRepository;
     private IAccountSavingRepository accountSavingRepository;
@@ -72,26 +81,26 @@ public class UserService implements IUserService {
     private IReminderRepository reminderRepository;
     private IDebtRepository debtRepository;
     private ITransactionRepository transactionRepository;
-    private IOtpRepository otpRepository;
     private IPartnerRepository partnerRepository;
+    private INotifyRepository notifyRepository;
 
     @Autowired
     public UserService(IAccountPaymentRepository accountPaymentRepository,
-            IAccountSavingRepository accountSavingRepository,
-            IUserRepository userRepository,
-            IReminderRepository reminderRepository,
-            IDebtRepository debtRepository,
-            ITransactionRepository transactionRepository,
-            IOtpRepository otpRepository,
-            IPartnerRepository partnerRepository) {
-        this.accountPaymentRepository   = accountPaymentRepository;
-        this.accountSavingRepository    = accountSavingRepository;
-        this.userRepository             = userRepository;
-        this.reminderRepository         = reminderRepository;
-        this.debtRepository             = debtRepository;
-        this.transactionRepository      = transactionRepository;
-        this.otpRepository              = otpRepository;
-        this.partnerRepository          = partnerRepository;
+                       IAccountSavingRepository accountSavingRepository,
+                       IUserRepository userRepository,
+                       IReminderRepository reminderRepository,
+                       IDebtRepository debtRepository,
+                       ITransactionRepository transactionRepository,
+                       IPartnerRepository partnerRepository,
+                       INotifyRepository notifyRepository) {
+        this.accountPaymentRepository = accountPaymentRepository;
+        this.accountSavingRepository = accountSavingRepository;
+        this.userRepository = userRepository;
+        this.reminderRepository = reminderRepository;
+        this.debtRepository = debtRepository;
+        this.transactionRepository = transactionRepository;
+        this.partnerRepository = partnerRepository;
+        this.notifyRepository = notifyRepository;
     }
 
     @Override
@@ -129,7 +138,7 @@ public class UserService implements IUserService {
     public ReminderDTO createReminder(String logId, CreateReminderRequest request, long userId, String nameReminisce) {
         long cardNumber = request.getCardNumber();
         long merchantId = request.getMerchantId();
-        Timestamp currentTime =  new Timestamp(request.getRequestTime());
+        Timestamp currentTime = new Timestamp(request.getRequestTime());
 
         //Step 1: Validate reminder
         ReminderDTO reminder = reminderRepository.findFirstByCardNumberAndMerchantIdAndTypeAndUserId(
@@ -204,7 +213,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidParameterSpecException {
+    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance, String authorization) throws Exception {
         List<Account> accounts = new ArrayList<>();
         long userId = 0;
         if (merchantId == myBankId) {
@@ -230,15 +239,18 @@ public class UserService implements IUserService {
             String mid = String.valueOf(merchantId);
             String alg = PartnerConfig.getAlg(mid);
             String cardPartner = String.valueOf(cardNumber);
+            String url = PartnerConfig.getUrlQueryAccount(mid);
 
             if (alg.equals("RSA")) {
+                // HttpHeaders
+                MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+
                 //RSA
                 //2.1: Build json body
                 String secretKey = PartnerConfig.getPartnerSecretKey(mid);
                 String partnerPub = PartnerConfig.getPartnerPubKey(mid);
                 long currentTime = 1595770284249L;//System.currentTimeMillis();
                 String partnerCode = PartnerConfig.getPartnerCode(mid);
-                String url = PartnerConfig.getUrlQueryAccount(mid);
 
                 //(JSON.stringify(req.body)+ secretKey + time + partnerCode, 'base64')
                 JsonObject requestBody = new JsonObject()
@@ -258,26 +270,59 @@ public class UserService implements IUserService {
                     return null;
                 }
 
-                RestTemplate restTemplate = new RestTemplate();
-
-                // HttpHeaders
-                HttpHeaders headers = new HttpHeaders();
-
-                headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-                // Request to return JSON format
-                headers.setContentType(MediaType.APPLICATION_JSON);
                 headers.set("x-partner-code", partnerCode);
                 headers.set("x-timestamp", String.valueOf(currentTime));
                 headers.set("x-data-encrypted", encrypt);
+
+                RestTemplate restTemplate = new RestTemplate();
 
                 HttpEntity<JsonObject> request = new HttpEntity<>(requestBody, headers);
                 ResponseEntity<JsonObject> resp = restTemplate.postForEntity(url, request, JsonObject.class);
                 /// TODO: 7/26/2020
                 return UserResponse.builder().build();
             } else if (alg.equals("PGP")) {
-                //PGP
-                //todo
-                return UserResponse.builder().build();
+                String data = new JsonObject().put("account_number", cardNumber).toString();
+                String pubKey = StringEscapeUtils.unescapeJava(PartnerConfig.getPartnerPubKey(mid));
+                String secretKey = PartnerConfig.getPartnerSecretKey(mid);
+                if (StringUtils.isBlank(pubKey)) {
+                    logger.warn("{}| Public key of partner - {} not existed!", logId, merchantId);
+                    return null;
+                }
+
+                PGPPublicKey pgpPublicKey = PartnerProcess.readPublicKey(pubKey);
+                String payload = PGPEncryptionUtil.encryptMessage(data, new ByteArrayInputStream(pubKey.getBytes()));
+                String signature = DataUtil.signHmacSHA512(StringEscapeUtils.escapeJava(payload), secretKey);
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                JsonObject requestBody;
+                requestBody = PartnerProcess.getDataPartner(logId, new JsonObject(data), mid);
+
+                if (requestBody == null) {
+                    logger.warn("{}| Build request body fail!", logId);
+                    requestBody = new JsonObject()
+                            .put("payload", payload)
+                            .put("signature", signature);
+                }
+                RestTemplate restTemplate = new RestTemplate();
+                HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
+
+                ResponseEntity<String> response = restTemplate.exchange(url,
+                        HttpMethod.POST,
+                        entity,
+                        String.class);
+                if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                    logger.info("{}| Response from associate: {}", logId, response.getBody());
+                    return null;
+                }
+                JsonObject accountAssociate = new JsonObject(response.getBody()).getJsonObject("data");
+                accounts.add(Account.builder()
+                        .cardName(accountAssociate.getString("name", ""))
+                        .cardNumber(Long.parseLong(accountAssociate.getString("account_number", "0")))
+                        .build());
+                return UserResponse.builder()
+                        .account(accounts)
+                        .build();
             } else {
                 logger.warn("{}| alg - {} of merchant id - {} not existed!", logId, alg, merchantId);
                 return null;
@@ -300,7 +345,7 @@ public class UserService implements IUserService {
         DebtDTO debtDTO = UserProcess.createDebt(ActionConstant.INIT.getValue(), request, new Timestamp(request.getRequestTime()), userId, accountPaymentDTO.getUserId());
         debtRepository.save(debtDTO);
 
-       return getDebts(logId, userId, ActionConstant.INIT.getValue(), TYPE_CREDITOR);
+        return getDebts(logId, userId, ActionConstant.INIT.getValue(), TYPE_CREDITOR);
     }
 
     @Override
@@ -399,9 +444,9 @@ public class UserService implements IUserService {
         logger.info("{}| Debtor  -{} is existed!", logId, debtDTO.getUserId());
 
         //Step 3: validate balance FROM
-        long amountPay          = debtDTO.getAmount();
+        long amountPay = debtDTO.getAmount();
         long currentBalanceFrom = accountFrom.getBalance();
-        long currentBalanceTo   = accountTo.getBalance();
+        long currentBalanceTo = accountTo.getBalance();
 
         if (request.getTypeFee() == 1) { //from tra fee
             if (currentBalanceFrom < amountPay + fee) {
@@ -447,6 +492,21 @@ public class UserService implements IUserService {
                 currentTime,
                 currentTime,
                 fee);
+
+        //Save notification
+        UserDTO userDTO = userRepository.findById(accountTo.getUserId()).get();
+        UserDTO fromDTO = userRepository.findById(userId).get();
+        String receiverName = fromDTO.getName();
+        NotifyDTO notifyDTO = new NotifyDTO();
+        notifyDTO.setUserId(userDTO.getId());
+        notifyDTO.setContent("Nhận tiền thanh toán nợ thành công");
+        notifyDTO.setTitle("Quý khách đã nhận được số tiền " + debtDTO.getAmount() + "đ thanh toán nợ từ " + receiverName + ". Phí giao dịch: " + fee + "đ, do " + (request.getTypeFee() == 1 ? receiverName : "quý khách") + " thanh toán. Mã giao dịch " + transactionDTO.getTransId() + ".");
+        notifyDTO.setIsActive(1);
+        notifyDTO.setSeen(false);
+        notifyDTO.setCreateAt(currentTime);
+        notifyDTO.setUpdateAt(currentTime);
+        notifyRepository.save(notifyDTO);
+
         return TransactionMapper.toModelTransResponse(transactionRepository.save(transactionDTO), accountTo.getCardName());
     }
 
@@ -492,11 +552,21 @@ public class UserService implements IUserService {
         userDTO.setPassword(hashPass);
         userDTO.setLastPassword(userDTO.getPassword());
         userDTO.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
-        UserDTO user = userRepository.save(userDTO);
+        userRepository.save(userDTO);
 
         return new JsonObject()
                 .put("password", password)
                 .put("hashPassword", hashPass)
                 .toString();
+    }
+
+    @Override
+    public UserDTO getByCardNumber(String logId, long cardNumber) {
+        AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(cardNumber);
+        if (accountPaymentDTO == null) {
+            return null;
+        }
+        Optional<UserDTO> userDTO = userRepository.findById(accountPaymentDTO.getUserId());
+        return userDTO.orElse(null);
     }
 }
