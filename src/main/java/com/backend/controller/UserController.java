@@ -632,18 +632,25 @@ public class UserController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            Transaction transactionDTO = transactionService.getByTransIdAndType(transId, action.equals(otpPayment) ? 1 : 2, ActionConstant.INIT.name());
+            TransactionDTO transactionDTO = transactionService.getByTransIdAndTypeAndAction(transId, action.equals(otpPayment) ? 1 : 2, ActionConstant.INIT.name());
             if (transactionDTO == null) {
                 logger.warn("{}| Transaction - {} not existed!", logId, transId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
+            AccountPaymentDTO accountPaymentDTO = accountPaymentService.findByCardNumber(transactionDTO.getSenderCard());
+            UserDTO userDTO = userService.getById(accountPaymentDTO.getUserId());
             SimpleMailMessage msg = new SimpleMailMessage();
             UserResponse user = getUser(logId, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
             msg.setTo(user.getEmail());
             msg.setSubject("Your one-time passcode to view the message");
-            msg.setText("Here is your one-time passcode\n" + otp);
+            String body = "Hello " + userDTO.getName() + ",\n";
+            body += "A request has been received to create a new transaction for your LHBank account.\n";
+            body += "Please enter the code below before " + DataUtil.convertTimeWithFormat(System.currentTimeMillis() + session,  StringConstant.FORMAT_ddMMyyyyTHHmmss) + ":\n";
+            body += "\t\t\t" + otp + "\t\t\t\n";
+            body += "Thanks you,\nThe LHBank Team";
+            msg.setText(body);
 
             OtpDTO otpDTO = new OtpDTO();
             otpDTO.setCreatedAt(currentTime);
