@@ -425,19 +425,22 @@ public class PartnerProcess {
         return new BASE64Encoder().encode(encOut.toByteArray()) ;
     }
 
-    public static JsonObject getDataPartner(String logId, JsonObject dataRequest, String merchantId) {
+    public static JsonObject getDataPartner(String logId, JsonObject dataRequest
+            , String associateUrl
+            , String pgpSecretKey
+            , String pgpPublicKey) {
         // create headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         RestTemplate restTemplate = new RestTemplate();
-        String url = PartnerConfig.getUrlAssociate();
+        String url = associateUrl;//PartnerConfig.getUrlAssociate();
 
         // create object
         JsonObject requestBody = new JsonObject()
                 .put("data", dataRequest)
-                .put("secret_key", PartnerConfig.getPartnerSecretKey(merchantId))
-                .put("public_key", PartnerConfig.getPartnerPubKey(merchantId));
+                .put("secret_key", pgpSecretKey)//PartnerConfig.getPartnerSecretKey(merchantId))
+                .put("public_key", pgpPublicKey);//PartnerConfig.getPartnerPubKey(merchantId));
 
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);

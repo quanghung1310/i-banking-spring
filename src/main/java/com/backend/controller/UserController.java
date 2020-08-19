@@ -80,6 +80,31 @@ public class UserController {
     @Value("${session.request}")
     private int session;
 
+    @Value("${pgp.bank.id}")
+    private int pgpBankId;
+
+    @Value("${pgp.public.key}")
+    private String pgpPublicKey;
+
+    @Value("${pgp.secret.key}")
+    private String pgpSecretKey;
+
+    @Value("${pgp.alg}")
+    private String pgpAlg;
+
+    @Value("${pgp.url.query.account}")
+    private String pgpUrlQueryAccount;
+
+    @Value("${pgp.url.transfer}")
+    private String pgpUrlTransfer;
+
+    @Value("${pgp.url.associate}")
+    private String pgpUrlAssociate;
+
+
+    @Value("${rsa.bank.id}")
+    private int rsaBankId;
+
     private IUserService userService;
     private IReminderRepository reminderRepository;
     private IAccountPaymentService accountPaymentService;
@@ -346,17 +371,17 @@ public class UserController {
                 }
 
                 String mid = String.valueOf(merchantId);
-                String alg = PartnerConfig.getAlg(mid);
-                String url = PartnerConfig.getUrlTransfer(mid);
-                String partnerPub = PartnerConfig.getPartnerPubKey(mid);
+//                String alg = PartnerConfig.getAlg(mid);
+//                String url = PartnerConfig.getUrlTransfer(mid);
+//                String partnerPub = PartnerConfig.getPartnerPubKey(mid);
 
-                if (alg.equals("RSA")) {
+                if (merchantId == rsaBankId) {
                     //RSA
                     //2.1: Build json body
                     String publicKey = PartnerConfig.getPublicKey(mid);
                     String privateKey = PartnerConfig.getPrivateKey(mid);
                     long currentTime = System.currentTimeMillis();
-                    String partnerCode = PartnerConfig.getPartnerCode(mid);
+                    String partnerCode = "";//PartnerConfig.getPartnerCode(mid);
 
                     JsonObject requestBody = new JsonObject()
                             .put("from", String.valueOf(senderCard))
@@ -366,11 +391,11 @@ public class UserController {
                             .put("type", 1); ////1 là bên gửi chịu phí, 2 là bên
 
                     String dataCrypto = requestBody
-                            + PartnerConfig.getPartnerSecretKey(mid)
+                            + ""//PartnerConfig.getPartnerSecretKey(mid)
                             + System.currentTimeMillis()
                             + partnerCode
                             + "base64";
-                    String hash = DataUtil.signHmacSHA256(dataCrypto, partnerPub);
+                    String hash = "";//DataUtil.signHmacSHA256(dataCrypto, partnerPub);
 
 //                    String signature = DataUtil.sig
                     if (StringUtils.isBlank(hash)) {
@@ -391,10 +416,10 @@ public class UserController {
                     headers.set("x-data-encrypted", hash);
 
                     HttpEntity<JsonObject> entity = new HttpEntity<>(requestBody, headers);
-                    ResponseEntity<JsonObject> resp = restTemplate.postForEntity(url, entity, JsonObject.class);
+                    ResponseEntity<JsonObject> resp = restTemplate.postForEntity("", entity, JsonObject.class);
                     /// TODO: 7/26/2020
                     return null;
-                } else if (alg.equals("PGP")) {
+                } else if (pgpBankId == merchantId) {
                     //Sig
                     String payload = "";
                     //hash
@@ -403,7 +428,7 @@ public class UserController {
                     JsonObject data = new JsonObject()
                             .put("account_number", request.getReceiverCard())
                             .put("value", amountTransfer);
-                    JsonObject requestBody = PartnerProcess.getDataPartner(logId, data, mid);
+                    JsonObject requestBody = PartnerProcess.getDataPartner(logId, data, pgpUrlAssociate, pgpSecretKey, pgpPublicKey);
 
                     if (requestBody == null) {
                         logger.warn("{}| Build request body fail!", logId);
@@ -431,7 +456,7 @@ public class UserController {
                     //insert transaction
                     transId = transactionService.insertTransaction(logId, request, senderCard);
                 } else {
-                    logger.warn("{}| alg - {} of merchant id - {} not existed!", logId, alg, merchantId);
+                    logger.warn("{}|merchant id - {} not existed!", logId, merchantId);
                     return null;
                 }
             }
@@ -722,12 +747,12 @@ public class UserController {
                 }
 
                 String mid = String.valueOf(merchantId);
-                String alg = PartnerConfig.getAlg(mid);
-                String url = PartnerConfig.getUrlTransfer(mid);
+//                String alg = PartnerConfig.getAlg(mid);
+//                String url = PartnerConfig.getUrlTransfer(mid);
 
-                if (alg.equals("RSA")) {
+                if (merchantId == rsaBankId) {
                     //todo : call api
-                } else if (alg.equals("PGP")) {
+                } else if (merchantId == pgpBankId) {
                     //Sig
                     String payload = "";
                     //hash
@@ -736,7 +761,7 @@ public class UserController {
                     JsonObject data = new JsonObject()
                             .put("account_number", senderCard)
                             .put("value", amountTransfer);
-                    JsonObject requestData = PartnerProcess.getDataPartner(logId, data, mid);
+                    JsonObject requestData = PartnerProcess.getDataPartner(logId, data, pgpUrlAssociate, pgpSecretKey, pgpPublicKey);
 
                     if (requestData == null) {
                         logger.warn("{}| Build request body fail!", logId);
@@ -750,7 +775,7 @@ public class UserController {
                     RestTemplate restTemplate = new RestTemplate();
                     HttpEntity<String> entity = new HttpEntity<>(requestData.toString(), headers);
 
-                    ResponseEntity<String> responseEntity = restTemplate.exchange(url,
+                    ResponseEntity<String> responseEntity = restTemplate.exchange(pgpUrlTransfer,
                             HttpMethod.POST,
                             entity,
                             String.class);
@@ -762,7 +787,7 @@ public class UserController {
                         return new ResponseEntity<>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
                 } else {
-                    logger.warn("{}| alg - {} of merchant id - {} not existed!", logId, alg, merchantId);
+                    logger.warn("{}| merchant id - {} not existed!", logId, merchantId);
                     return null;
                 }
             }
