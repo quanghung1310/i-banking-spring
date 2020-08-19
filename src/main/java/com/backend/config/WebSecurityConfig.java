@@ -34,7 +34,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests().antMatchers("/authenticate",
-                "/transfer-bank", "/account-bank", "/generate-query-account")
+                "/transfer-bank",
+                "/account-bank",
+                "/generate-query-account",
+                "/generate-transfer")
                 .permitAll().anyRequest().authenticated()
                 .and().exceptionHandling().and().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
