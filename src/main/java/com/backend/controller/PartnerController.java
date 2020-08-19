@@ -193,6 +193,7 @@ public class PartnerController {
             Timestamp currentTime = new Timestamp(request.getRequestTime());
             TransactionDTO transactionDTO = TransactionProcess.createTrans(request.getFrom(),
                     request.getTo(),
+                    request.getCardName(),
                     request.getValue(),
                     request.getTypeFee(),
                     1,

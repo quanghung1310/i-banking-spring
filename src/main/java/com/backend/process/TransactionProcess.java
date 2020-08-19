@@ -13,6 +13,7 @@ public class TransactionProcess {
         return createTrans(
                 senderCard,
                 request.getReceiverCard(),
+                request.getReceiverName(),
                 request.getAmount(),
                 request.getTypeFee(),
                 1, //send/receiver
@@ -37,7 +38,7 @@ public class TransactionProcess {
         return balance;
     }
 
-    public static TransactionDTO createTrans(long senderCard, long receiverCard, long amount, int typeFee, int typeTrans, long merchantId,
+    public static TransactionDTO createTrans(long senderCard, long receiverCard, String receiverName, long amount, int typeFee, int typeTrans, long merchantId,
                                              String content, String status, Timestamp create, Timestamp update, long fee) {
         return TransactionDTO.builder()
                 .transId(1000000000L + (long)(new Random().nextDouble() * 999999999L))
@@ -52,6 +53,7 @@ public class TransactionProcess {
                 .createdAt(create)
                 .updatedAt(update)
                 .fee(fee)
+                .cardName(receiverName)
                 .build();
     }
 

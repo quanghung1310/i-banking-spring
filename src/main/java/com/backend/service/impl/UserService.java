@@ -483,6 +483,7 @@ public class UserService implements IUserService {
         TransactionDTO transactionDTO = TransactionProcess.createTrans(
                 accountFrom.getCardNumber(),
                 accountTo.getCardNumber(),
+                accountTo.getCardName(),
                 amountPay,
                 request.getTypeFee(),
                 2,

@@ -321,7 +321,14 @@ public class UserController {
 
             if (request.getMerchantId() == myBankId) {
                 //todo Validate account to ?
+                AccountPaymentDTO accountReceiver = accountPaymentService.findByCardNumber(request.getReceiverCard());
+                if (accountReceiver == null) {
+                    logger.warn("{}| Account receiver - {} not found!", logId, request.getReceiverCard());
+                    response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(), null);
+                    return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
+                }
                 //insert transaction
+                request.setReceiverName(accountReceiver.getCardName());
                 transId = transactionService.insertTransaction(logId, request, senderCard);
             } else {
                 //Lien ngan hang
