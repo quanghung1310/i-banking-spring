@@ -622,7 +622,7 @@ public class UserController {
                                           @PathVariable long transId) {
         String logId = DataUtil.createRequestId();
         logger.info("{}| Request data: action - {}", logId, action);
-        int otp = new Random().nextInt(900000);
+        int otp = new Random().nextInt(899999) + 100000;
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
         BaseResponse response;
         try {
