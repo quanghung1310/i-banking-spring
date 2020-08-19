@@ -199,6 +199,7 @@ public class UserController {
         logger.info("{}| Request data: type - {}, cardNumber - {}", logId, type, cardNumber);
         BaseResponse response;
         try {
+            //type: 1 - send, type: 2 - debt
             if (type < 0 || type > 2) {
                 logger.warn("{}| Validate request get reminders data: Fail!", logId);
                 response = DataUtil.buildResponse(ErrorConstant.BAD_FORMAT_DATA, logId, null);

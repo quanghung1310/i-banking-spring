@@ -102,7 +102,7 @@ public class PartnerController {
                         response.toString(),
                         HttpStatus.BAD_REQUEST);
             }
-            UserResponse toUser = userService.queryAccount(logId, request.getTo(), myBankId, paymentBank, true, "");
+            UserResponse toUser = userService.queryAccount(logId, request.getTo(), myBankId, paymentBank, true);
             if (toUser == null) {
                 logger.warn("{}| Account target - {} not fount!", logId, request.getTo());
                 response = DataUtil.buildResponse(ErrorConstant.NOT_EXISTED, request.getRequestId(),null);
@@ -282,7 +282,7 @@ public class PartnerController {
             logger.info("{}| Valid request hash success!", logId);
 
             //Step 4: Query info account
-            UserResponse userResponse = userService.queryAccount(logId, request.getCardNumber(), myBankId, paymentBank, false, "");
+            UserResponse userResponse = userService.queryAccount(logId, request.getCardNumber(), myBankId, paymentBank, false);
             return DataUtil.getStringResponseEntity(logId, userResponse);
 
         } catch (Exception ex) {

@@ -191,7 +191,7 @@ public class TransactionService implements ITransactionService {
         AccountPaymentDTO accountPaymentDTO = accountPaymentRepository.findFirstByCardNumber(transactionDTO1.getReceiverCard());
         long carNumber = transactionDTO1.getReceiverCard();
         String cardName = transactionDTO1.getCardName();
-        if (accountPaymentDTO == null){
+        if (accountPaymentDTO != null){
             carNumber = accountPaymentDTO.getCardNumber();
             cardName = accountPaymentDTO.getCardName();
         }
