@@ -136,8 +136,7 @@ public class EmployeeController {
 
     @GetMapping("/get-account-info/{cardNumber}/{merchantId}")
     public ResponseEntity<String> queryAccount(@PathVariable long cardNumber,
-                                               @PathVariable long merchantId,
-                                               @RequestHeader("Authorization") String authorization) {
+                                               @PathVariable long merchantId) {
         String logId = DataUtil.createRequestId();
         logger.info("{}| Request data: cardNumber - {}, merchantId - {}", logId, cardNumber, merchantId);
         BaseResponse response;
@@ -148,7 +147,7 @@ public class EmployeeController {
                 return new ResponseEntity<>(response.toString(), HttpStatus.BAD_REQUEST);
             }
 
-            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId, paymentBank, false, authorization);
+            UserResponse userResponse = userService.queryAccount(logId, cardNumber, merchantId, paymentBank, false);
             return DataUtil.getStringResponseEntity(logId, userResponse);
         } catch (Exception ex) {
             logger.error("{}| Request query account catch exception: ", logId, ex);

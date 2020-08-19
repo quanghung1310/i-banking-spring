@@ -213,7 +213,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance, String authorization) throws Exception {
+    public UserResponse queryAccount(String logId, long cardNumber, long merchantId, int typeAccount, boolean isBalance) throws Exception {
         List<Account> accounts = new ArrayList<>();
         long userId = 0;
         if (merchantId == myBankId) {
@@ -483,6 +483,7 @@ public class UserService implements IUserService {
         TransactionDTO transactionDTO = TransactionProcess.createTrans(
                 accountFrom.getCardNumber(),
                 accountTo.getCardNumber(),
+                accountTo.getCardName(),
                 amountPay,
                 request.getTypeFee(),
                 2,
